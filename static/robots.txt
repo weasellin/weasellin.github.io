@@ -1,0 +1,3 @@
+User-agent: *
+Sitemap: http://ansellin.club:2368/sitemap.xml
+Disallow: /ghost/
