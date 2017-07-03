@@ -1,0 +1,232 @@
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>How to Setup My Ghost Pages</title>
+    <meta name="description" content="">
+
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=a13532eeb8">
+
+
+    <link rel="canonical" href="index.html">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <link rel="amphtml" href="amp/index.html">
+    
+    <meta property="og:site_name" content="Ansel's Notes">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Setup My Ghost Pages">
+    <meta property="og:description" content="By this setup, you can run a Ghost service on local host, and publish the content to GitHub Pages. Before this Setup Follow the post to setup required environment of GitHub client, Python virtual environment, and Docker. How to Setup Ghost From this docker image, it's very easy to run">
+    <meta property="og:url" content="//weasellin.github.io/how-to-setup-my-ghost/">
+    <meta property="article:published_time" content="2017-07-03T20:47:54.000Z">
+    <meta property="article:modified_time" content="2017-07-03T20:50:48.000Z">
+    <meta property="article:tag" content="develop">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="How to Setup My Ghost Pages">
+    <meta name="twitter:description" content="By this setup, you can run a Ghost service on local host, and publish the content to GitHub Pages. Before this Setup Follow the post to setup required environment of GitHub client, Python virtual environment, and Docker. How to Setup Ghost From this docker image, it's very easy to run">
+    <meta name="twitter:url" content="//weasellin.github.io/how-to-setup-my-ghost/">
+    <meta name="twitter:label1" content="Written by">
+    <meta name="twitter:data1" content="Ansel Lin">
+    <meta name="twitter:label2" content="Filed under">
+    <meta name="twitter:data2" content="develop">
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "Ansel&#x27;s Notes",
+        "logo": "http://ansellin.club:2368/ghost/img/ghosticon.jpg"
+    },
+    "author": {
+        "@type": "Person",
+        "name": "Ansel Lin",
+        "url": "http://ansellin.club:2368/author/ansel/",
+        "sameAs": []
+    },
+    "headline": "How to Setup My Ghost Pages",
+    "url": "http://ansellin.club:2368/how-to-setup-my-ghost/",
+    "datePublished": "2017-07-03T20:47:54.000Z",
+    "dateModified": "2017-07-03T20:50:48.000Z",
+    "keywords": "develop",
+    "description": "By this setup, you can run a Ghost service on local host, and publish the content to GitHub Pages. Before this Setup Follow the post to setup required environment of GitHub client, Python virtual environment, and Docker. How to Setup Ghost From this docker image, it&#x27;s very easy to run",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "http://ansellin.club:2368"
+    }
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.11">
+    <link rel="alternate" type="application/rss+xml" title="Ansel's Notes" href="../rss/index.html">
+</head>
+<body class="post-template tag-develop nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home"><a href="../">Home</a></li>
+    </ul>
+        <a class="subscribe-button icon-feed" href="../rss/index.rss">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post tag-develop">
+
+        <header class="post-header">
+            <h1 class="post-title">How to Setup My Ghost Pages</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2017-07-03">03 July 2017</time>  on <a href="../tag/develop/">develop</a>
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>By this setup, you can run a <a href="//ghost.org/">Ghost</a> service on local host, and publish the content to <a href="//pages.github.com/">GitHub Pages</a>.</p>
+
+<h3 id="beforethissetup">Before this Setup</h3>
+
+<p>Follow the <a href="../how-to-setup-my-develop-environment/">post</a> to setup required environment of GitHub client, Python virtual environment, and Docker.</p>
+
+<h3 id="howtosetupghost">How to Setup Ghost</h3>
+
+<p>From this <a href="//hub.docker.com/_/ghost/">docker image</a>, it's very easy to run a Ghost service by the following command. And be sure to create a directory <code>$GHOST_DATA_DIR</code> whatever you prefer to keep data of the Ghost.</p>
+
+<pre><code>$ mkdir -p $GHOST_DATA_DIR
+$ docker run \
+      --name my-ghost \
+      -p 2368:2368 \
+      -d \
+      -v $GHOST_DATA_DIR:/var/lib/ghost \
+      ghost
+</code></pre>
+
+<p>Then, go to <code>http://localhost:2368/ghost/</code> to manage the Ghost blog.</p>
+
+<p>In addition, if your host can be accessed from a domain name or a public IP, by setting the <code>config.development.config</code> in the <code>$GHOST_DATA_DIR/config.js</code>, you can configure your blog to expose to <code>http://&lt;ghost_host&gt;:2368</code>.</p>
+
+<pre><code>$ docker restart my-ghost
+</code></pre>
+
+<p>to apply the changed configuration.</p>
+
+<h3 id="howtopublishtogithubpages">How to Publish to GitHub Pages</h3>
+
+<ul>
+<li>Follow this <a href="//pages.github.com/">tutorial</a> to create a <code>&lt;username&gt;.github.io</code> repository.</li>
+</ul>
+
+<p>Then, use the <a href="//github.com/axitkhurana/buster">Buster tools</a> to setup, generate, and deploy the Ghost contents to the Github Pages.</p>
+
+<pre><code># buster incompatible to python3
+$ pyenv activate myenv-2.7.8
+# install from my fork of buster
+$ pip install git+https://github.com/weasellin/buster.git
+$ cd $GHOST_DATA_DIR
+$ buster setup --gh-repo=git@github.com:&lt;username&gt;/&lt;username&gt;.github.io.git
+$ buster generate --domain '&lt;ghost_host&gt;:2368' --target-domain '&lt;username&gt;.github.io'
+$ buster deploy
+Good job! Deployed to Github Pages.
+</code></pre>
+
+<p>After deployment, the Pages in <code>https://&lt;username&gt;.github.io</code> should be updated.</p>
+
+<p>Notice that, <a href="//github.com/weasellin/buster">here</a> is my fork of the buster to fix links with:</p>
+
+<ul>
+<li>replacing <code>&lt;ghost_host&gt;:2368</code> with <code>&lt;username&gt;.github.io</code></li>
+<li>using scheme relative URLs (removing <code>http:</code>, <code>https:</code> in the front of the <code>//</code>)</li>
+</ul>
+
+<h3 id="updatepublishfromghost">Update Publish From Ghost</h3>
+
+<pre><code>$ pyenv activate myenv-2.7.8
+$ cd $GHOST_DATA_DIR
+$ buster generate --domain '&lt;ghost_host&gt;:2368' --target-domain '&lt;username&gt;.github.io'
+$ buster deploy
+Good job! Deployed to Github Pages.
+</code></pre>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/ansel/">Ansel Lin</a></h4>
+
+                    <p>Read <a href="../author/ansel/">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="//twitter.com/intent/tweet?text=How%20to%20Setup%20My%20Ghost%20Pages&amp;url=http://weasellin.github.io/how-to-setup-my-ghost/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="//www.facebook.com/sharer/sharer.php?u=http://weasellin.github.io/how-to-setup-my-ghost/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="//plus.google.com/share?url=http://weasellin.github.io/how-to-setup-my-ghost/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../how-to-setup-my-develop-environment/">
+        <section class="post">
+            <h2>How to Setup My Develop Environment</h2>
+            <p>The following settings are based on Ubuntu 14.04 LTS. How to Setup GitHub Client Follow this official document…</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../">Ansel's Notes</a> © 2017</section>
+            <section class="poweredby">Proudly published with <a href="//ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=a13532eeb8"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=a13532eeb8"></script>
+
+</body>

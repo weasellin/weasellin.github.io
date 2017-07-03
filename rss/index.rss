@@ -1,4 +1,75 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 03 Jul 2017 03:25:53 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup My Develop Environment</title><description>&lt;p&gt;The following settings are based on Ubuntu 14.04 LTS. (from the instance created by AWS EC2)&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 03 Jul 2017 20:52:04 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup My Ghost Pages</title><description>&lt;p&gt;By this setup, you can run a &lt;a href="https://ghost.org/"&gt;Ghost&lt;/a&gt; service on local host, and publish the content to &lt;a href="https://pages.github.com/"&gt;GitHub Pages&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id="beforethissetup"&gt;Before this Setup&lt;/h3&gt;
+
+&lt;p&gt;Follow the &lt;a href="http://ansellin.club:2368/how-to-setup-my-develop-environment/"&gt;post&lt;/a&gt; to setup required environment of GitHub client, Python virtual environment, and Docker.&lt;/p&gt;
+
+&lt;h3 id="howtosetupghost"&gt;How to Setup Ghost&lt;/h3&gt;
+
+&lt;p&gt;From this &lt;a href="https://hub.docker.com/_/ghost/"&gt;docker image&lt;/a&gt;, it's very easy to run&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-my-ghost/</link><guid isPermaLink="false">887297c0-0c08-4ef9-a3d3-ccec858dcdff</guid><category>develop</category><dc:creator>Ansel Lin</dc:creator><pubDate>Mon, 03 Jul 2017 20:47:54 GMT</pubDate><content:encoded>&lt;p&gt;By this setup, you can run a &lt;a href="https://ghost.org/"&gt;Ghost&lt;/a&gt; service on local host, and publish the content to &lt;a href="https://pages.github.com/"&gt;GitHub Pages&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id="beforethissetup"&gt;Before this Setup&lt;/h3&gt;
+
+&lt;p&gt;Follow the &lt;a href="http://ansellin.club:2368/how-to-setup-my-develop-environment/"&gt;post&lt;/a&gt; to setup required environment of GitHub client, Python virtual environment, and Docker.&lt;/p&gt;
+
+&lt;h3 id="howtosetupghost"&gt;How to Setup Ghost&lt;/h3&gt;
+
+&lt;p&gt;From this &lt;a href="https://hub.docker.com/_/ghost/"&gt;docker image&lt;/a&gt;, it's very easy to run a Ghost service by the following command. And be sure to create a directory &lt;code&gt;$GHOST_DATA_DIR&lt;/code&gt; whatever you prefer to keep data of the Ghost.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ mkdir -p $GHOST_DATA_DIR
+$ docker run \
+      --name my-ghost \
+      -p 2368:2368 \
+      -d \
+      -v $GHOST_DATA_DIR:/var/lib/ghost \
+      ghost
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, go to &lt;code&gt;http://localhost:2368/ghost/&lt;/code&gt; to manage the Ghost blog.&lt;/p&gt;
+
+&lt;p&gt;In addition, if your host can be accessed from a domain name or a public IP, by setting the &lt;code&gt;config.development.config&lt;/code&gt; in the &lt;code&gt;$GHOST_DATA_DIR/config.js&lt;/code&gt;, you can configure your blog to expose to &lt;code&gt;http://&amp;lt;ghost_host&amp;gt;:2368&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ docker restart my-ghost
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to apply the changed configuration.&lt;/p&gt;
+
+&lt;h3 id="howtopublishtogithubpages"&gt;How to Publish to GitHub Pages&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Follow this &lt;a href="https://pages.github.com/"&gt;tutorial&lt;/a&gt; to create a &lt;code&gt;&amp;lt;username&amp;gt;.github.io&lt;/code&gt; repository.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Then, use the &lt;a href="https://github.com/axitkhurana/buster"&gt;Buster tools&lt;/a&gt; to setup, generate, and deploy the Ghost contents to the Github Pages.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# buster incompatible to python3
+$ pyenv activate myenv-2.7.8
+# install from my fork of buster
+$ pip install git+https://github.com/weasellin/buster.git
+$ cd $GHOST_DATA_DIR
+$ buster setup --gh-repo=git@github.com:&amp;lt;username&amp;gt;/&amp;lt;username&amp;gt;.github.io.git
+$ buster generate --domain '&amp;lt;ghost_host&amp;gt;:2368' --target-domain '&amp;lt;username&amp;gt;.github.io'
+$ buster deploy
+Good job! Deployed to Github Pages.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After deployment, the Pages in &lt;code&gt;https://&amp;lt;username&amp;gt;.github.io&lt;/code&gt; should be updated.&lt;/p&gt;
+
+&lt;p&gt;Notice that, &lt;a href="https://github.com/weasellin/buster"&gt;here&lt;/a&gt; is my fork of the buster to fix links with:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;replacing &lt;code&gt;&amp;lt;ghost_host&amp;gt;:2368&lt;/code&gt; with &lt;code&gt;&amp;lt;username&amp;gt;.github.io&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;using scheme relative URLs (removing &lt;code&gt;http:&lt;/code&gt;, &lt;code&gt;https:&lt;/code&gt; in the front of the &lt;code&gt;//&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id="updatepublishfromghost"&gt;Update Publish From Ghost&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;$ pyenv activate myenv-2.7.8
+$ cd $GHOST_DATA_DIR
+$ buster generate --domain '&amp;lt;ghost_host&amp;gt;:2368' --target-domain '&amp;lt;username&amp;gt;.github.io'
+$ buster deploy
+Good job! Deployed to Github Pages.
+&lt;/code&gt;&lt;/pre&gt;</content:encoded></item><item><title>How to Setup My Develop Environment</title><description>&lt;p&gt;The following settings are based on Ubuntu 14.04 LTS.&lt;/p&gt;
 
 &lt;h3 id="howtosetupgithubclient"&gt;How to Setup GitHub Client&lt;/h3&gt;
 
@@ -8,7 +79,11 @@
 
 &lt;h3 id="howtosetupmyvimrc"&gt;How to Setup My .vimrc&lt;/h3&gt;
 
-&lt;p&gt;Follow my &lt;a href="https://github.com/weasellin/dotfile#vimrc"&gt;dotfile&lt;/a&gt;'s document to setup my &lt;code&gt;.vimrc&lt;/code&gt;&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-my-develop-environment/</link><guid isPermaLink="false">a4dc02c3-d9da-4f3b-8354-2a7e7aa5b6fa</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 09:01:29 GMT</pubDate><content:encoded>&lt;p&gt;The following settings are based on Ubuntu 14.04 LTS. (from the instance created by AWS EC2)&lt;/p&gt;
+&lt;p&gt;Follow my &lt;a href="https://github.com/weasellin/dotfile#vimrc"&gt;dotfile&lt;/a&gt;'s document to setup my &lt;code&gt;.vimrc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id="howtosetuppythonpyenv"&gt;How to Setup Python pyenv&lt;/h3&gt;
+
+&lt;p&gt;Follow this&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-my-develop-environment/</link><guid isPermaLink="false">a4dc02c3-d9da-4f3b-8354-2a7e7aa5b6fa</guid><category>develop</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 09:01:29 GMT</pubDate><content:encoded>&lt;p&gt;The following settings are based on Ubuntu 14.04 LTS.&lt;/p&gt;
 
 &lt;h3 id="howtosetupgithubclient"&gt;How to Setup GitHub Client&lt;/h3&gt;
 
@@ -71,46 +146,7 @@ $ pyenv deactivate
 &lt;h3 id="howtosetupdocker"&gt;How to Setup Docker&lt;/h3&gt;
 
 &lt;p&gt;Follow this &lt;a href="https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#install-using-the-repository"&gt;official document&lt;/a&gt; to install Docker CE. &lt;br&gt;
-Then be sure to follow the &lt;a href="https://docs.docker.com/engine/installation/linux/linux-postinstall/#manage-docker-as-a-non-root-user"&gt;post-install steps&lt;/a&gt; to allow non-super-user to use docker.&lt;/p&gt;
-
-&lt;h3 id="howtosetupghost"&gt;How to Setup Ghost&lt;/h3&gt;
-
-&lt;p&gt;From this &lt;a href="https://hub.docker.com/_/ghost/"&gt;docker image&lt;/a&gt;, it's very easy to run a Ghost service by the command:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ mkdir -p $GHOST_DATA_DIR
-$ docker run \
-      --name ansel-ghost \
-      -p 2368:2368 \
-      -d \
-      -v $GHOST_DATA_DIR:/var/lib/ghost \
-      ghost
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Then, go to &lt;code&gt;http://&amp;lt;domain&amp;gt;:2368/ghost/&lt;/code&gt; to manage the Ghost blog.&lt;/p&gt;
-
-&lt;h3 id="howtopublishtogithubpages"&gt;How to Publish to GitHub Pages&lt;/h3&gt;
-
-&lt;p&gt;Follow this &lt;a href="https://pages.github.com/"&gt;tutorial&lt;/a&gt; to create a &lt;code&gt;&amp;lt;username&amp;gt;.github.io&lt;/code&gt; repository. &lt;br&gt;
-Then, use the &lt;a href="https://github.com/axitkhurana/buster"&gt;Buster tools&lt;/a&gt; to setup, generate, and deploy the Ghost contents to the Github Pages.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ cd $GHOST_DATA_DIR
-# buster incompatible to python3
-$ pyenv activate myenv-2.7.8
-$ pip install git+https://github.com/weasellin/buster.git
-$ buster setup --gh-repo=git@github.com:&amp;lt;username&amp;gt;/&amp;lt;username&amp;gt;.github.io.git
-$ buster generate --domain '&amp;lt;localhost&amp;gt;:2368' --target-domain '&amp;lt;username&amp;gt;.github.io'
-$ buster deploy
-Good job! Deployed to Github Pages.
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;After deployment, the Pages in &lt;code&gt;https://&amp;lt;username&amp;gt;.github.io&lt;/code&gt; should be updated.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt; &lt;a href="https://github.com/weasellin/buster"&gt;here&lt;/a&gt; is my fork of the buster to fix links by:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;replacing &lt;code&gt;&amp;lt;localhost&amp;gt;:2368&lt;/code&gt; with &lt;code&gt;&amp;lt;username&amp;gt;.github.io&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Using scheme relative URLs. (removed &lt;code&gt;http:&lt;/code&gt;, &lt;code&gt;https:&lt;/code&gt; in front of the &lt;code&gt;//&lt;/code&gt;)&lt;/li&gt;
-&lt;/ul&gt;</content:encoded></item><item><title>Welcome to Ghost</title><description>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list&lt;/p&gt;</description><link>http://ansellin.club:2368/welcome-to-ghost/</link><guid isPermaLink="false">61a5c5e0-5774-4d58-9578-d2b2d2dbfcf5</guid><category>Getting Started</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 07:49:54 GMT</pubDate><content:encoded>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list on the left and see a preview of it on the right. Click the little pencil icon at the top of the preview to edit this post and read the next section!&lt;/p&gt;
+Then be sure to follow the &lt;a href="https://docs.docker.com/engine/installation/linux/linux-postinstall/#manage-docker-as-a-non-root-user"&gt;post-install steps&lt;/a&gt; to allow non-super-user to use docker.&lt;/p&gt;</content:encoded></item><item><title>Welcome to Ghost</title><description>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list&lt;/p&gt;</description><link>http://ansellin.club:2368/welcome-to-ghost/</link><guid isPermaLink="false">61a5c5e0-5774-4d58-9578-d2b2d2dbfcf5</guid><category>Getting Started</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 07:49:54 GMT</pubDate><content:encoded>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list on the left and see a preview of it on the right. Click the little pencil icon at the top of the preview to edit this post and read the next section!&lt;/p&gt;
 
 &lt;h2 id="gettingstarted"&gt;Getting Started&lt;/h2&gt;
 

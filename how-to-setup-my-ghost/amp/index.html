@@ -2,7 +2,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>How to Setup My Develop Environment</title>
+    <title>How to Setup My Ghost Pages</title>
     <meta name="description" content="">
 
     <meta name="HandheldFriendly" content="True">
@@ -15,17 +15,17 @@
     
     <meta property="og:site_name" content="Ansel's Notes">
     <meta property="og:type" content="article">
-    <meta property="og:title" content="How to Setup My Develop Environment">
-    <meta property="og:description" content="The following settings are based on Ubuntu 14.04 LTS. How to Setup GitHub Client Follow this official document to setup GitHub auth key. How to Setup My .bashrc How to Setup My .vimrc Follow my dotfile's document to setup my .vimrc. How to Setup Python pyenv Follow this document">
-    <meta property="og:url" content="//weasellin.github.io/how-to-setup-my-develop-environment/">
-    <meta property="article:published_time" content="2017-07-01T09:01:29.000Z">
-    <meta property="article:modified_time" content="2017-07-03T20:51:15.000Z">
+    <meta property="og:title" content="How to Setup My Ghost Pages">
+    <meta property="og:description" content="By this setup, you can run a Ghost service on local host, and publish the content to GitHub Pages. Before this Setup Follow the post to setup required environment of GitHub client, Python virtual environment, and Docker. How to Setup Ghost From this docker image, it's very easy to run">
+    <meta property="og:url" content="//weasellin.github.io/how-to-setup-my-ghost/">
+    <meta property="article:published_time" content="2017-07-03T20:47:54.000Z">
+    <meta property="article:modified_time" content="2017-07-03T20:50:48.000Z">
     <meta property="article:tag" content="develop">
     
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="How to Setup My Develop Environment">
-    <meta name="twitter:description" content="The following settings are based on Ubuntu 14.04 LTS. How to Setup GitHub Client Follow this official document to setup GitHub auth key. How to Setup My .bashrc How to Setup My .vimrc Follow my dotfile's document to setup my .vimrc. How to Setup Python pyenv Follow this document">
-    <meta name="twitter:url" content="//weasellin.github.io/how-to-setup-my-develop-environment/">
+    <meta name="twitter:title" content="How to Setup My Ghost Pages">
+    <meta name="twitter:description" content="By this setup, you can run a Ghost service on local host, and publish the content to GitHub Pages. Before this Setup Follow the post to setup required environment of GitHub client, Python virtual environment, and Docker. How to Setup Ghost From this docker image, it's very easy to run">
+    <meta name="twitter:url" content="//weasellin.github.io/how-to-setup-my-ghost/">
     <meta name="twitter:label1" content="Written by">
     <meta name="twitter:data1" content="Ansel Lin">
     <meta name="twitter:label2" content="Filed under">
@@ -46,12 +46,12 @@
         "url": "http://ansellin.club:2368/author/ansel/",
         "sameAs": []
     },
-    "headline": "How to Setup My Develop Environment",
-    "url": "http://ansellin.club:2368/how-to-setup-my-develop-environment/",
-    "datePublished": "2017-07-01T09:01:29.000Z",
-    "dateModified": "2017-07-03T20:51:15.000Z",
+    "headline": "How to Setup My Ghost Pages",
+    "url": "http://ansellin.club:2368/how-to-setup-my-ghost/",
+    "datePublished": "2017-07-03T20:47:54.000Z",
+    "dateModified": "2017-07-03T20:50:48.000Z",
     "keywords": "develop",
-    "description": "The following settings are based on Ubuntu 14.04 LTS. How to Setup GitHub Client Follow this official document to setup GitHub auth key. How to Setup My .bashrc How to Setup My .vimrc Follow my dotfile&#x27;s document to setup my .vimrc. How to Setup Python pyenv Follow this document",
+    "description": "By this setup, you can run a Ghost service on local host, and publish the content to GitHub Pages. Before this Setup Follow the post to setup required environment of GitHub client, Python virtual environment, and Docker. How to Setup Ghost From this docker image, it&#x27;s very easy to run",
     "mainEntityOfPage": {
         "@type": "WebPage",
         "@id": "http://ansellin.club:2368"
@@ -844,78 +844,78 @@
         <article class="post">
 
             <header class="post-header">
-                <h1 class="post-title">How to Setup My Develop Environment</h1>
+                <h1 class="post-title">How to Setup My Ghost Pages</h1>
                 <section class="post-meta">
                     <p class="author">by <a href="../../author/ansel/">Ansel Lin</a></p>
-                    <time class="post-date" datetime="2017-07-01">2017-07-01</time>
+                    <time class="post-date" datetime="2017-07-03">2017-07-03</time>
                 </section>
             </header>
             <section class="post-content">
 
-                <p>The following settings are based on Ubuntu 14.04 LTS.</p>
+                <p>By this setup, you can run a <a href="//ghost.org/">Ghost</a> service on local host, and publish the content to <a href="//pages.github.com/">GitHub Pages</a>.</p>
 
-<h3 id="howtosetupgithubclient">How to Setup GitHub Client</h3>
+<h3 id="beforethissetup">Before this Setup</h3>
 
-<p>Follow this <a href="//help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/">official document</a> to setup GitHub auth key.</p>
+<p>Follow the <a href="../../how-to-setup-my-develop-environment/">post</a> to setup required environment of GitHub client, Python virtual environment, and Docker.</p>
 
-<h3 id="howtosetupmybashrc">How to Setup My .bashrc</h3>
+<h3 id="howtosetupghost">How to Setup Ghost</h3>
 
-<h3 id="howtosetupmyvimrc">How to Setup My .vimrc</h3>
+<p>From this <a href="//hub.docker.com/_/ghost/">docker image</a>, it's very easy to run a Ghost service by the following command. And be sure to create a directory <code>$GHOST_DATA_DIR</code> whatever you prefer to keep data of the Ghost.</p>
 
-<p>Follow my <a href="//github.com/weasellin/dotfile#vimrc">dotfile</a>'s document to setup my <code>.vimrc</code>.</p>
-
-<h3 id="howtosetuppythonpyenv">How to Setup Python pyenv</h3>
-
-<p>Follow this <a href="//github.com/pyenv/pyenv/wiki/Common-build-problems#requirements">document</a> to install required libraries:</p>
-
-<pre><code>$ sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
+<pre><code>$ mkdir -p $GHOST_DATA_DIR
+$ docker run \
+      --name my-ghost \
+      -p 2368:2368 \
+      -d \
+      -v $GHOST_DATA_DIR:/var/lib/ghost \
+      ghost
 </code></pre>
 
-<p>Then by this <a href="//github.com/pyenv/pyenv-installer#github-way-recommended">document</a> to install pyenv:</p>
+<p>Then, go to <code>http://localhost:2368/ghost/</code> to manage the Ghost blog.</p>
 
-<pre><code>$ curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
+<p>In addition, if your host can be accessed from a domain name or a public IP, by setting the <code>config.development.config</code> in the <code>$GHOST_DATA_DIR/config.js</code>, you can configure your blog to expose to <code>http://&lt;ghost_host&gt;:2368</code>.</p>
 
-...
-
-# Load pyenv automatically by adding
-# the following to ~/.bash_profile:
-
-export PATH="/home/weasellin/.pyenv/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+<pre><code>$ docker restart my-ghost
 </code></pre>
 
-<p>Install some python versions to pyenv:</p>
+<p>to apply the changed configuration.</p>
 
-<pre><code>$ pyenv install --list
-   ...
-$ pyenv install 2.7.8
-$ pyenv install 3.6.0
-$ pyenv install pypy3-2.4.0
-$ pyenv versions
-* system (set by /home/weasellin/.pyenv/version)
-  2.7.8
-  3.6.0
-  pypy3-2.4.0
+<h3 id="howtopublishtogithubpages">How to Publish to GitHub Pages</h3>
+
+<ul>
+<li>Follow this <a href="//pages.github.com/">tutorial</a> to create a <code>&lt;username&gt;.github.io</code> repository.</li>
+</ul>
+
+<p>Then, use the <a href="//github.com/axitkhurana/buster">Buster tools</a> to setup, generate, and deploy the Ghost contents to the Github Pages.</p>
+
+<pre><code># buster incompatible to python3
+$ pyenv activate myenv-2.7.8
+# install from my fork of buster
+$ pip install git+https://github.com/weasellin/buster.git
+$ cd $GHOST_DATA_DIR
+$ buster setup --gh-repo=git@github.com:&lt;username&gt;/&lt;username&gt;.github.io.git
+$ buster generate --domain '&lt;ghost_host&gt;:2368' --target-domain '&lt;username&gt;.github.io'
+$ buster deploy
+Good job! Deployed to Github Pages.
 </code></pre>
 
-<p>Create virtual env from installed versions:</p>
+<p>After deployment, the Pages in <code>https://&lt;username&gt;.github.io</code> should be updated.</p>
 
-<pre><code>$ pyenv virtualenv 2.7.8 myenv-2.7.8
-$ pyenv virtualenv 3.6.0 myenv-3.6.0
-$ pyenv virtualenv pypy3-2.4.0 myenv-pypy3-2.4.0
+<p>Notice that, <a href="//github.com/weasellin/buster">here</a> is my fork of the buster to fix links with:</p>
+
+<ul>
+<li>replacing <code>&lt;ghost_host&gt;:2368</code> with <code>&lt;username&gt;.github.io</code></li>
+<li>using scheme relative URLs (removing <code>http:</code>, <code>https:</code> in the front of the <code>//</code>)</li>
+</ul>
+
+<h3 id="updatepublishfromghost">Update Publish From Ghost</h3>
+
+<pre><code>$ pyenv activate myenv-2.7.8
+$ cd $GHOST_DATA_DIR
+$ buster generate --domain '&lt;ghost_host&gt;:2368' --target-domain '&lt;username&gt;.github.io'
+$ buster deploy
+Good job! Deployed to Github Pages.
 </code></pre>
-
-<p>Activate &amp; deactivate virtual env:</p>
-
-<pre><code>$ pyenv activate myenv-3.6.0
-$ pyenv deactivate
-</code></pre>
-
-<h3 id="howtosetupdocker">How to Setup Docker</h3>
-
-<p>Follow this <a href="//docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#install-using-the-repository">official document</a> to install Docker CE. <br>
-Then be sure to follow the <a href="//docs.docker.com/engine/installation/linux/linux-postinstall/#manage-docker-as-a-non-root-user">post-install steps</a> to allow non-super-user to use docker.</p>
 
             </section>
 
