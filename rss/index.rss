@@ -1,4 +1,4 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 03 Jul 2017 03:18:08 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup My Develop Environment</title><description>&lt;p&gt;The following settings are based on Ubuntu 14.04 LTS. (from the instance created by AWS EC2)&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 03 Jul 2017 03:25:53 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup My Develop Environment</title><description>&lt;p&gt;The following settings are based on Ubuntu 14.04 LTS. (from the instance created by AWS EC2)&lt;/p&gt;
 
 &lt;h3 id="howtosetupgithubclient"&gt;How to Setup GitHub Client&lt;/h3&gt;
 
@@ -91,20 +91,26 @@ $ docker run \
 &lt;h3 id="howtopublishtogithubpages"&gt;How to Publish to GitHub Pages&lt;/h3&gt;
 
 &lt;p&gt;Follow this &lt;a href="https://pages.github.com/"&gt;tutorial&lt;/a&gt; to create a &lt;code&gt;&amp;lt;username&amp;gt;.github.io&lt;/code&gt; repository. &lt;br&gt;
-Then, use the &lt;a href="https://github.com/axitkhurana/buster"&gt;Buster tools&lt;/a&gt; to setup, generate, preview, and deploy the Ghost contents to the Github Pages.&lt;/p&gt;
+Then, use the &lt;a href="https://github.com/axitkhurana/buster"&gt;Buster tools&lt;/a&gt; to setup, generate, and deploy the Ghost contents to the Github Pages.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;$ cd $GHOST_DATA_DIR
 # buster incompatible to python3
 $ pyenv activate myenv-2.7.8
-$ pip install buster
+$ pip install git+https://github.com/weasellin/buster.git
 $ buster setup --gh-repo=git@github.com:&amp;lt;username&amp;gt;/&amp;lt;username&amp;gt;.github.io.git
-$ buster generate
-$ buster preview
+$ buster generate --domain '&amp;lt;localhost&amp;gt;:2368' --target-domain '&amp;lt;username&amp;gt;.github.io'
 $ buster deploy
 Good job! Deployed to Github Pages.
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;After deployment, the Pages in &lt;code&gt;https://&amp;lt;username&amp;gt;.github.io&lt;/code&gt; should be updated.&lt;/p&gt;</content:encoded></item><item><title>Welcome to Ghost</title><description>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list&lt;/p&gt;</description><link>http://ansellin.club:2368/welcome-to-ghost/</link><guid isPermaLink="false">61a5c5e0-5774-4d58-9578-d2b2d2dbfcf5</guid><category>Getting Started</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 07:49:54 GMT</pubDate><content:encoded>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list on the left and see a preview of it on the right. Click the little pencil icon at the top of the preview to edit this post and read the next section!&lt;/p&gt;
+&lt;p&gt;After deployment, the Pages in &lt;code&gt;https://&amp;lt;username&amp;gt;.github.io&lt;/code&gt; should be updated.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt; &lt;a href="https://github.com/weasellin/buster"&gt;here&lt;/a&gt; is my fork of the buster to fix links by:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;replacing &lt;code&gt;&amp;lt;localhost&amp;gt;:2368&lt;/code&gt; with &lt;code&gt;&amp;lt;username&amp;gt;.github.io&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Using scheme relative URLs. (removed &lt;code&gt;http:&lt;/code&gt;, &lt;code&gt;https:&lt;/code&gt; in front of the &lt;code&gt;//&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;</content:encoded></item><item><title>Welcome to Ghost</title><description>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list&lt;/p&gt;</description><link>http://ansellin.club:2368/welcome-to-ghost/</link><guid isPermaLink="false">61a5c5e0-5774-4d58-9578-d2b2d2dbfcf5</guid><category>Getting Started</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 07:49:54 GMT</pubDate><content:encoded>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list on the left and see a preview of it on the right. Click the little pencil icon at the top of the preview to edit this post and read the next section!&lt;/p&gt;
 
 &lt;h2 id="gettingstarted"&gt;Getting Started&lt;/h2&gt;
 
