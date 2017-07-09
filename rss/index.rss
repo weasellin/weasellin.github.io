@@ -1,4 +1,109 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Wed, 05 Jul 2017 00:19:38 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup My Ghost Pages</title><description>&lt;p&gt;By this setup, you can run a &lt;a href="https://ghost.org/"&gt;Ghost&lt;/a&gt; service on local host, and publish the content to &lt;a href="https://pages.github.com/"&gt;GitHub Pages&lt;/a&gt;.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Sun, 09 Jul 2017 07:40:23 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup GitLab Runner on Local</title><description>&lt;blockquote&gt;
+  &lt;p&gt;The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id="dockerizedgitlabrunner"&gt;Dockerized GitLab Runner&lt;/h3&gt;
+
+&lt;p&gt;&lt;mark&gt;If you are looking for a workable solution, please skip this section, or refer to &lt;a href="https://gitlab.com/gitlab-org/gitlab-ci-multi-runner/issues/2438"&gt;this issue&lt;/a&gt;.&lt;/mark&gt;&lt;/p&gt;
+
+&lt;p&gt;First of all, by following &lt;a href="https://docs.gitlab.com/runner/"&gt;this document&lt;/a&gt;, &lt;br&gt;
+I&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-gitlab-runner/</link><guid isPermaLink="false">aa4e72f5-f717-49e9-9943-233260378f01</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Wed, 05 Jul 2017 06:50:15 GMT</pubDate><content:encoded>&lt;blockquote&gt;
+  &lt;p&gt;The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id="dockerizedgitlabrunner"&gt;Dockerized GitLab Runner&lt;/h3&gt;
+
+&lt;p&gt;&lt;mark&gt;If you are looking for a workable solution, please skip this section, or refer to &lt;a href="https://gitlab.com/gitlab-org/gitlab-ci-multi-runner/issues/2438"&gt;this issue&lt;/a&gt;.&lt;/mark&gt;&lt;/p&gt;
+
+&lt;p&gt;First of all, by following &lt;a href="https://docs.gitlab.com/runner/"&gt;this document&lt;/a&gt;, &lt;br&gt;
+I tried to run a dockerized gitlab-runner, &lt;br&gt;
+and mounted local repository directory with &lt;br&gt;
+&lt;code&gt;-v &amp;lt;local_repo_dir&amp;gt;:/usr/local/repo&lt;/code&gt;
+and specified the working directory &lt;br&gt;
+&lt;code&gt;-w /usr/local/repo&lt;/code&gt;
+for the purpose of auto-load the CI config &lt;code&gt;.gitlab-ci.yml&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ docker run \
+    -d \
+    --name gitlab-runner \
+    --restart always \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+    -v &amp;lt;local_repo_dir&amp;gt;:/usr/local/repo \
+    -w /usr/local/repo \
+    gitlab/gitlab-runner:latest
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To see &lt;code&gt;gitlab-runner&lt;/code&gt; usage&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ docker exec -it gitlab-runner gitlab-runner
+
+NAME:
+   gitlab-runner - a GitLab Runner
+
+USAGE:
+   gitlab-runner [global options] command [command options] [arguments...]
+
+VERSION:
+   9.3.0 (3df822b)
+
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But, to run CI jobs&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ docker exec -it gitlab-runner \
+    gitlab-runner exec docker [job_name]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I got an error&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Running on runner--project-0-concurrent-0 via 
+a853d0cb3c01...
+Cloning repository...
+fatal: repository '/usr/local/repo' does not exist
+ERROR: Job failed: exit code 1
+FATAL: exit code 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With some solutions searching, I found &lt;a href="https://gitlab.com/gitlab-org/gitlab-ci-multi-runner/issues/2438"&gt;this issue&lt;/a&gt;. After failure on the trial of the &lt;code&gt;--docker-privileged&lt;/code&gt; and &lt;code&gt;--docker-volumes&lt;/code&gt; parameters, I decided to leave it alone and try to really install GitLab Runner.&lt;/p&gt;
+
+&lt;h3 id="originalgitlabrunner"&gt;Original GitLab Runner&lt;/h3&gt;
+
+&lt;p&gt;Follow &lt;a href="https://docs.gitlab.com/runner/install/linux-repository.html"&gt;this document&lt;/a&gt; to install&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-ci-multi-runner/script.deb.sh | sudo bash
+$ sudo apt-get install gitlab-ci-multi-runner
+$ gitlab-runner 
+NAME:
+   gitlab-runner - a GitLab Runner
+
+USAGE:
+   gitlab-runner [global options] command [command options] [arguments...]
+
+VERSION:
+   9.3.0 (3df822b)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you want to execute docker commands in the job script:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;DOCKER_AUTH_CONFIG&lt;/code&gt; should be set with the content of &lt;code&gt;~/.docker/config.json&lt;/code&gt;, if the job requires registry privileged.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;image: docker:latest&lt;/code&gt; should be specified in &lt;code&gt;.gitlab-ci.yml&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;the &lt;code&gt;/var/run/docker.sock&lt;/code&gt; should be mounted by the &lt;code&gt;gitlab-runner exec docker&lt;/code&gt; option &lt;code&gt;--docker-volumes&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;the other environment variables which will be used in job configurations.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;for example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ gitlab-runner exec docker \
+    --env DOCKER_AUTH_CONFIG='{"auths":{"registry.private":{"auth":"xxx"}}}' \
+    --env CI_PROJECT_PATH_SLUG='project/path' \
+    --docker-volumes /var/run/docker.sock:/var/run/docker.sock \
+    staging
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;from now on, you can run the GitLab runner locally to test your project in each stages and jobs.&lt;/p&gt;</content:encoded></item><item><title>How to Setup My Ghost Pages</title><description>&lt;p&gt;By this setup, you can run a &lt;a href="https://ghost.org/"&gt;Ghost&lt;/a&gt; service on local host, and publish the content to &lt;a href="https://pages.github.com/"&gt;GitHub Pages&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h3 id="beforethissetup"&gt;Before this Setup&lt;/h3&gt;
 
