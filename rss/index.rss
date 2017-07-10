@@ -1,42 +1,43 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Sun, 09 Jul 2017 07:40:23 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup GitLab Runner on Local</title><description>&lt;blockquote&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 10 Jul 2017 04:02:07 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup GitLab Runner on Local</title><description>&lt;blockquote&gt;
   &lt;p&gt;The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage.&lt;/p&gt;
 &lt;/blockquote&gt;
 
 &lt;h3 id="dockerizedgitlabrunner"&gt;Dockerized GitLab Runner&lt;/h3&gt;
 
-&lt;p&gt;&lt;mark&gt;If you are looking for a workable solution, please skip this section, or refer to &lt;a href="https://gitlab.com/gitlab-org/gitlab-ci-multi-runner/issues/2438"&gt;this issue&lt;/a&gt;.&lt;/mark&gt;&lt;/p&gt;
-
-&lt;p&gt;First of all, by following &lt;a href="https://docs.gitlab.com/runner/"&gt;this document&lt;/a&gt;, &lt;br&gt;
-I&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-gitlab-runner/</link><guid isPermaLink="false">aa4e72f5-f717-49e9-9943-233260378f01</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Wed, 05 Jul 2017 06:50:15 GMT</pubDate><content:encoded>&lt;blockquote&gt;
-  &lt;p&gt;The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h3 id="dockerizedgitlabrunner"&gt;Dockerized GitLab Runner&lt;/h3&gt;
-
-&lt;p&gt;&lt;mark&gt;If you are looking for a workable solution, please skip this section, or refer to &lt;a href="https://gitlab.com/gitlab-org/gitlab-ci-multi-runner/issues/2438"&gt;this issue&lt;/a&gt;.&lt;/mark&gt;&lt;/p&gt;
+&lt;p&gt;(recommended approach)&lt;/p&gt;
 
 &lt;p&gt;First of all, by following &lt;a href="https://docs.gitlab.com/runner/"&gt;this document&lt;/a&gt;, &lt;br&gt;
 I tried to run a dockerized gitlab-runner, &lt;br&gt;
 and mounted local repository directory with &lt;br&gt;
-&lt;code&gt;-v &amp;lt;local_repo_dir&amp;gt;:/usr/local/repo&lt;/code&gt;
+&lt;code&gt;-v &amp;lt;local_&lt;/code&gt;&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-gitlab-runner/</link><guid isPermaLink="false">aa4e72f5-f717-49e9-9943-233260378f01</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Wed, 05 Jul 2017 06:50:15 GMT</pubDate><content:encoded>&lt;blockquote&gt;
+  &lt;p&gt;The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id="dockerizedgitlabrunner"&gt;Dockerized GitLab Runner&lt;/h3&gt;
+
+&lt;p&gt;(recommended approach)&lt;/p&gt;
+
+&lt;p&gt;First of all, by following &lt;a href="https://docs.gitlab.com/runner/"&gt;this document&lt;/a&gt;, &lt;br&gt;
+I tried to run a dockerized gitlab-runner, &lt;br&gt;
+and mounted local repository directory with &lt;br&gt;
+&lt;code&gt;-v &amp;lt;local_repo_dir&amp;gt;:&amp;lt;local_repo_dir&amp;gt;&lt;/code&gt;
 and specified the working directory &lt;br&gt;
-&lt;code&gt;-w /usr/local/repo&lt;/code&gt;
+&lt;code&gt;-w &amp;lt;local_repo_dir&amp;gt;&lt;/code&gt;
 for the purpose of auto-load the CI config &lt;code&gt;.gitlab-ci.yml&lt;/code&gt;.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;$ docker run \
     -d \
-    --name gitlab-runner \
+    --name gitlab-runner-container \
     --restart always \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -v /srv/gitlab-runner/config:/etc/gitlab-runner \
-    -v &amp;lt;local_repo_dir&amp;gt;:/usr/local/repo \
-    -w /usr/local/repo \
+    -v &amp;lt;local_repo_dir&amp;gt;:&amp;lt;local_repo_dir&amp;gt; \
+    -w &amp;lt;local_repo_dir&amp;gt; \
     gitlab/gitlab-runner:latest
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;To see &lt;code&gt;gitlab-runner&lt;/code&gt; usage&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;$ docker exec -it gitlab-runner gitlab-runner
+&lt;pre&gt;&lt;code&gt;$ docker exec -it gitlab-runner-container gitlab-runner
 
 NAME:
    gitlab-runner - a GitLab Runner
@@ -50,23 +51,37 @@ VERSION:
 ...
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;But, to run CI jobs&lt;/p&gt;
+&lt;p&gt;To run CI jobs&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;$ docker exec -it gitlab-runner \
-    gitlab-runner exec docker [job_name]
+&lt;pre&gt;&lt;code&gt;$ docker exec -it gitlab-runner-container \
+    gitlab-runner exec docker \
+    --docker-privileged \
+    [job_name]
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;I got an error&lt;/p&gt;
+&lt;p&gt;If you use the image from the private docker registry, you could add the &lt;code&gt;--DOCKER_AUTH_CONFIG&lt;/code&gt; with the &lt;code&gt;json&lt;/code&gt; string from the &lt;code&gt;${HOME}/.docker/config.json&lt;/code&gt;.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;Running on runner--project-0-concurrent-0 via 
-a853d0cb3c01...
-Cloning repository...
-fatal: repository '/usr/local/repo' does not exist
-ERROR: Job failed: exit code 1
-FATAL: exit code 1
+&lt;pre&gt;&lt;code&gt;$ docker exec -it gitlab-runner-container \
+    gitlab-runner exec docker \
+    --docker-privileged \
+    --env DOCKER_AUTH_CONFIG='$(cat ~/.docker/config.json | tr -d '\040\011\012\015')' \
+    [job_name]
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;With some solutions searching, I found &lt;a href="https://gitlab.com/gitlab-org/gitlab-ci-multi-runner/issues/2438"&gt;this issue&lt;/a&gt;. After failure on the trial of the &lt;code&gt;--docker-privileged&lt;/code&gt; and &lt;code&gt;--docker-volumes&lt;/code&gt; parameters, I decided to leave it alone and try to really install GitLab Runner.&lt;/p&gt;
+&lt;p&gt;[&lt;strong&gt;Updated&lt;/strong&gt; Jul. 10th 2017]
+&lt;em&gt;By mounted repository directory explicitly, I resolved the issue mentioned below.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;del&gt;I got an error&lt;/del&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;del&gt;Running on runner--project-0-concurrent-0 via &lt;br&gt;
+    a853d0cb3c01...
+    Cloning repository...
+    fatal: repository '/usr/local/repo' does not exist
+    ERROR: Job failed: exit code 1
+    FATAL: exit code 1&lt;/del&gt;&lt;/p&gt;
+
+&lt;p&gt;With some solutions searching, I found &lt;a href="https://gitlab.com/gitlab-org/gitlab-ci-multi-runner/issues/2438"&gt;this issue&lt;/a&gt;. &lt;br&gt;
+&lt;del&gt;After failure on the trial of the &lt;code&gt;--docker-privileged&lt;/code&gt; and &lt;code&gt;--docker-volumes&lt;/code&gt; parameters, I decided to leave it alone and try to really install GitLab Runner.&lt;/del&gt;&lt;/p&gt;
 
 &lt;h3 id="originalgitlabrunner"&gt;Original GitLab Runner&lt;/h3&gt;
 
