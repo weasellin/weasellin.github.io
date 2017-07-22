@@ -1,4 +1,36 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 10 Jul 2017 04:02:07 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup GitLab Runner on Local</title><description>&lt;blockquote&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Sat, 22 Jul 2017 07:51:09 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup Jupyter PySpark Server</title><description>&lt;p&gt;From this &lt;a href="https://github.com/jupyter/docker-stacks/tree/master/pyspark-notebook"&gt;image&lt;/a&gt;, it's easy to start a Jupyter Notebook Server with PySpark.&lt;/p&gt;
+
+&lt;p&gt;To preserve file and data, we have to prepare a host directory, ex.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ export JUPYTER_DATA_DIR=${HOME}/service/jupyter_data
+$ mkdir -p ${JUPYTER_DATA_DIR}
+$ chmod 777 ${JUPYTER_DATA_DIR}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that, there is a workaround&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-jupyter-pyspark-server/</link><guid isPermaLink="false">350299f6-ad04-4a9f-bfee-2f348939d105</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 22 Jul 2017 07:48:21 GMT</pubDate><content:encoded>&lt;p&gt;From this &lt;a href="https://github.com/jupyter/docker-stacks/tree/master/pyspark-notebook"&gt;image&lt;/a&gt;, it's easy to start a Jupyter Notebook Server with PySpark.&lt;/p&gt;
+
+&lt;p&gt;To preserve file and data, we have to prepare a host directory, ex.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ export JUPYTER_DATA_DIR=${HOME}/service/jupyter_data
+$ mkdir -p ${JUPYTER_DATA_DIR}
+$ chmod 777 ${JUPYTER_DATA_DIR}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that, there is a workaround to allow the privilege of notebook user in the container, by &lt;code&gt;chmod&lt;/code&gt; for the &lt;code&gt;${JUPYTER_DATA_DIR}&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;By the following command, the &lt;a href="https://github.com/jupyterlab/jupyterlab"&gt;Jupyter Lab&lt;/a&gt; Notebook server would be up in &lt;code&gt;http://localhost:8888&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ docker run \
+    --name ansel-jupyterlab \
+    -p 8888:8888 \
+    -d \
+    --restart always \
+    -v ${JUPYTER_DATA_DIR}:/home/jovyan \
+    jupyter/pyspark-notebook \
+    start.sh \
+    jupyter lab \
+    --NotebookApp.token='******'
+&lt;/code&gt;&lt;/pre&gt;</content:encoded></item><item><title>How to Setup GitLab Runner on Local</title><description>&lt;blockquote&gt;
   &lt;p&gt;The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage.&lt;/p&gt;
 &lt;/blockquote&gt;
 
