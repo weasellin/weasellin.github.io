@@ -1,4 +1,35 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ansellin.club:2368/</link><generator>Ghost 0.11</generator><lastBuildDate>Sat, 22 Jul 2017 07:51:09 GMT</lastBuildDate><atom:link href="http://ansellin.club:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup Jupyter PySpark Server</title><description>&lt;p&gt;From this &lt;a href="https://github.com/jupyter/docker-stacks/tree/master/pyspark-notebook"&gt;image&lt;/a&gt;, it's easy to start a Jupyter Notebook Server with PySpark.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ghost.ansellin.club/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 24 Jul 2017 22:15:29 GMT</lastBuildDate><atom:link href="http://ghost.ansellin.club/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup Nginx Reverse Proxy</title><description>&lt;p&gt;The Nginx Reverse Proxy service could be started easily by the &lt;a href="https://hub.docker.com/_/nginx/"&gt;Nginx image&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;With my configuration,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git clone https://github.com/weasellin/nginx_conf.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Replace the &lt;code&gt;${HOST_IP}&lt;/code&gt; in the &lt;code&gt;service_*.conf&lt;/code&gt; with the host ip&lt;/p&gt;
+
+&lt;p&gt;Since the Nginx would be run in the container, we have to explicitly&lt;/p&gt;</description><link>http://ghost.ansellin.club/how-to-setup-nginx-proxy/</link><guid isPermaLink="false">5db4d743-7eca-45cb-8acb-70f522d5fc87</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Mon, 24 Jul 2017 22:07:32 GMT</pubDate><content:encoded>&lt;p&gt;The Nginx Reverse Proxy service could be started easily by the &lt;a href="https://hub.docker.com/_/nginx/"&gt;Nginx image&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;With my configuration,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git clone https://github.com/weasellin/nginx_conf.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Replace the &lt;code&gt;${HOST_IP}&lt;/code&gt; in the &lt;code&gt;service_*.conf&lt;/code&gt; with the host ip&lt;/p&gt;
+
+&lt;p&gt;Since the Nginx would be run in the container, we have to explicitly assign host ip instead of using &lt;code&gt;localhost&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To run the service,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$docker run \
+    --name ansel-nginx \
+    -p 80:80 \
+    -d \
+    --restart always \
+    -v ${NGINX_CONF_DIR}:/etc/nginx/conf.d \
+    nginx
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id="dynamicreverseproxyadvanced"&gt;Dynamic Reverse Proxy (Advanced)&lt;/h3&gt;</content:encoded></item><item><title>How to Setup Jupyter PySpark Server</title><description>&lt;p&gt;From this &lt;a href="https://github.com/jupyter/docker-stacks/tree/master/pyspark-notebook"&gt;image&lt;/a&gt;, it's easy to start a Jupyter Notebook Server with PySpark.&lt;/p&gt;
 
 &lt;p&gt;To preserve file and data, we have to prepare a host directory, ex.&lt;/p&gt;
 
@@ -7,7 +38,7 @@ $ mkdir -p ${JUPYTER_DATA_DIR}
 $ chmod 777 ${JUPYTER_DATA_DIR}
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Notice that, there is a workaround&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-jupyter-pyspark-server/</link><guid isPermaLink="false">350299f6-ad04-4a9f-bfee-2f348939d105</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 22 Jul 2017 07:48:21 GMT</pubDate><content:encoded>&lt;p&gt;From this &lt;a href="https://github.com/jupyter/docker-stacks/tree/master/pyspark-notebook"&gt;image&lt;/a&gt;, it's easy to start a Jupyter Notebook Server with PySpark.&lt;/p&gt;
+&lt;p&gt;Notice that, there is a workaround&lt;/p&gt;</description><link>http://ghost.ansellin.club/how-to-setup-jupyter-pyspark-server/</link><guid isPermaLink="false">350299f6-ad04-4a9f-bfee-2f348939d105</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 22 Jul 2017 07:48:21 GMT</pubDate><content:encoded>&lt;p&gt;From this &lt;a href="https://github.com/jupyter/docker-stacks/tree/master/pyspark-notebook"&gt;image&lt;/a&gt;, it's easy to start a Jupyter Notebook Server with PySpark.&lt;/p&gt;
 
 &lt;p&gt;To preserve file and data, we have to prepare a host directory, ex.&lt;/p&gt;
 
@@ -41,7 +72,7 @@ $ chmod 777 ${JUPYTER_DATA_DIR}
 &lt;p&gt;First of all, by following &lt;a href="https://docs.gitlab.com/runner/"&gt;this document&lt;/a&gt;, &lt;br&gt;
 I tried to run a dockerized gitlab-runner, &lt;br&gt;
 and mounted local repository directory with &lt;br&gt;
-&lt;code&gt;-v &amp;lt;local_&lt;/code&gt;&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-gitlab-runner/</link><guid isPermaLink="false">aa4e72f5-f717-49e9-9943-233260378f01</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Wed, 05 Jul 2017 06:50:15 GMT</pubDate><content:encoded>&lt;blockquote&gt;
+&lt;code&gt;-v &amp;lt;local_&lt;/code&gt;&lt;/p&gt;</description><link>http://ghost.ansellin.club/how-to-setup-gitlab-runner/</link><guid isPermaLink="false">aa4e72f5-f717-49e9-9943-233260378f01</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Wed, 05 Jul 2017 06:50:15 GMT</pubDate><content:encoded>&lt;blockquote&gt;
   &lt;p&gt;The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage.&lt;/p&gt;
 &lt;/blockquote&gt;
 
@@ -158,7 +189,7 @@ VERSION:
 
 &lt;h3 id="howtosetupghost"&gt;How to Setup Ghost&lt;/h3&gt;
 
-&lt;p&gt;From this &lt;a href="https://hub.docker.com/_/ghost/"&gt;docker image&lt;/a&gt;, it's very easy to run&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-my-ghost/</link><guid isPermaLink="false">887297c0-0c08-4ef9-a3d3-ccec858dcdff</guid><category>develop</category><dc:creator>Ansel Lin</dc:creator><pubDate>Mon, 03 Jul 2017 20:47:54 GMT</pubDate><content:encoded>&lt;p&gt;By this setup, you can run a &lt;a href="https://ghost.org/"&gt;Ghost&lt;/a&gt; service on local host, and publish the content to &lt;a href="https://pages.github.com/"&gt;GitHub Pages&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;From this &lt;a href="https://hub.docker.com/_/ghost/"&gt;docker image&lt;/a&gt;, it's very easy to run&lt;/p&gt;</description><link>http://ghost.ansellin.club/how-to-setup-my-ghost/</link><guid isPermaLink="false">887297c0-0c08-4ef9-a3d3-ccec858dcdff</guid><category>develop</category><dc:creator>Ansel Lin</dc:creator><pubDate>Mon, 03 Jul 2017 20:47:54 GMT</pubDate><content:encoded>&lt;p&gt;By this setup, you can run a &lt;a href="https://ghost.org/"&gt;Ghost&lt;/a&gt; service on local host, and publish the content to &lt;a href="https://pages.github.com/"&gt;GitHub Pages&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h3 id="beforethissetup"&gt;Before this Setup&lt;/h3&gt;
 
@@ -231,7 +262,7 @@ Good job! Deployed to Github Pages.
 
 &lt;p&gt;Follow my &lt;a href="https://github.com/weasellin/dotfile"&gt;dotfile&lt;/a&gt;'s document to setup my &lt;code&gt;.bashrc&lt;/code&gt;, &lt;code&gt;.inputrc&lt;/code&gt;, and &lt;code&gt;.vimrc&lt;/code&gt;.&lt;/p&gt;
 
-&lt;p&gt;Where the term, "rc", originated from could found&lt;/p&gt;</description><link>http://ansellin.club:2368/how-to-setup-my-develop-environment/</link><guid isPermaLink="false">a4dc02c3-d9da-4f3b-8354-2a7e7aa5b6fa</guid><category>develop</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 09:01:29 GMT</pubDate><content:encoded>&lt;p&gt;The following settings are based on Ubuntu 14.04 LTS.&lt;/p&gt;
+&lt;p&gt;Where the term, "rc", originated from could found&lt;/p&gt;</description><link>http://ghost.ansellin.club/how-to-setup-my-develop-environment/</link><guid isPermaLink="false">a4dc02c3-d9da-4f3b-8354-2a7e7aa5b6fa</guid><category>develop</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 09:01:29 GMT</pubDate><content:encoded>&lt;p&gt;The following settings are based on Ubuntu 14.04 LTS.&lt;/p&gt;
 
 &lt;h3 id="howtosetupgithubclient"&gt;How to Setup GitHub Client&lt;/h3&gt;
 
@@ -294,7 +325,7 @@ $ pyenv deactivate
 &lt;h3 id="howtosetupdocker"&gt;How to Setup Docker&lt;/h3&gt;
 
 &lt;p&gt;Follow this &lt;a href="https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#install-using-the-repository"&gt;official document&lt;/a&gt; to install Docker CE. &lt;br&gt;
-Then be sure to follow the &lt;a href="https://docs.docker.com/engine/installation/linux/linux-postinstall/#manage-docker-as-a-non-root-user"&gt;post-install steps&lt;/a&gt; to allow non-super-user to use docker.&lt;/p&gt;</content:encoded></item><item><title>Welcome to Ghost</title><description>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list&lt;/p&gt;</description><link>http://ansellin.club:2368/welcome-to-ghost/</link><guid isPermaLink="false">61a5c5e0-5774-4d58-9578-d2b2d2dbfcf5</guid><category>Getting Started</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 07:49:54 GMT</pubDate><content:encoded>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list on the left and see a preview of it on the right. Click the little pencil icon at the top of the preview to edit this post and read the next section!&lt;/p&gt;
+Then be sure to follow the &lt;a href="https://docs.docker.com/engine/installation/linux/linux-postinstall/#manage-docker-as-a-non-root-user"&gt;post-install steps&lt;/a&gt; to allow non-super-user to use docker.&lt;/p&gt;</content:encoded></item><item><title>Welcome to Ghost</title><description>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list&lt;/p&gt;</description><link>http://ghost.ansellin.club/welcome-to-ghost/</link><guid isPermaLink="false">61a5c5e0-5774-4d58-9578-d2b2d2dbfcf5</guid><category>Getting Started</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 07:49:54 GMT</pubDate><content:encoded>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list on the left and see a preview of it on the right. Click the little pencil icon at the top of the preview to edit this post and read the next section!&lt;/p&gt;
 
 &lt;h2 id="gettingstarted"&gt;Getting Started&lt;/h2&gt;
 

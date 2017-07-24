@@ -2,7 +2,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>How to Setup GitLab Runner on Local</title>
+    <title>How to Setup Nginx Reverse Proxy</title>
     <meta name="description" content="">
 
     <meta name="HandheldFriendly" content="True">
@@ -15,15 +15,15 @@
     
     <meta property="og:site_name" content="Ansel's Notes">
     <meta property="og:type" content="article">
-    <meta property="og:title" content="How to Setup GitLab Runner on Local">
-    <meta property="og:description" content="The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage. Dockerized GitLab Runner (recommended approach) First of all, by following this document,  I tried to run a dockerized gitlab-runner,  and mounted local repository directory with  -v &amp;lt;local_">
-    <meta property="og:url" content="//weasellin.github.io/how-to-setup-gitlab-runner/">
-    <meta property="article:published_time" content="2017-07-05T06:50:15.000Z">
-    <meta property="article:modified_time" content="2017-07-10T04:00:55.000Z">
+    <meta property="og:title" content="How to Setup Nginx Reverse Proxy">
+    <meta property="og:description" content="The Nginx Reverse Proxy service could be started easily by the Nginx image. With my configuration, $ git clone https://github.com/weasellin/nginx_conf.git Replace the ${HOST_IP} in the service_*.conf with the host ip Since the Nginx would be run in the container, we have to explicitly">
+    <meta property="og:url" content="//weasellin.github.io/how-to-setup-nginx-proxy/">
+    <meta property="article:published_time" content="2017-07-24T22:07:32.000Z">
+    <meta property="article:modified_time" content="2017-07-24T22:07:32.000Z">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="How to Setup GitLab Runner on Local">
-    <meta name="twitter:description" content="The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage. Dockerized GitLab Runner (recommended approach) First of all, by following this document,  I tried to run a dockerized gitlab-runner,  and mounted local repository directory with  -v &amp;lt;local_">
-    <meta name="twitter:url" content="//weasellin.github.io/how-to-setup-gitlab-runner/">
+    <meta name="twitter:title" content="How to Setup Nginx Reverse Proxy">
+    <meta name="twitter:description" content="The Nginx Reverse Proxy service could be started easily by the Nginx image. With my configuration, $ git clone https://github.com/weasellin/nginx_conf.git Replace the ${HOST_IP} in the service_*.conf with the host ip Since the Nginx would be run in the container, we have to explicitly">
+    <meta name="twitter:url" content="//weasellin.github.io/how-to-setup-nginx-proxy/">
     <meta name="twitter:label1" content="Written by">
     <meta name="twitter:data1" content="Ansel Lin">
     
@@ -42,11 +42,11 @@
         "url": "http://ghost.ansellin.club/author/ansel/",
         "sameAs": []
     },
-    "headline": "How to Setup GitLab Runner on Local",
-    "url": "http://ghost.ansellin.club/how-to-setup-gitlab-runner/",
-    "datePublished": "2017-07-05T06:50:15.000Z",
-    "dateModified": "2017-07-10T04:00:55.000Z",
-    "description": "The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage. Dockerized GitLab Runner (recommended approach) First of all, by following this document,  I tried to run a dockerized gitlab-runner,  and mounted local repository directory with  -v &amp;lt;local_",
+    "headline": "How to Setup Nginx Reverse Proxy",
+    "url": "http://ghost.ansellin.club/how-to-setup-nginx-proxy/",
+    "datePublished": "2017-07-24T22:07:32.000Z",
+    "dateModified": "2017-07-24T22:07:32.000Z",
+    "description": "The Nginx Reverse Proxy service could be started easily by the Nginx image. With my configuration, $ git clone https://github.com/weasellin/nginx_conf.git Replace the ${HOST_IP} in the service_*.conf with the host ip Since the Nginx would be run in the container, we have to explicitly",
     "mainEntityOfPage": {
         "@type": "WebPage",
         "@id": "http://ghost.ansellin.club"
@@ -839,124 +839,37 @@
         <article class="post">
 
             <header class="post-header">
-                <h1 class="post-title">How to Setup GitLab Runner on Local</h1>
+                <h1 class="post-title">How to Setup Nginx Reverse Proxy</h1>
                 <section class="post-meta">
                     <p class="author">by <a href="../../author/ansel/">Ansel Lin</a></p>
-                    <time class="post-date" datetime="2017-07-05">2017-07-05</time>
+                    <time class="post-date" datetime="2017-07-24">2017-07-24</time>
                 </section>
             </header>
             <section class="post-content">
 
-                <blockquote>
-  <p>The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage.</p>
-</blockquote>
+                <p>The Nginx Reverse Proxy service could be started easily by the <a href="//hub.docker.com/_/nginx/">Nginx image</a>.</p>
 
-<h3 id="dockerizedgitlabrunner">Dockerized GitLab Runner</h3>
+<p>With my configuration,</p>
 
-<p>(recommended approach)</p>
+<pre><code>$ git clone https://github.com/weasellin/nginx_conf.git
+</code></pre>
 
-<p>First of all, by following <a href="//docs.gitlab.com/runner/">this document</a>, <br>
-I tried to run a dockerized gitlab-runner, <br>
-and mounted local repository directory with <br>
-<code>-v &lt;local_repo_dir&gt;:&lt;local_repo_dir&gt;</code>
-and specified the working directory <br>
-<code>-w &lt;local_repo_dir&gt;</code>
-for the purpose of auto-load the CI config <code>.gitlab-ci.yml</code>.</p>
+<p>Replace the <code>${HOST_IP}</code> in the <code>service_*.conf</code> with the host ip</p>
 
-<pre><code>$ docker run \
+<p>Since the Nginx would be run in the container, we have to explicitly assign host ip instead of using <code>localhost</code>.</p>
+
+<p>To run the service,</p>
+
+<pre><code>$docker run \
+    --name ansel-nginx \
+    -p 80:80 \
     -d \
-    --name gitlab-runner-container \
     --restart always \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v &lt;local_repo_dir&gt;:&lt;local_repo_dir&gt; \
-    -w &lt;local_repo_dir&gt; \
-    gitlab/gitlab-runner:latest
+    -v ${NGINX_CONF_DIR}:/etc/nginx/conf.d \
+    nginx
 </code></pre>
 
-<p>To see <code>gitlab-runner</code> usage</p>
-
-<pre><code>$ docker exec -it gitlab-runner-container gitlab-runner
-
-NAME:
-   gitlab-runner - a GitLab Runner
-
-USAGE:
-   gitlab-runner [global options] command [command options] [arguments...]
-
-VERSION:
-   9.3.0 (3df822b)
-
-...
-</code></pre>
-
-<p>To run CI jobs</p>
-
-<pre><code>$ docker exec -it gitlab-runner-container \
-    gitlab-runner exec docker \
-    --docker-privileged \
-    [job_name]
-</code></pre>
-
-<p>If you use the image from the private docker registry, you could add the <code>--DOCKER_AUTH_CONFIG</code> with the <code>json</code> string from the <code>${HOME}/.docker/config.json</code>.</p>
-
-<pre><code>$ docker exec -it gitlab-runner-container \
-    gitlab-runner exec docker \
-    --docker-privileged \
-    --env DOCKER_AUTH_CONFIG='$(cat ~/.docker/config.json | tr -d '\040\011\012\015')' \
-    [job_name]
-</code></pre>
-
-<p>[<strong>Updated</strong> Jul. 10th 2017]
-<em>By mounted repository directory explicitly, I resolved the issue mentioned below.</em></p>
-
-<p><del>I got an error</del></p>
-
-<p><del>Running on runner--project-0-concurrent-0 via <br>
-    a853d0cb3c01...
-    Cloning repository...
-    fatal: repository '/usr/local/repo' does not exist
-    ERROR: Job failed: exit code 1
-    FATAL: exit code 1</del></p>
-
-<p>With some solutions searching, I found <a href="//gitlab.com/gitlab-org/gitlab-ci-multi-runner/issues/2438">this issue</a>. <br>
-<del>After failure on the trial of the <code>--docker-privileged</code> and <code>--docker-volumes</code> parameters, I decided to leave it alone and try to really install GitLab Runner.</del></p>
-
-<h3 id="originalgitlabrunner">Original GitLab Runner</h3>
-
-<p>Follow <a href="//docs.gitlab.com/runner/install/linux-repository.html">this document</a> to install</p>
-
-<pre><code>$ curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-ci-multi-runner/script.deb.sh | sudo bash
-$ sudo apt-get install gitlab-ci-multi-runner
-$ gitlab-runner 
-NAME:
-   gitlab-runner - a GitLab Runner
-
-USAGE:
-   gitlab-runner [global options] command [command options] [arguments...]
-
-VERSION:
-   9.3.0 (3df822b)
-</code></pre>
-
-<p>If you want to execute docker commands in the job script:</p>
-
-<ul>
-<li><code>DOCKER_AUTH_CONFIG</code> should be set with the content of <code>~/.docker/config.json</code>, if the job requires registry privileged.</li>
-<li><code>image: docker:latest</code> should be specified in <code>.gitlab-ci.yml</code>.</li>
-<li>the <code>/var/run/docker.sock</code> should be mounted by the <code>gitlab-runner exec docker</code> option <code>--docker-volumes</code>.</li>
-<li>the other environment variables which will be used in job configurations.</li>
-</ul>
-
-<p>for example:</p>
-
-<pre><code>$ gitlab-runner exec docker \
-    --env DOCKER_AUTH_CONFIG='{"auths":{"registry.private":{"auth":"xxx"}}}' \
-    --env CI_PROJECT_PATH_SLUG='project/path' \
-    --docker-volumes /var/run/docker.sock:/var/run/docker.sock \
-    staging
-</code></pre>
-
-<p>from now on, you can run the GitLab runner locally to test your project in each stages and jobs.</p>
+<h3 id="dynamicreverseproxyadvanced">Dynamic Reverse Proxy (Advanced)</h3>
 
             </section>
 

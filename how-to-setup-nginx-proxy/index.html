@@ -1,0 +1,186 @@
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>How to Setup Nginx Reverse Proxy</title>
+    <meta name="description" content="">
+
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=ac3be77226">
+
+
+    <link rel="canonical" href="index.html">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <link rel="amphtml" href="amp/index.html">
+    
+    <meta property="og:site_name" content="Ansel's Notes">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="How to Setup Nginx Reverse Proxy">
+    <meta property="og:description" content="The Nginx Reverse Proxy service could be started easily by the Nginx image. With my configuration, $ git clone https://github.com/weasellin/nginx_conf.git Replace the ${HOST_IP} in the service_*.conf with the host ip Since the Nginx would be run in the container, we have to explicitly">
+    <meta property="og:url" content="//weasellin.github.io/how-to-setup-nginx-proxy/">
+    <meta property="article:published_time" content="2017-07-24T22:07:32.000Z">
+    <meta property="article:modified_time" content="2017-07-24T22:07:32.000Z">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="How to Setup Nginx Reverse Proxy">
+    <meta name="twitter:description" content="The Nginx Reverse Proxy service could be started easily by the Nginx image. With my configuration, $ git clone https://github.com/weasellin/nginx_conf.git Replace the ${HOST_IP} in the service_*.conf with the host ip Since the Nginx would be run in the container, we have to explicitly">
+    <meta name="twitter:url" content="//weasellin.github.io/how-to-setup-nginx-proxy/">
+    <meta name="twitter:label1" content="Written by">
+    <meta name="twitter:data1" content="Ansel Lin">
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "Ansel&#x27;s Notes",
+        "logo": "http://ghost.ansellin.club/ghost/img/ghosticon.jpg"
+    },
+    "author": {
+        "@type": "Person",
+        "name": "Ansel Lin",
+        "url": "http://ghost.ansellin.club/author/ansel/",
+        "sameAs": []
+    },
+    "headline": "How to Setup Nginx Reverse Proxy",
+    "url": "http://ghost.ansellin.club/how-to-setup-nginx-proxy/",
+    "datePublished": "2017-07-24T22:07:32.000Z",
+    "dateModified": "2017-07-24T22:07:32.000Z",
+    "description": "The Nginx Reverse Proxy service could be started easily by the Nginx image. With my configuration, $ git clone https://github.com/weasellin/nginx_conf.git Replace the ${HOST_IP} in the service_*.conf with the host ip Since the Nginx would be run in the container, we have to explicitly",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "http://ghost.ansellin.club"
+    }
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.11">
+    <link rel="alternate" type="application/rss+xml" title="Ansel's Notes" href="../rss/index.html">
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home"><a href="../">Home</a></li>
+    </ul>
+        <a class="subscribe-button icon-feed" href="../rss/index.rss">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">How to Setup Nginx Reverse Proxy</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2017-07-24">24 July 2017</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>The Nginx Reverse Proxy service could be started easily by the <a href="//hub.docker.com/_/nginx/">Nginx image</a>.</p>
+
+<p>With my configuration,</p>
+
+<pre><code>$ git clone https://github.com/weasellin/nginx_conf.git
+</code></pre>
+
+<p>Replace the <code>${HOST_IP}</code> in the <code>service_*.conf</code> with the host ip</p>
+
+<p>Since the Nginx would be run in the container, we have to explicitly assign host ip instead of using <code>localhost</code>.</p>
+
+<p>To run the service,</p>
+
+<pre><code>$docker run \
+    --name ansel-nginx \
+    -p 80:80 \
+    -d \
+    --restart always \
+    -v ${NGINX_CONF_DIR}:/etc/nginx/conf.d \
+    nginx
+</code></pre>
+
+<h3 id="dynamicreverseproxyadvanced">Dynamic Reverse Proxy (Advanced)</h3>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/ansel/">Ansel Lin</a></h4>
+
+                    <p>Read <a href="../author/ansel/">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="//twitter.com/intent/tweet?text=How%20to%20Setup%20Nginx%20Reverse%20Proxy&amp;url=http://weasellin.github.io/how-to-setup-nginx-proxy/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="//www.facebook.com/sharer/sharer.php?u=http://weasellin.github.io/how-to-setup-nginx-proxy/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="//plus.google.com/share?url=http://weasellin.github.io/how-to-setup-nginx-proxy/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../how-to-setup-jupyter-pyspark-server/">
+        <section class="post">
+            <h2>How to Setup Jupyter PySpark Server</h2>
+            <p>From this image, it's easy to start a Jupyter Notebook Server with PySpark. To preserve file and data, we…</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../">Ansel's Notes</a> © 2017</section>
+            <section class="poweredby">Proudly published with <a href="//ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=ac3be77226"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=ac3be77226"></script>
+
+</body>
