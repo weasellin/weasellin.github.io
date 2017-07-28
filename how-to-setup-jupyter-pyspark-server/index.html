@@ -25,7 +25,7 @@
     <meta property="og:description" content="From this image, it's easy to start a Jupyter Notebook Server with PySpark. To preserve file and data, we have to prepare a host directory, ex. $ export JUPYTER_DATA_DIR=${HOME}/service/jupyter_data $ mkdir -p ${JUPYTER_DATA_DIR} $ chmod 777 ${JUPYTER_DATA_DIR} Notice that, there is a workaround">
     <meta property="og:url" content="//weasellin.github.io/how-to-setup-jupyter-pyspark-server/">
     <meta property="article:published_time" content="2017-07-22T07:48:21.000Z">
-    <meta property="article:modified_time" content="2017-07-22T07:48:27.000Z">
+    <meta property="article:modified_time" content="2017-07-26T03:40:16.000Z">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="How to Setup Jupyter PySpark Server">
     <meta name="twitter:description" content="From this image, it's easy to start a Jupyter Notebook Server with PySpark. To preserve file and data, we have to prepare a host directory, ex. $ export JUPYTER_DATA_DIR=${HOME}/service/jupyter_data $ mkdir -p ${JUPYTER_DATA_DIR} $ chmod 777 ${JUPYTER_DATA_DIR} Notice that, there is a workaround">
@@ -51,7 +51,7 @@
     "headline": "How to Setup Jupyter PySpark Server",
     "url": "http://ghost.ansellin.club/how-to-setup-jupyter-pyspark-server/",
     "datePublished": "2017-07-22T07:48:21.000Z",
-    "dateModified": "2017-07-22T07:48:27.000Z",
+    "dateModified": "2017-07-26T03:40:16.000Z",
     "description": "From this image, it&#x27;s easy to start a Jupyter Notebook Server with PySpark. To preserve file and data, we have to prepare a host directory, ex. $ export JUPYTER_DATA_DIR&#x3D;${HOME}/service/jupyter_data $ mkdir -p ${JUPYTER_DATA_DIR} $ chmod 777 ${JUPYTER_DATA_DIR} Notice that, there is a workaround",
     "mainEntityOfPage": {
         "@type": "WebPage",
@@ -111,6 +111,8 @@ $ chmod 777 ${JUPYTER_DATA_DIR}
 </code></pre>
 
 <p>Notice that, there is a workaround to allow the privilege of notebook user in the container, by <code>chmod</code> for the <code>${JUPYTER_DATA_DIR}</code></p>
+
+<p><strong>TODO</strong>: study the docker option of <code>--userns-remap</code></p>
 
 <p>By the following command, the <a href="//github.com/jupyterlab/jupyterlab">Jupyter Lab</a> Notebook server would be up in <code>http://localhost:8888</code></p>
 
