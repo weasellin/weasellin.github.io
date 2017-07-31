@@ -19,7 +19,7 @@
     <meta property="og:description" content="From this image, it's easy to start a Jupyter Notebook Server with PySpark. To preserve file and data, we have to prepare a host directory, ex. $ export JUPYTER_DATA_DIR=${HOME}/service/jupyter_data $ mkdir -p ${JUPYTER_DATA_DIR} $ chmod 777 ${JUPYTER_DATA_DIR} Notice that, there is a workaround">
     <meta property="og:url" content="//weasellin.github.io/how-to-setup-jupyter-pyspark-server/">
     <meta property="article:published_time" content="2017-07-22T07:48:21.000Z">
-    <meta property="article:modified_time" content="2017-07-26T03:40:16.000Z">
+    <meta property="article:modified_time" content="2017-07-31T15:52:18.000Z">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="How to Setup Jupyter PySpark Server">
     <meta name="twitter:description" content="From this image, it's easy to start a Jupyter Notebook Server with PySpark. To preserve file and data, we have to prepare a host directory, ex. $ export JUPYTER_DATA_DIR=${HOME}/service/jupyter_data $ mkdir -p ${JUPYTER_DATA_DIR} $ chmod 777 ${JUPYTER_DATA_DIR} Notice that, there is a workaround">
@@ -45,7 +45,7 @@
     "headline": "How to Setup Jupyter PySpark Server",
     "url": "http://ghost.ansellin.club/how-to-setup-jupyter-pyspark-server/",
     "datePublished": "2017-07-22T07:48:21.000Z",
-    "dateModified": "2017-07-26T03:40:16.000Z",
+    "dateModified": "2017-07-31T15:52:18.000Z",
     "description": "From this image, it&#x27;s easy to start a Jupyter Notebook Server with PySpark. To preserve file and data, we have to prepare a host directory, ex. $ export JUPYTER_DATA_DIR&#x3D;${HOME}/service/jupyter_data $ mkdir -p ${JUPYTER_DATA_DIR} $ chmod 777 ${JUPYTER_DATA_DIR} Notice that, there is a workaround",
     "mainEntityOfPage": {
         "@type": "WebPage",
@@ -873,6 +873,35 @@ $ chmod 777 ${JUPYTER_DATA_DIR}
     jupyter lab \
     --NotebookApp.token='******'
 </code></pre>
+
+<h3 id="multiplepysparkkernels">Multiple PySpark Kernels</h3>
+
+<p>For the requirement of running multiple version of pyspark kernels, I initiate a project in <a href="//github.com/weasellin/jupyter_pyspark">here</a>, which is referring from <a href="//mengdong.github.io/2016/08/08/fully-armed-pyspark-with-ipython-and-jupyter/">this post</a>.</p>
+
+<p>To build the image:</p>
+
+<pre><code>$ git clone https://github.com/weasellin/jupyter_pyspark.git
+$ cd jupyter_pyspark
+$ docker build -t jupyter/pyspark_multi_kernels .
+</code></pre>
+
+<p>To run the image, similar as the previous one:</p>
+
+<pre><code>$ docker run \
+    --name ansel-jupyterlab \
+    -p 8888:8888 \
+    -d \
+    --restart always \
+    -v ${JUPYTER_DATA_DIR}:/home/jovyan \
+    jupyter/pyspark_multi_kernels \
+    start.sh \
+    jupyter lab \
+    --NotebookApp.token='******'
+</code></pre>
+
+<p>Then the kernels would be shown in the options.</p>
+
+<p><amp-img src="//weasellin.github.io/content/images/2017/07/Screenshot-from-2017-07-31-23-48-27.png" alt width="1309" height="744" layout="responsive"></amp-img></p>
 
             </section>
 

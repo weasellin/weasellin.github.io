@@ -1,4 +1,4 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ghost.ansellin.club/</link><generator>Ghost 0.11</generator><lastBuildDate>Fri, 28 Jul 2017 09:23:05 GMT</lastBuildDate><atom:link href="http://ghost.ansellin.club/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup Nginx Reverse Proxy</title><description>&lt;p&gt;The Nginx Reverse Proxy service could be started easily by the &lt;a href="https://hub.docker.com/_/nginx/"&gt;Nginx image&lt;/a&gt;.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ghost.ansellin.club/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 31 Jul 2017 15:56:47 GMT</lastBuildDate><atom:link href="http://ghost.ansellin.club/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup Nginx Reverse Proxy</title><description>&lt;p&gt;The Nginx Reverse Proxy service could be started easily by the &lt;a href="https://hub.docker.com/_/nginx/"&gt;Nginx image&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;With my configuration,&lt;/p&gt;
 
@@ -63,7 +63,36 @@ $ chmod 777 ${JUPYTER_DATA_DIR}
     start.sh \
     jupyter lab \
     --NotebookApp.token='******'
-&lt;/code&gt;&lt;/pre&gt;</content:encoded></item><item><title>How to Setup GitLab Runner on Local</title><description>&lt;blockquote&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id="multiplepysparkkernels"&gt;Multiple PySpark Kernels&lt;/h3&gt;
+
+&lt;p&gt;For the requirement of running multiple version of pyspark kernels, I initiate a project in &lt;a href="https://github.com/weasellin/jupyter_pyspark"&gt;here&lt;/a&gt;, which is referring from &lt;a href="https://mengdong.github.io/2016/08/08/fully-armed-pyspark-with-ipython-and-jupyter/"&gt;this post&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;To build the image:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git clone https://github.com/weasellin/jupyter_pyspark.git
+$ cd jupyter_pyspark
+$ docker build -t jupyter/pyspark_multi_kernels .
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To run the image, similar as the previous one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ docker run \
+    --name ansel-jupyterlab \
+    -p 8888:8888 \
+    -d \
+    --restart always \
+    -v ${JUPYTER_DATA_DIR}:/home/jovyan \
+    jupyter/pyspark_multi_kernels \
+    start.sh \
+    jupyter lab \
+    --NotebookApp.token='******'
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then the kernels would be shown in the options.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="http://ghost.ansellin.club/content/images/2017/07/Screenshot-from-2017-07-31-23-48-27.png" alt=""&gt;&lt;/p&gt;</content:encoded></item><item><title>How to Setup GitLab Runner on Local</title><description>&lt;blockquote&gt;
   &lt;p&gt;The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage.&lt;/p&gt;
 &lt;/blockquote&gt;
 
