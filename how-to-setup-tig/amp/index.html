@@ -2,7 +2,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>How to Setup My Develop Environment</title>
+    <title>How to Setup Tig</title>
     <meta name="description" content="">
 
     <meta name="HandheldFriendly" content="True">
@@ -15,21 +15,17 @@
     
     <meta property="og:site_name" content="Ansel's Notes">
     <meta property="og:type" content="article">
-    <meta property="og:title" content="How to Setup My Develop Environment">
-    <meta property="og:description" content="The following settings are based on Ubuntu 14.04 LTS. How to Setup GitHub Client Follow this official document to setup GitHub auth key. How to Setup My rc Files Follow my dotfile's document to setup my .bashrc, .inputrc, and .vimrc. Where the term, &quot;rc&quot;, originated from could found in">
-    <meta property="og:url" content="//weasellin.github.io/how-to-setup-my-develop-environment/">
-    <meta property="article:published_time" content="2017-07-01T09:01:29.000Z">
-    <meta property="article:modified_time" content="2017-08-02T11:50:29.000Z">
-    <meta property="article:tag" content="develop">
-    
+    <meta property="og:title" content="How to Setup Tig">
+    <meta property="og:description" content="From this tig project. $ git clone http://github.com/jonas/tig $ cd tig $ make $ make install Then, using tig to enter the interactive mode of git.">
+    <meta property="og:url" content="//weasellin.github.io/how-to-setup-tig/">
+    <meta property="article:published_time" content="2017-08-02T12:34:06.000Z">
+    <meta property="article:modified_time" content="2017-08-02T12:34:06.000Z">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="How to Setup My Develop Environment">
-    <meta name="twitter:description" content="The following settings are based on Ubuntu 14.04 LTS. How to Setup GitHub Client Follow this official document to setup GitHub auth key. How to Setup My rc Files Follow my dotfile's document to setup my .bashrc, .inputrc, and .vimrc. Where the term, &quot;rc&quot;, originated from could found in">
-    <meta name="twitter:url" content="//weasellin.github.io/how-to-setup-my-develop-environment/">
+    <meta name="twitter:title" content="How to Setup Tig">
+    <meta name="twitter:description" content="From this tig project. $ git clone http://github.com/jonas/tig $ cd tig $ make $ make install Then, using tig to enter the interactive mode of git.">
+    <meta name="twitter:url" content="//weasellin.github.io/how-to-setup-tig/">
     <meta name="twitter:label1" content="Written by">
     <meta name="twitter:data1" content="Ansel Lin">
-    <meta name="twitter:label2" content="Filed under">
-    <meta name="twitter:data2" content="develop">
     
     <script type="application/ld+json">
 {
@@ -46,12 +42,11 @@
         "url": "http://ghost.ansellin.club/author/ansel/",
         "sameAs": []
     },
-    "headline": "How to Setup My Develop Environment",
-    "url": "http://ghost.ansellin.club/how-to-setup-my-develop-environment/",
-    "datePublished": "2017-07-01T09:01:29.000Z",
-    "dateModified": "2017-08-02T11:50:29.000Z",
-    "keywords": "develop",
-    "description": "The following settings are based on Ubuntu 14.04 LTS. How to Setup GitHub Client Follow this official document to setup GitHub auth key. How to Setup My rc Files Follow my dotfile&#x27;s document to setup my .bashrc, .inputrc, and .vimrc. Where the term, &quot;rc&quot;, originated from could found in",
+    "headline": "How to Setup Tig",
+    "url": "http://ghost.ansellin.club/how-to-setup-tig/",
+    "datePublished": "2017-08-02T12:34:06.000Z",
+    "dateModified": "2017-08-02T12:34:06.000Z",
+    "description": "From this tig project. $ git clone http://github.com/jonas/tig $ cd tig $ make $ make install Then, using tig to enter the interactive mode of git.",
     "mainEntityOfPage": {
         "@type": "WebPage",
         "@id": "http://ghost.ansellin.club"
@@ -844,94 +839,25 @@
         <article class="post">
 
             <header class="post-header">
-                <h1 class="post-title">How to Setup My Develop Environment</h1>
+                <h1 class="post-title">How to Setup Tig</h1>
                 <section class="post-meta">
                     <p class="author">by <a href="../../author/ansel/">Ansel Lin</a></p>
-                    <time class="post-date" datetime="2017-07-01">2017-07-01</time>
+                    <time class="post-date" datetime="2017-08-02">2017-08-02</time>
                 </section>
             </header>
             <section class="post-content">
 
-                <p>The following settings are based on Ubuntu 14.04 LTS.</p>
+                <p>From this <a href="//github.com/jonas/tig">tig</a> project.</p>
 
-<h3 id="howtosetupgithubclient">How to Setup GitHub Client</h3>
-
-<p>Follow this <a href="//help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/">official document</a> to setup GitHub auth key.</p>
-
-<h3 id="howtosetupmyrcfiles">How to Setup My rc Files</h3>
-
-<p>Follow my <a href="//github.com/weasellin/dotfile">dotfile</a>'s document to setup my <code>.bashrc</code>, <code>.inputrc</code>, and <code>.vimrc</code>.</p>
-
-<p>Where the term, "rc", originated from could found in <a href="//stackoverflow.com/questions/11030552/what-does-rc-mean-in-dot-files">here</a>.</p>
-
-<h3 id="howtosetuppythonpyenv">How to Setup Python pyenv</h3>
-
-<p>Follow this <a href="//github.com/pyenv/pyenv/wiki/Common-build-problems#requirements">document</a> to install required libraries:</p>
-
-<pre><code>$ sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
+<pre><code>$ git clone http://github.com/jonas/tig
+$ cd tig
+$ make
+$ make install
 </code></pre>
 
-<p>Then by this <a href="//github.com/pyenv/pyenv-installer#github-way-recommended">document</a> to install pyenv:</p>
+<p>Then, using <code>tig</code> to enter the interactive mode of git.</p>
 
-<pre><code>$ curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
-
-...
-
-# Load pyenv automatically by adding
-# the following to ~/.bash_profile:
-
-export PATH="/home/weasellin/.pyenv/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-</code></pre>
-
-<p>Install some python versions to pyenv:</p>
-
-<pre><code>$ pyenv install --list
-   ...
-$ pyenv install 2.7.8
-$ pyenv install 3.6.0
-$ pyenv install pypy3-2.4.0
-$ pyenv versions
-* system (set by /home/weasellin/.pyenv/version)
-  2.7.8
-  3.6.0
-  pypy3-2.4.0
-</code></pre>
-
-<p>Create virtual env from installed versions:</p>
-
-<pre><code>$ pyenv virtualenv 2.7.8 myenv-2.7.8
-$ pyenv virtualenv 3.6.0 myenv-3.6.0
-$ pyenv virtualenv pypy3-2.4.0 myenv-pypy3-2.4.0
-</code></pre>
-
-<p>Activate &amp; deactivate virtual env:</p>
-
-<pre><code>$ pyenv activate myenv-3.6.0
-$ pyenv deactivate
-</code></pre>
-
-<h3 id="howtosetupdocker">How to Setup Docker</h3>
-
-<p>Follow this <a href="//docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#install-using-the-repository">official document</a> to install Docker CE. <br>
-Then be sure to follow the <a href="//docs.docker.com/engine/installation/linux/linux-postinstall/#manage-docker-as-a-non-root-user">post-install steps</a> to allow non-super-user to use docker.</p>
-
-<pre><code>$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-$ sudo add-apt-repository \
-      "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-      $(lsb_release -cs) \
-      stable"
-$ sudo apt-get update
-$ sudo apt-get install docker-ce
-$ sudo gpasswd -a ${USER} docker
-$ newgrp docker
-$ docker run hello-world
-========================
-Hello from Docker!
-This message shows that your installation appears to be working correctly.
-......
-</code></pre>
+<p><amp-img src="//weasellin.github.io/content/images/2017/08/Screenshot-from-2017-08-02-20-32-04.png" alt width="1305" height="262" layout="responsive"></amp-img></p>
 
             </section>
 

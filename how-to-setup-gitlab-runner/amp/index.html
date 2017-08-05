@@ -19,7 +19,7 @@
     <meta property="og:description" content="The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage. Dockerized GitLab Runner (recommended approach) First of all, by following this document,  I tried to run a dockerized gitlab-runner,  and mounted local repository directory with  -v &amp;lt;local_">
     <meta property="og:url" content="//weasellin.github.io/how-to-setup-gitlab-runner/">
     <meta property="article:published_time" content="2017-07-05T06:50:15.000Z">
-    <meta property="article:modified_time" content="2017-07-26T03:29:32.000Z">
+    <meta property="article:modified_time" content="2017-08-03T02:57:21.000Z">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="How to Setup GitLab Runner on Local">
     <meta name="twitter:description" content="The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage. Dockerized GitLab Runner (recommended approach) First of all, by following this document,  I tried to run a dockerized gitlab-runner,  and mounted local repository directory with  -v &amp;lt;local_">
@@ -45,7 +45,7 @@
     "headline": "How to Setup GitLab Runner on Local",
     "url": "http://ghost.ansellin.club/how-to-setup-gitlab-runner/",
     "datePublished": "2017-07-05T06:50:15.000Z",
-    "dateModified": "2017-07-26T03:29:32.000Z",
+    "dateModified": "2017-08-03T02:57:21.000Z",
     "description": "The purpose of this note is to setup a GitLab Runner on local to run GitLab CI jobs in the developing stage. Dockerized GitLab Runner (recommended approach) First of all, by following this document,  I tried to run a dockerized gitlab-runner,  and mounted local repository directory with  -v &amp;lt;local_",
     "mainEntityOfPage": {
         "@type": "WebPage",
@@ -896,11 +896,14 @@ VERSION:
 
 <p>To run CI jobs</p>
 
-<pre><code>$ docker exec -it gitlab-runner-container \
+<pre><code># if you want to test some changes, you have to commit them first
+$ docker exec -it gitlab-runner-container \
     gitlab-runner exec docker \
     --docker-privileged \
     [job_name]
 </code></pre>
+
+<p><strong>Note</strong>: you have to (locally) commit your change first for gitlab-runner to stick in.</p>
 
 <hr>
 

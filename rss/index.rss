@@ -1,4 +1,24 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ghost.ansellin.club/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 31 Jul 2017 15:56:47 GMT</lastBuildDate><atom:link href="http://ghost.ansellin.club/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup Nginx Reverse Proxy</title><description>&lt;p&gt;The Nginx Reverse Proxy service could be started easily by the &lt;a href="https://hub.docker.com/_/nginx/"&gt;Nginx image&lt;/a&gt;.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ghost.ansellin.club/</link><generator>Ghost 0.11</generator><lastBuildDate>Sat, 05 Aug 2017 05:59:46 GMT</lastBuildDate><atom:link href="http://ghost.ansellin.club/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup Tig</title><description>&lt;p&gt;From this &lt;a href="https://github.com/jonas/tig"&gt;tig&lt;/a&gt; project.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git clone http://github.com/jonas/tig
+$ cd tig
+$ make
+$ make install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, using &lt;code&gt;tig&lt;/code&gt; to enter the interactive mode of git.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="http://ghost.ansellin.club/content/images/2017/08/Screenshot-from-2017-08-02-20-32-04.png" alt=""&gt;&lt;/p&gt;</description><link>http://ghost.ansellin.club/how-to-setup-tig/</link><guid isPermaLink="false">097e75e3-d279-4c5d-bc74-57915ab6f5c7</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Wed, 02 Aug 2017 12:34:06 GMT</pubDate><content:encoded>&lt;p&gt;From this &lt;a href="https://github.com/jonas/tig"&gt;tig&lt;/a&gt; project.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git clone http://github.com/jonas/tig
+$ cd tig
+$ make
+$ make install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, using &lt;code&gt;tig&lt;/code&gt; to enter the interactive mode of git.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="http://ghost.ansellin.club/content/images/2017/08/Screenshot-from-2017-08-02-20-32-04.png" alt=""&gt;&lt;/p&gt;</content:encoded></item><item><title>How to Setup Nginx Reverse Proxy</title><description>&lt;p&gt;The Nginx Reverse Proxy service could be started easily by the &lt;a href="https://hub.docker.com/_/nginx/"&gt;Nginx image&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;With my configuration,&lt;/p&gt;
 
@@ -152,11 +172,14 @@ VERSION:
 
 &lt;p&gt;To run CI jobs&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;$ docker exec -it gitlab-runner-container \
+&lt;pre&gt;&lt;code&gt;# if you want to test some changes, you have to commit them first
+$ docker exec -it gitlab-runner-container \
     gitlab-runner exec docker \
     --docker-privileged \
     [job_name]
 &lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt;: you have to (locally) commit your change first for gitlab-runner to stick in.&lt;/p&gt;
 
 &lt;hr&gt;
 
@@ -366,7 +389,23 @@ $ pyenv deactivate
 &lt;h3 id="howtosetupdocker"&gt;How to Setup Docker&lt;/h3&gt;
 
 &lt;p&gt;Follow this &lt;a href="https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#install-using-the-repository"&gt;official document&lt;/a&gt; to install Docker CE. &lt;br&gt;
-Then be sure to follow the &lt;a href="https://docs.docker.com/engine/installation/linux/linux-postinstall/#manage-docker-as-a-non-root-user"&gt;post-install steps&lt;/a&gt; to allow non-super-user to use docker.&lt;/p&gt;</content:encoded></item><item><title>Welcome to Ghost</title><description>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list&lt;/p&gt;</description><link>http://ghost.ansellin.club/welcome-to-ghost/</link><guid isPermaLink="false">61a5c5e0-5774-4d58-9578-d2b2d2dbfcf5</guid><category>Getting Started</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 07:49:54 GMT</pubDate><content:encoded>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list on the left and see a preview of it on the right. Click the little pencil icon at the top of the preview to edit this post and read the next section!&lt;/p&gt;
+Then be sure to follow the &lt;a href="https://docs.docker.com/engine/installation/linux/linux-postinstall/#manage-docker-as-a-non-root-user"&gt;post-install steps&lt;/a&gt; to allow non-super-user to use docker.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+$ sudo add-apt-repository \
+      "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+      $$(lsb_release -cs) \
+      stable"
+$ sudo apt-get update
+$ sudo apt-get install docker-ce
+$ sudo gpasswd -a ${USER} docker
+$ newgrp docker
+$ docker run hello-world
+========================
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+......
+&lt;/code&gt;&lt;/pre&gt;</content:encoded></item><item><title>Welcome to Ghost</title><description>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list&lt;/p&gt;</description><link>http://ghost.ansellin.club/welcome-to-ghost/</link><guid isPermaLink="false">61a5c5e0-5774-4d58-9578-d2b2d2dbfcf5</guid><category>Getting Started</category><dc:creator>Ansel Lin</dc:creator><pubDate>Sat, 01 Jul 2017 07:49:54 GMT</pubDate><content:encoded>&lt;p&gt;You're live! Nice. We've put together a little post to introduce you to the Ghost editor and get you started. You can manage your content by signing in to the admin area at &lt;code&gt;&amp;lt;your blog URL&amp;gt;/ghost/&lt;/code&gt;. When you arrive, you can select this post from a list on the left and see a preview of it on the right. Click the little pencil icon at the top of the preview to edit this post and read the next section!&lt;/p&gt;
 
 &lt;h2 id="gettingstarted"&gt;Getting Started&lt;/h2&gt;
 
