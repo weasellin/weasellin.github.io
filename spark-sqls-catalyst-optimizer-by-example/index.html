@@ -1,0 +1,282 @@
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Spark SQL’s Catalyst Optimizer by Example</title>
+    <meta name="description" content="">
+
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=ac3be77226">
+
+
+    <link rel="canonical" href="index.html">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <link rel="amphtml" href="amp/index.html">
+    
+    <meta property="og:site_name" content="Ansel's Notes">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Spark SQL’s Catalyst Optimizer by Example">
+    <meta property="og:description" content="The introduction of the Catalyst optimizer for Spark SQL can be found in the post of Deep Dive into Spark SQL’s Catalyst Optimizer. Basically, there're four phases of optimization: analysis   logical plan optimization   physical planning   code generation And in this post, I will try to demonstrate by example. Example">
+    <meta property="og:url" content="//weasellin.github.io/spark-sqls-catalyst-optimizer-by-example/">
+    <meta property="article:published_time" content="2017-08-28T09:05:16.000Z">
+    <meta property="article:modified_time" content="2017-08-28T09:05:16.000Z">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Spark SQL’s Catalyst Optimizer by Example">
+    <meta name="twitter:description" content="The introduction of the Catalyst optimizer for Spark SQL can be found in the post of Deep Dive into Spark SQL’s Catalyst Optimizer. Basically, there're four phases of optimization: analysis   logical plan optimization   physical planning   code generation And in this post, I will try to demonstrate by example. Example">
+    <meta name="twitter:url" content="//weasellin.github.io/spark-sqls-catalyst-optimizer-by-example/">
+    <meta name="twitter:label1" content="Written by">
+    <meta name="twitter:data1" content="Ansel Lin">
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "Ansel&#x27;s Notes",
+        "logo": "http://ghost.ansellin.club/ghost/img/ghosticon.jpg"
+    },
+    "author": {
+        "@type": "Person",
+        "name": "Ansel Lin",
+        "url": "http://ghost.ansellin.club/author/ansel/",
+        "sameAs": []
+    },
+    "headline": "Spark SQL’s Catalyst Optimizer by Example",
+    "url": "http://ghost.ansellin.club/spark-sqls-catalyst-optimizer-by-example/",
+    "datePublished": "2017-08-28T09:05:16.000Z",
+    "dateModified": "2017-08-28T09:05:16.000Z",
+    "description": "The introduction of the Catalyst optimizer for Spark SQL can be found in the post of Deep Dive into Spark SQL’s Catalyst Optimizer. Basically, there&#x27;re four phases of optimization: analysis   logical plan optimization   physical planning   code generation And in this post, I will try to demonstrate by example. Example",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "http://ghost.ansellin.club"
+    }
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.11">
+    <link rel="alternate" type="application/rss+xml" title="Ansel's Notes" href="../rss/index.html">
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home"><a href="../">Home</a></li>
+    </ul>
+        <a class="subscribe-button icon-feed" href="../rss/index.rss">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Spark SQL’s Catalyst Optimizer by Example</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2017-08-28">28 August 2017</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>The introduction of the Catalyst optimizer for Spark SQL can be found in the post of <a href="//databricks.com/blog/2015/04/13/deep-dive-into-spark-sqls-catalyst-optimizer.html">Deep Dive into Spark SQL’s Catalyst Optimizer</a>.</p>
+
+<p>Basically, there're four phases of optimization:</p>
+
+<ol>
+<li>analysis  </li>
+<li>logical plan optimization  </li>
+<li>physical planning  </li>
+<li>code generation</li>
+</ol>
+
+<p>And in this post, I will try to demonstrate by example.</p>
+
+<h2 id="example">Example</h2>
+
+<p>The following statement is a common usage of aggregation group count and filter.</p>
+
+<pre><code>df.select(  
+    df.ViewLogInfo.PublisherId
+      .alias('advertiser_id'),
+    df.BrowserInfo) 
+  .where(
+    df.user_id.third_party_cookie_id
+      .isNotNull())
+  .groupBy(F.col('advertiser_id'))
+  .count()
+  .explain(True)
+</code></pre>
+
+<h4 id="analysis">Analysis</h4>
+
+<p>Look at the difference from</p>
+
+<pre><code>== Parsed Logical Plan ==
+'Aggregate ['advertiser_id], [unresolvedalias('advertiser_id, None), count(1) AS count#161L]
+...
+</code></pre>
+
+<p>to</p>
+
+<pre><code>== Analyzed Logical Plan ==
+advertiser_id: int, count: bigint
+Aggregate [advertiser_id#152], [advertiser_id#152, count(1) AS count#161L]
+...
+</code></pre>
+
+<p>In the analysis phase, the query terms will be </p>
+
+<ul>
+<li>resolved column</li>
+<li>assigned to the column number</li>
+<li>determined the column type</li>
+</ul>
+
+<h4 id="logicaloptimization">Logical Optimization</h4>
+
+<p>Look at the difference from</p>
+
+<pre><code>== Analyzed Logical Plan ==
+...
++- Project [advertiser_id#152, BrowserInfo#7]
+   +- Filter isnotnull(user_id#22.third_party_cookie_id)
+      +- Project [ViewLogInfo#27.PublisherId AS advertiser_id#152, BrowserInfo#7, user_id#22]
+...
+</code></pre>
+
+<p>to</p>
+
+<pre><code>== Optimized Logical Plan ==
+...
++- Project [ViewLogInfo#27.PublisherId AS advertiser_id#152]
+   +- Filter isnotnull(user_id#22.third_party_cookie_id)
+...
+</code></pre>
+
+<p>In this phase, the <code>Project</code> and <code>Filter</code> is reordered to apply <code>Filter</code> first to avoid unnecessary cost of operation.</p>
+
+<h4 id="physicalplanning">Physical Planning</h4>
+
+<p>Look at the difference from</p>
+
+<pre><code>== Optimized Logical Plan ==
+Aggregate [advertiser_id#152], [advertiser_id#152, count(1) AS count#161L]
+...
+</code></pre>
+
+<p>to</p>
+
+<pre><code>== Physical Plan ==
+*HashAggregate(keys=[advertiser_id#152], functions=[count(1)], output=[advertiser_id#152, count#161L])
++- Exchange hashpartitioning(advertiser_id#152, 200)
+   +- *HashAggregate(keys=[advertiser_id#152], functions=[partial_count(1)], output=[advertiser_id#152, count#166L])
+...
+</code></pre>
+
+<p>The <code>groupBy</code> and aggregation <code>count</code> will be executed by <code>HashAggregate</code>, <code>Exchange hashpartitioning</code>, and <code>HashAggregate</code> sequentially.</p>
+
+<p>In addition, only the necessary columns will be scan. However, according to the scan plan, only the first level columns will be specified in the planning, so it's worth to investigate that if this optimization implies that we should avoid to encapsulate the fields into second or more level depth to avoid extra data scan.</p>
+
+<pre><code>== Optimized Logical Plan ==
+...
+      +- Relation[TimeStamp#0L,CookieID#1,UserLoginID#2,PublisherCookieID#3,ClientIP#4,RefererURL#5,URL#6,BrowserInfo#7,IDSource#8,Host#9,LogId#10L,LogRouteFlag#11,_year#12,_month#13,_day#14,_hour#15,SessionToken#16,EventToken#17,write_time_diff#18L,AppDomainId#19L,ProcessId#20L,XId#21,user_id#22,conversion_id#23,... 4 more fields] parquet
+</code></pre>
+
+<p>to</p>
+
+<pre><code>== Physical Plan ==
+...
+            +- *Scan parquet [user_id#22,ViewLogInfo#27,_year#12,_month#13,_day#14,_hour#15] ...
+</code></pre>
+
+<hr>
+
+<p>Further reading:</p>
+
+<ul>
+<li><a href="//medium.com/@wx.london.cun/simple-queries-in-spark-catalyst-optimisation-1-5797bb1945bc">Simple queries in Spark Catalyst optimisation (1)</a></li>
+<li><a href="//medium.com/@wx.london.cun/simple-queries-in-spark-catalyst-optimisation-2-join-and-aggregation-c03f07a1dda8">Simple queries in Spark Catalyst optimisation (2) join and aggregation</a></li>
+</ul>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/ansel/">Ansel Lin</a></h4>
+
+                    <p>Read <a href="../author/ansel/">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="//twitter.com/intent/tweet?text=Spark%20SQL%E2%80%99s%20Catalyst%20Optimizer%20by%20Example&amp;url=http://weasellin.github.io/spark-sqls-catalyst-optimizer-by-example/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="//www.facebook.com/sharer/sharer.php?u=http://weasellin.github.io/spark-sqls-catalyst-optimizer-by-example/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="//plus.google.com/share?url=http://weasellin.github.io/spark-sqls-catalyst-optimizer-by-example/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../job-description/">
+        <section class="post">
+            <h2>My Job Description</h2>
+            <p>I wrote down this job description, corresponding to my role in Bridgewell, while I prepare to leave.  (However, it's…</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="../">Ansel's Notes</a> © 2017</section>
+            <section class="poweredby">Proudly published with <a href="//ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=ac3be77226"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=ac3be77226"></script>
+
+</body>

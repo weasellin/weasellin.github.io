@@ -1,4 +1,201 @@
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ghost.ansellin.club/</link><generator>Ghost 0.11</generator><lastBuildDate>Sat, 05 Aug 2017 05:59:46 GMT</lastBuildDate><atom:link href="http://ghost.ansellin.club/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>How to Setup Tig</title><description>&lt;p&gt;From this &lt;a href="https://github.com/jonas/tig"&gt;tig&lt;/a&gt; project.&lt;/p&gt;
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>Ansel's Notes</title><description>Thoughts, stories and ideas.</description><link>http://ghost.ansellin.club/</link><generator>Ghost 0.11</generator><lastBuildDate>Mon, 28 Aug 2017 09:09:08 GMT</lastBuildDate><atom:link href="http://ghost.ansellin.club/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Spark SQL’s Catalyst Optimizer by Example</title><description>&lt;p&gt;The introduction of the Catalyst optimizer for Spark SQL can be found in the post of &lt;a href="https://databricks.com/blog/2015/04/13/deep-dive-into-spark-sqls-catalyst-optimizer.html"&gt;Deep Dive into Spark SQL’s Catalyst Optimizer&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Basically, there're four phases of optimization:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;analysis  &lt;/li&gt;
+&lt;li&gt;logical plan optimization  &lt;/li&gt;
+&lt;li&gt;physical planning  &lt;/li&gt;
+&lt;li&gt;code generation&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;And in this post, I will try to demonstrate by example.&lt;/p&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;</description><link>http://ghost.ansellin.club/spark-sqls-catalyst-optimizer-by-example/</link><guid isPermaLink="false">e47054eb-18a8-42b0-8218-34d3cd1f6692</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Mon, 28 Aug 2017 09:05:16 GMT</pubDate><content:encoded>&lt;p&gt;The introduction of the Catalyst optimizer for Spark SQL can be found in the post of &lt;a href="https://databricks.com/blog/2015/04/13/deep-dive-into-spark-sqls-catalyst-optimizer.html"&gt;Deep Dive into Spark SQL’s Catalyst Optimizer&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Basically, there're four phases of optimization:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;analysis  &lt;/li&gt;
+&lt;li&gt;logical plan optimization  &lt;/li&gt;
+&lt;li&gt;physical planning  &lt;/li&gt;
+&lt;li&gt;code generation&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;And in this post, I will try to demonstrate by example.&lt;/p&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+
+&lt;p&gt;The following statement is a common usage of aggregation group count and filter.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;df.select(  
+    df.ViewLogInfo.PublisherId
+      .alias('advertiser_id'),
+    df.BrowserInfo) 
+  .where(
+    df.user_id.third_party_cookie_id
+      .isNotNull())
+  .groupBy(F.col('advertiser_id'))
+  .count()
+  .explain(True)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id="analysis"&gt;Analysis&lt;/h4&gt;
+
+&lt;p&gt;Look at the difference from&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;== Parsed Logical Plan ==
+'Aggregate ['advertiser_id], [unresolvedalias('advertiser_id, None), count(1) AS count#161L]
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;== Analyzed Logical Plan ==
+advertiser_id: int, count: bigint
+Aggregate [advertiser_id#152], [advertiser_id#152, count(1) AS count#161L]
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the analysis phase, the query terms will be &lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;resolved column&lt;/li&gt;
+&lt;li&gt;assigned to the column number&lt;/li&gt;
+&lt;li&gt;determined the column type&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id="logicaloptimization"&gt;Logical Optimization&lt;/h4&gt;
+
+&lt;p&gt;Look at the difference from&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;== Analyzed Logical Plan ==
+...
++- Project [advertiser_id#152, BrowserInfo#7]
+   +- Filter isnotnull(user_id#22.third_party_cookie_id)
+      +- Project [ViewLogInfo#27.PublisherId AS advertiser_id#152, BrowserInfo#7, user_id#22]
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;== Optimized Logical Plan ==
+...
++- Project [ViewLogInfo#27.PublisherId AS advertiser_id#152]
+   +- Filter isnotnull(user_id#22.third_party_cookie_id)
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this phase, the &lt;code&gt;Project&lt;/code&gt; and &lt;code&gt;Filter&lt;/code&gt; is reordered to apply &lt;code&gt;Filter&lt;/code&gt; first to avoid unnecessary cost of operation.&lt;/p&gt;
+
+&lt;h4 id="physicalplanning"&gt;Physical Planning&lt;/h4&gt;
+
+&lt;p&gt;Look at the difference from&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;== Optimized Logical Plan ==
+Aggregate [advertiser_id#152], [advertiser_id#152, count(1) AS count#161L]
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;== Physical Plan ==
+*HashAggregate(keys=[advertiser_id#152], functions=[count(1)], output=[advertiser_id#152, count#161L])
++- Exchange hashpartitioning(advertiser_id#152, 200)
+   +- *HashAggregate(keys=[advertiser_id#152], functions=[partial_count(1)], output=[advertiser_id#152, count#166L])
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;groupBy&lt;/code&gt; and aggregation &lt;code&gt;count&lt;/code&gt; will be executed by &lt;code&gt;HashAggregate&lt;/code&gt;, &lt;code&gt;Exchange hashpartitioning&lt;/code&gt;, and &lt;code&gt;HashAggregate&lt;/code&gt; sequentially.&lt;/p&gt;
+
+&lt;p&gt;In addition, only the necessary columns will be scan. However, according to the scan plan, only the first level columns will be specified in the planning, so it's worth to investigate that if this optimization implies that we should avoid to encapsulate the fields into second or more level depth to avoid extra data scan.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;== Optimized Logical Plan ==
+...
+      +- Relation[TimeStamp#0L,CookieID#1,UserLoginID#2,PublisherCookieID#3,ClientIP#4,RefererURL#5,URL#6,BrowserInfo#7,IDSource#8,Host#9,LogId#10L,LogRouteFlag#11,_year#12,_month#13,_day#14,_hour#15,SessionToken#16,EventToken#17,write_time_diff#18L,AppDomainId#19L,ProcessId#20L,XId#21,user_id#22,conversion_id#23,... 4 more fields] parquet
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;== Physical Plan ==
+...
+            +- *Scan parquet [user_id#22,ViewLogInfo#27,_year#12,_month#13,_day#14,_hour#15] ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;Further reading:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://medium.com/@wx.london.cun/simple-queries-in-spark-catalyst-optimisation-1-5797bb1945bc"&gt;Simple queries in Spark Catalyst optimisation (1)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://medium.com/@wx.london.cun/simple-queries-in-spark-catalyst-optimisation-2-join-and-aggregation-c03f07a1dda8"&gt;Simple queries in Spark Catalyst optimisation (2) join and aggregation&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content:encoded></item><item><title>My Job Description</title><description>&lt;p&gt;I wrote down this job description, corresponding to my role in Bridgewell, while I prepare to leave. &lt;br&gt;
+(However, it's already closed at this writing time.)&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Software Engineer (Data Team)&lt;/p&gt;
+  
+  &lt;p&gt;Bridgewell Inc.&lt;/p&gt;
+  
+  &lt;p&gt;Taipei, Taiwan&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In Bridgewell, we are building and operating a data-intensive platform for the mainly purpose of internet advertisement.&lt;/p&gt;</description><link>http://ghost.ansellin.club/job-description/</link><guid isPermaLink="false">1faed24b-1131-41f2-b104-5729a647d2a6</guid><dc:creator>Ansel Lin</dc:creator><pubDate>Sun, 27 Aug 2017 08:08:01 GMT</pubDate><content:encoded>&lt;p&gt;I wrote down this job description, corresponding to my role in Bridgewell, while I prepare to leave. &lt;br&gt;
+(However, it's already closed at this writing time.)&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Software Engineer (Data Team)&lt;/p&gt;
+  
+  &lt;p&gt;Bridgewell Inc.&lt;/p&gt;
+  
+  &lt;p&gt;Taipei, Taiwan&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In Bridgewell, we are building and operating a data-intensive platform for the mainly purpose of internet advertisement. Our customers cover the largest e-commerce companies in Taiwan and branding requirements from many kinds of industries.&lt;/p&gt;
+
+&lt;p&gt;In Data Team, our biggest responsibility is to make sure the system could reliably serve the high quality data, since we make decision based on data. There are many exciting challenges in our daily work. One of the largest is that our platform have to process data with throughput over 2TB per day, along with up to thousands of attributes per record, and have to instantly reflect analysis, association results for the business requirements. &lt;br&gt;
+In addition, by employing many cutting-edge technologies, we are highly focusing on improving our data’s quality assurance and platform’s performance, and reliability.&lt;/p&gt;
+
+&lt;h4 id="whatyouwilldoinourteam"&gt;what you will do in our team&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;work on and dive into the high performance required data platform&lt;/li&gt;
+&lt;li&gt;collaborate with data scientist to design and model data content and schema&lt;/li&gt;
+&lt;li&gt;define and investigate the data integrity problem and defection&lt;/li&gt;
+&lt;li&gt;ensure the timeliness, completeness, and quality of the data delivery&lt;/li&gt;
+&lt;li&gt;fulfill the ad-hoc data analysis demands for business intelligence&lt;/li&gt;
+&lt;li&gt;study all kinds of data processing solution of streaming, batch, OLTP and OLAP&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id="whatweareusingnow"&gt;what we are using now&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Python ecosystem&lt;/li&gt;
+&lt;li&gt;data ETL and warehousing with Kafka, Cassandra, Spark, and HDFS&lt;/li&gt;
+&lt;li&gt;data aggregation, analysis and visualization with OpenTSDB, Grafana, Fluentd, Elasticsearch, and Kibana&lt;/li&gt;
+&lt;li&gt;development and deployment with Docker, Gitlab, Gitlab CI, Jenkins, and Ansible&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id="whatwewantyouhave"&gt;what we want you have&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;experience in Python&lt;/li&gt;
+&lt;li&gt;preliminary understanding of data structure, algorithm and complexity&lt;/li&gt;
+&lt;li&gt;understanding of data en/decoding (serialization/deserialization)&lt;/li&gt;
+&lt;li&gt;experience or interest in distributed computing and storage engine&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id="whatweappreciateifyoulove"&gt;what we appreciate if you love&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;chasing the quality of data and software systems passionately&lt;/li&gt;
+&lt;li&gt;taking challenges to learn new technologies, knowledge, by exploration, introducing, and create the impact&lt;/li&gt;
+&lt;li&gt;involving team and company’s culture shaping to make us better&lt;/li&gt;
+&lt;/ul&gt;</content:encoded></item><item><title>How to Setup Tig</title><description>&lt;p&gt;From this &lt;a href="https://github.com/jonas/tig"&gt;tig&lt;/a&gt; project.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;$ git clone http://github.com/jonas/tig
 $ cd tig
