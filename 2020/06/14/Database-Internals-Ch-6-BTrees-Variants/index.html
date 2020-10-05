@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Database-Internals-Ch-6-BTrees-Variants | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Abstracting Node Updates, allow to have different life cycles on-disk pages in-memory raw binary cached versions in-memory language-native representations (materialized)   Three problems for in-place">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Database-Internals-Ch-6-BTrees-Variants">
+<meta property="og:url" content="https://weasellin.github.io/2020/06/14/Database-Internals-Ch-6-BTrees-Variants/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="Abstracting Node Updates, allow to have different life cycles on-disk pages in-memory raw binary cached versions in-memory language-native representations (materialized)   Three problems for in-place">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-06-14T23:19:13.000Z">
+<meta property="article:modified_time" content="2020-06-28T03:45:26.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="database_internals">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Database-Internals-Ch-6-BTrees-Variants" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Database-Internals-Ch-6-BTrees-Variants
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/06/14/Database-Internals-Ch-6-BTrees-Variants/" class="article-date">
+  <time datetime="2020-06-14T23:19:13.000Z" itemprop="datePublished">2020-06-14</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>Abstracting Node Updates, allow to have different life cycles<ul>
+<li>on-disk pages</li>
+<li>in-memory raw binary cached versions</li>
+<li>in-memory language-native representations (materialized)</li>
+</ul>
+</li>
+<li>Three problems for in-place update B-Tree implementation<ul>
+<li><em>write amplification</em><ul>
+<li>updating a disk-resident page copy on every update</li>
+</ul>
+</li>
+<li><em>space amplification</em><ul>
+<li>preserve some unused buffer space for future insertion and update, and included in transferring</li>
+</ul>
+</li>
+<li><em>complexity of concurrency</em><ul>
+<li>solving concurrency and dealing with latches</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Copy-on-Write-B-Trees"><a href="#Copy-on-Write-B-Trees" class="headerlink" title="Copy-on-Write B-Trees"></a>Copy-on-Write B-Trees</h2><ul>
+<li>content updating<ul>
+<li>make a copy on the modified nodes</li>
+<li>on completion, switch the topmost pointer</li>
+</ul>
+</li>
+<li>pros<ul>
+<li>tree is immutable</li>
+<li>readers require no sync, no lock</li>
+<li>inherent structure of MVCC (multiversioned)</li>
+</ul>
+</li>
+<li>cons<ul>
+<li>requires extra page copying</li>
+<li>requires more space (but not too much since the shallow tree depth)\</li>
+</ul>
+</li>
+<li>ex. <em>Lightning Memory-Mapped Database</em> (LMDB)<ul>
+<li>k-v store used by the OpenLDAP</li>
+<li>single-level data store</li>
+<li>direct memory map, no application-level cache, no materialization</li>
+</ul>
+</li>
+</ul>
+<h2 id="Lazy-B-Trees"><a href="#Lazy-B-Trees" class="headerlink" title="Lazy B-Trees"></a>Lazy B-Trees</h2><ul>
+<li>buffer updates and propagate them with a delay</li>
+</ul>
+<h3 id="WiredTiger"><a href="#WiredTiger" class="headerlink" title="WiredTiger"></a>WiredTiger</h3><ul>
+<li>default MongoDB’s storage engine</li>
+<li>data structures:<ul>
+<li>for a node, <em>clean</em> page consists of just index, initially constructed from the on-disk page image</li>
+<li>for a node, <em>update buffer</em>, implemented using <em>skiplists</em>, complexity similar to search trees, better concurrency profile</li>
+</ul>
+</li>
+<li>operations<ul>
+<li>when content updating, save into the <em>update buffer</em> list</li>
+<li>when reading, the update buffers are merge with the on-disk page content</li>
+<li>when flushing, the update buffers contents are <em>reconciled</em> and persisted on disk<ul>
+<li>split or merge according to the reconciled page size</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>pros<ul>
+<li>page updates and structural modifications are performed by the background thread</li>
+</ul>
+</li>
+</ul>
+<h3 id="Lazy-Adaptive-Tree"><a href="#Lazy-Adaptive-Tree" class="headerlink" title="Lazy-Adaptive Tree"></a>Lazy-Adaptive Tree</h3><ul>
+<li><em>update buffers</em> attach to subtrees</li>
+<li>when buffer full, it’s propagating to lower tree levels’ buffer</li>
+<li>when the propagation reaching the leaf level and the buffer full, if flush to disk and change tree structure at once.</li>
+</ul>
+<h2 id="FD-Trees"><a href="#FD-Trees" class="headerlink" title="FD-Trees"></a>FD-Trees</h2><ul>
+<li>small mutable <em>head tree</em> &amp; multiple immutable sorted <em>runs</em><ul>
+<li>limit the surface area, where random write I/O in the <em>head tree</em></li>
+<li><em>head tree</em> is a small B-Tree buffering the updates</li>
+<li>once <em>head tree</em> get full, contents are transferred to the immutable <em>run</em></li>
+<li>propagating records from upper level run to lower level</li>
+</ul>
+</li>
+<li><em>Fractional Cascading</em><ul>
+<li>helps to reduce the cost of locating an item in the lower cascading levels</li>
+<li><em>bridges</em> between neighboring-level</li>
+<li>pull every N-th item from the lower level</li>
+</ul>
+</li>
+<li><em>Logarithmic Runs</em><ul>
+<li>increasing by factor k to previous level</li>
+<li>propagating from up to down when <em>run</em> get full</li>
+</ul>
+</li>
+</ul>
+<h2 id="Bw-Trees"><a href="#Bw-Trees" class="headerlink" title="Bw-Trees"></a>Bw-Trees</h2><ul>
+<li><em>Buzzword-Tree</em>, try to resolve the <em>three problems</em> at once</li>
+<li><em>Update Chains</em><ul>
+<li>each logical node for B-Tree consist of a linked list head from latest update: <em>delta</em> -&gt; <em>delta</em> -&gt; … -&gt; <em>base</em></li>
+<li><em>base node</em>: cache of the disk copy page contents</li>
+<li><em>delta node</em>: all the modifications, can represents inserts, updates, or deletes</li>
+<li>logical rather than physical<ul>
+<li>node sizes are unlikely to be page aligned</li>
+<li>no need to pre-allocate space</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>Concurrency</em><ul>
+<li>each logical node for B-Tree has a <em>logical identifier</em></li>
+<li>maintained with an in-memory <em>mapping table</em></li>
+<li>the mapping table contains virtual links to the <em>update chain</em>‘s head (latest delta node)</li>
+<li>updated with <em>Compare-and-Swap</em> (lock-free)</li>
+</ul>
+</li>
+<li><em>Structural Modification Operations</em><ul>
+<li>SMO</li>
+<li>Split<ul>
+<li>append a special <em>split delta</em> node to the splitting node</li>
+<li><em>split delta</em> node with the midpoint separator key &amp; the pointer to the new logical sibling node</li>
+<li>similar to <em>B_link-Tree</em>‘s <em>half-split</em></li>
+<li>update the parent with the new child node</li>
+</ul>
+</li>
+<li>Merge<ul>
+<li>append a special <em>remove delta</em> node to the <em>right</em> sibling, indicating the start of merge SMO</li>
+<li>append a special <em>merge delta</em> node to the <em>left</em> sibling to point to the right sibling so to logical merge the contents</li>
+<li>update the parent to remove the link to the right sibling</li>
+</ul>
+</li>
+<li>Prevent concurrent SMO<ul>
+<li>an <em>abort delta</em> node is installed on the parent, like a write lock</li>
+<li>remove when SMO completes</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>Consolidation &amp; GC</em><ul>
+<li>once the delta chain length reaches a threshold, consolidate the chain into a new node</li>
+<li>then write to disk and update the mapping table</li>
+<li>but need to wait for all reader complete to reclaim the memory, <em>epoch-based reclaimation</em></li>
+</ul>
+</li>
+<li>ex. <em>Sled</em>, <em>OpenBw-Tree</em> (by CMU Database Group)</li>
+</ul>
+<h2 id="Cache-Oblivious-B-Trees"><a href="#Cache-Oblivious-B-Trees" class="headerlink" title="Cache-Oblivious B-Trees"></a>Cache-Oblivious B-Trees</h2><ul>
+<li>automatically optimize the parameters, ex. block size, page size, cache line size for arbitrary adjacent two levels of memory hierarchy</li>
+<li><em>van Emde Boas Layout</em><ul>
+<li>split the B-tree from the middle level, recursive for the subtree</li>
+<li>result in the <code>sqrt(N)</code> size subtrees</li>
+<li>any recursive subtree is stored in a contiguous block of memory</li>
+<li><em>packed array</em> with parameter <em>density threshold</em> to allow gaps for insertion or update</li>
+<li>array grow or shrink when become too dense or sparse</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/07/01/Database-Internals-Ch-7-Log-Strutured-Storage/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Database-Internals-Ch-7-Log-Strutured-Storage
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/05/28/Database-Internals-Ch-5-Transaction-Processing-and-Recovery/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Database-Internals-Ch-5-Transaction-Processing-and-Recovery</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

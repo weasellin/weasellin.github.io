@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Hadoop Application Architectures Ch.5 Graph Processing on Hadoop | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Use cases:  page ranking social network investment funds underlying equities route planning  gragh querying v.s. graph processing onion joining v.s. message sending The Bulk Synchronous Parallel (BSP)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop Application Architectures Ch.5 Graph Processing on Hadoop">
+<meta property="og:url" content="https://weasellin.github.io/2019/12/16/Hadoop-Application-Architectures-Ch-5-Graph-Processing-on-Hadoop/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="Use cases:  page ranking social network investment funds underlying equities route planning  gragh querying v.s. graph processing onion joining v.s. message sending The Bulk Synchronous Parallel (BSP)">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2019-12-16T06:32:23.000Z">
+<meta property="article:modified_time" content="2020-01-21T00:47:52.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="hadoop">
+<meta property="article:tag" content="hadoop_application_architectures">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Hadoop-Application-Architectures-Ch-5-Graph-Processing-on-Hadoop" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Hadoop Application Architectures Ch.5 Graph Processing on Hadoop
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/16/Hadoop-Application-Architectures-Ch-5-Graph-Processing-on-Hadoop/" class="article-date">
+  <time datetime="2019-12-16T06:32:23.000Z" itemprop="datePublished">2019-12-16</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Use cases:</p>
+<ul>
+<li>page ranking</li>
+<li>social network</li>
+<li>investment funds underlying equities</li>
+<li>route planning</li>
+</ul>
+<p><em>gragh querying</em> v.s. <em>graph processing</em></p>
+<p><em>onion joining</em> v.s. <em>message sending</em></p>
+<h3 id="The-Bulk-Synchronous-Parallel-BSP-Model"><a href="#The-Bulk-Synchronous-Parallel-BSP-Model" class="headerlink" title="The Bulk Synchronous Parallel (BSP) Model"></a>The Bulk Synchronous Parallel (BSP) Model</h3><ul>
+<li>proposed by Leslie Valiant of Harvard, a British computer scientist</li>
+<li>at the core of the Google graph processing solution, Pregel</li>
+<li>the distributed processes can send <strong>messages</strong> to each other, but they cannot act upon those messages until the next <strong>superstep</strong></li>
+</ul>
+<h2 id="Graph"><a href="#Graph" class="headerlink" title="Graph"></a>Graph</h2><ul>
+<li>an open source implementation of Google’s Pregel</li>
+<li>main stages<ul>
+<li>read and partition the data</li>
+<li>batch-process the graph with BSP</li>
+<li>write the graph back to disk</li>
+</ul>
+</li>
+</ul>
+<h2 id="GraphX"><a href="#GraphX" class="headerlink" title="GraphX"></a>GraphX</h2><ul>
+<li>contains an implementation of the Pregel API built on the Spark DAG engine</li>
+<li>RDD representation of EdgeRDD and VertexRDD</li>
+<li>could be mixed with Spark transformations</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/12/16/Hadoop-Application-Architectures-Ch-6-Orchestration/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Hadoop Application Architectures Ch.6 Orchestration
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/12/11/Join-in-Distributed-SQL-Engine/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Join in Distributed SQL Engine</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Ansel&#39;s Note">
+<meta property="og:url" content="https://weasellin.github.io/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="Ansel Lin">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-Database-Internals-Ch-9-Failure-Detection" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/10/05/Database-Internals-Ch-9-Failure-Detection/">Database-Internals-Ch-9-Failure-Detection</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/10/05/Database-Internals-Ch-9-Failure-Detection/" class="article-date">
+  <time datetime="2020-10-05T09:45:51.000Z" itemprop="datePublished">2020-10-05</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>prerequisite of consensus, atomic broadcast algorithms, and distributed systems</li>
+<li>link failure and process failure</li>
+<li>essential properties<ul>
+<li><em>completeness</em><ul>
+<li>all members notice the failure process</li>
+<li>eventually reach the final result</li>
+</ul>
+</li>
+<li><em>efficiency</em><ul>
+<li>how fast the failure process can be identified</li>
+</ul>
+</li>
+<li><em>accuracy</em><ul>
+<li>precisely detect process failure</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Heartbeats-amp-Pings"><a href="#Heartbeats-amp-Pings" class="headerlink" title="Heartbeats &amp; Pings"></a>Heartbeats &amp; Pings</h2><ul>
+<li>Fixed Time Interval<ul>
+<li>simple, need to carefully select frequency and timeout</li>
+</ul>
+</li>
+<li>Timeout-Free Failure Detector<ul>
+<li>under asynchronous assumption</li>
+</ul>
+</li>
+<li>Outsourced Heartbeats<ul>
+<li>heartbeats sending from neighbor nodes as failover</li>
+</ul>
+</li>
+<li>Phi-Accural Failure Detector<ul>
+<li>sliding window of ETA to estimate the failure probability</li>
+</ul>
+</li>
+<li>Gossip and Failure Detection<ul>
+<li>propagate and update heartbeat counters vector to random neighbor</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Database-Internals-Ch-7-Log-Strutured-Storage" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/07/01/Database-Internals-Ch-7-Log-Strutured-Storage/">Database-Internals-Ch-7-Log-Strutured-Storage</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/07/01/Database-Internals-Ch-7-Log-Strutured-Storage/" class="article-date">
+  <time datetime="2020-07-01T23:27:38.000Z" itemprop="datePublished">2020-07-01</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <table>
+<thead>
+<tr>
+<th>B-Tree</th>
+<th>LSM Tree</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>in-place update</td>
+<td>append-only</td>
+</tr>
+<tr>
+<td>optimized for read performance</td>
+<td>optimized for write performance</td>
+</tr>
+</tbody></table>
+<ul>
+<li>RUM Conjecture<ul>
+<li>trade-off between Read, Update, &amp; Memory</li>
+</ul>
+</li>
+</ul>
+<h2 id="LSM-Trees"><a href="#LSM-Trees" class="headerlink" title="LSM Trees"></a>LSM Trees</h2><ul>
+<li>immutable on-disk storage structure</li>
+<li>introduced by Patrick O’Neil &amp; Edward Cheng ‘96</li>
+<li>sequential write, prevent fragmentation, have higher density</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Amplification</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Read Amplification</td>
+<td>From needing to read the duplication from multiple tables</td>
+</tr>
+<tr>
+<td>Write Amplification</td>
+<td>From the multiple runs of the compactions</td>
+</tr>
+<tr>
+<td>Space Amplification</td>
+<td>From the duplication in multiple tables</td>
+</tr>
+</tbody></table>
+<h3 id="LSM-Tree-Structure"><a href="#LSM-Tree-Structure" class="headerlink" title="LSM Tree Structure"></a>LSM Tree Structure</h3><ul>
+<li><em>memtable</em><ul>
+<li>mutable in-memory</li>
+<li>serves read &amp; write</li>
+<li>triggered periodically or size threshold, flush to disk</li>
+<li>recoverable with WAL</li>
+</ul>
+</li>
+<li><em>Two-component LSM Tree</em><ul>
+<li>disk-resident tree &amp; memory-resident tree</li>
+<li>drawback: frequent merge by <em>memtable</em> flush</li>
+</ul>
+</li>
+<li><em>Multicomponent LSM Trees</em><ul>
+<li>multiple disk-resident tables (components)</li>
+<li>periodic <em>compaction</em> for several tables</li>
+</ul>
+</li>
+<li>life cycles<ul>
+<li>current memtable: receives writes &amp; serves reads</li>
+<li>flushing memtable: still available for read, but not writable</li>
+<li>on-disk flushing target: not readable, since still incomplete</li>
+<li>flushed tables: available for read as soon as the flushed memtable is discarded</li>
+<li>compacting tables: currently merging disk-resident tables</li>
+<li>compacted tables: created from flushed or other compacted tables</li>
+</ul>
+</li>
+<li><em>Deletion</em><ul>
+<li>just remove records from memtable will cause <em>resurrect</em></li>
+<li>done by <em>delete entry</em> / <em>tombstone</em> / <em>dormant certificate</em></li>
+<li>range delete: <em>predicate deletes</em> / <em>range tombstones</em>, ex. Cassandra</li>
+</ul>
+</li>
+<li><em>Lookups</em><ul>
+<li>from each components, merge &amp; reconcile the contents</li>
+</ul>
+</li>
+<li><em>Merge-Iteration</em><ul>
+<li>given a <em>cursor</em> or <em>iterator</em> to navigate through file contents</li>
+<li>use <em>multiway merge-sort</em> / <em>priority queue</em> / <em>min-heap</em></li>
+</ul>
+</li>
+<li><em>Reconciliation</em><ul>
+<li><em>reconciliation</em> &amp; <em>conflict resolution</em> of the data records associated with the same key</li>
+<li>with records holding metadata, ex. timestamps</li>
+</ul>
+</li>
+</ul>
+<h3 id="Compaction"><a href="#Compaction" class="headerlink" title="Compaction"></a>Compaction</h3><ul>
+<li><em>Maintenance</em><ul>
+<li>has memory usage upper bond since it only holds iterator heads</li>
+<li>multiple compactions can be executed (nonintersecting)</li>
+<li>not only for merge but also allow repartition</li>
+<li>preserve tombstones during compaction, only remove when no associated records assure, ex. RockDB’s bottommost level, Cassandra’s GC</li>
+</ul>
+</li>
+<li><em>Leveled Compaction</em><ul>
+<li>one of the compaction strategies used by RockDB</li>
+<li><em>Level 0</em>: flushed from memtable, tables range may overlapping, when reaching the size threshold, <strong>merge</strong> and <strong>partition</strong> into level 1</li>
+<li><em>Level 1</em>: partitioned into different key ranges, when reaching the size threshold, <strong>merge</strong> and <strong>partition</strong> into level 2</li>
+<li><em>Level k</em>: exponential enlarge the size threshold, bottommost is the oldest data</li>
+</ul>
+</li>
+<li><em>Size-tiered Compaction</em><ul>
+<li>decide level by tables size</li>
+<li>merge small tables to become larger one to be promoted to the higher levels</li>
+</ul>
+</li>
+<li><em>Time-Window Compaction</em><ul>
+<li>if records’ ttl (time-to-live) have been set, ex. Cassandra, the expired tables can be dropped directly</li>
+</ul>
+</li>
+</ul>
+<h3 id="Implementation-Details"><a href="#Implementation-Details" class="headerlink" title="Implementation Details"></a>Implementation Details</h3><h5 id="Sorted-String-Tables"><a href="#Sorted-String-Tables" class="headerlink" title="Sorted String Tables"></a>Sorted String Tables</h5><ul>
+<li>SSTables</li>
+<li>consist of index files and data files</li>
+<li>index file for lookup, ex. B-Trees or hash tables</li>
+<li>data records, concatenation of key-value, are ordered by key, so allows the sequential reading</li>
+<li>immutable dist-resident contents</li>
+<li><em>SSTables-Attached Secondary Indexes</em> (SASI), implemented in Cassandra, the secondary index files are created along with the SSTable primary key index</li>
+</ul>
+<h5 id="Bloom-Filter"><a href="#Bloom-Filter" class="headerlink" title="Bloom Filter"></a>Bloom Filter</h5><ul>
+<li>conceived by Burton Howard Bloom in 1970</li>
+<li>uses a large bits array and multiple hash functions apply on keys</li>
+<li>bitwise <code>or</code> to compose as a filter to indicate whether the test key <em>might</em> in the set</li>
+</ul>
+<h5 id="Skiplist"><a href="#Skiplist" class="headerlink" title="Skiplist"></a>Skiplist</h5><ul>
+<li>probabilistic complexity guarantees are close to search tree</li>
+<li>randomly assign the height</li>
+<li>link by / to each equal or lower height level’s next node</li>
+<li><code>fully_linked</code> flag &amp; compare-and-swap for concurrency</li>
+<li>ex. Cassandra’s secondary index memtable, WiredTiger’s some in-memory operations</li>
+</ul>
+<h5 id="Compression-amp-Disk-Access"><a href="#Compression-amp-Disk-Access" class="headerlink" title="Compression &amp; Disk Access"></a>Compression &amp; Disk Access</h5><ul>
+<li>compressed page size will not align with page boundary</li>
+<li>so need an indirection layer, <em>offset table</em>, which stores offsets and size of compressed pages</li>
+</ul>
+<h3 id="Unordered-LSM-Storage"><a href="#Unordered-LSM-Storage" class="headerlink" title="Unordered LSM Storage"></a>Unordered LSM Storage</h3><ul>
+<li><em>Bitcask</em><ul>
+<li>one of the storage engine used in Riak</li>
+<li>no memtable, store in log file directly, to avoid extra write</li>
+<li><em>keydir</em> as the in-memory hash table point from key to the latest record in log file</li>
+<li>GC during compaction</li>
+<li>not allow range scan</li>
+</ul>
+</li>
+<li><em>WiscKey</em><ul>
+<li>unsorted data records in append-only <em>vLogs</em></li>
+<li>sorted key in LSM tree</li>
+<li>to allow range scan</li>
+<li>when scanning range, use internal SSD parallelism to prefetch blocks, to reduce random I/O</li>
+</ul>
+</li>
+</ul>
+<h3 id="Concurrency-in-LSM-Trees"><a href="#Concurrency-in-LSM-Trees" class="headerlink" title="Concurrency in LSM Trees"></a>Concurrency in LSM Trees</h3><ul>
+<li>Cassandra uses operation order barriers</li>
+<li><em>Memtable switch</em>: after this, all writes go only to the new memtable, while the old one is still available for read</li>
+<li><em>Flush finalization</em>: replace the old memtable with a flushed disk-resident table in the table view</li>
+<li><em>Write-ahead log truncation</em>: discard a log segment holding records associated with a flushed memtable</li>
+</ul>
+<h2 id="Log-Stacking"><a href="#Log-Stacking" class="headerlink" title="Log Stacking"></a>Log Stacking</h2><ul>
+<li>SSDs also use log-structured storage to deal with small random writes</li>
+<li>stacking multiple log-structured systems can run into several problems<ul>
+<li>write amplification</li>
+<li>fragmentation</li>
+<li>poor performance</li>
+</ul>
+</li>
+<li><em>Flash Translation Layer</em><ul>
+<li>flash translation layer (FTL) is used by SSD</li>
+<li>translate logical page addresses to their physical locations</li>
+<li>keep track of pages status (live, discarded, empty)</li>
+<li>garbage collection<ul>
+<li>relocate live pages</li>
+<li>erase by block (group of pages, 64 to 512 pages)</li>
+</ul>
+</li>
+<li><em>wear leveling</em> distributes the load evenly across the medium, to extend device lifetime</li>
+</ul>
+</li>
+<li><em>Filesystem Logging</em><ul>
+<li>cause<ul>
+<li>redundant logging</li>
+<li>different GC pattern</li>
+<li>misaligned segment writes</li>
+<li>interleave data records and log records due to multiple write streams</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="LLAMA-amp-Mindful-Stacking"><a href="#LLAMA-amp-Mindful-Stacking" class="headerlink" title="LLAMA &amp; Mindful Stacking"></a>LLAMA &amp; Mindful Stacking</h3><ul>
+<li><em>latch-free, log-structured, access-method aware</em> (LLAMA)</li>
+<li>allow Bw-Trees to arrange the physical delta nodes in the same chain in contiguous physical location</li>
+<li>more efficient GC, less fragmentation</li>
+<li>reduce read latency</li>
+<li><em>Open-Channel SSDs</em><ul>
+<li>expose internal control of wear-leveling, garbage collection, data placement, &amp; scheduling</li>
+<li>skip flash translation layer, can achieve single layer GC, minimize write amplification</li>
+<li>Software Defined Flash (SDF): read in page, write in block</li>
+<li>LOCS (LSM Tree-based KV Store on Open-Channel SSD), 2013</li>
+<li>LightNVM, implemented in the Linux kernel, 2017</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Database-Internals-Ch-6-BTrees-Variants" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/06/14/Database-Internals-Ch-6-BTrees-Variants/">Database-Internals-Ch-6-BTrees-Variants</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/06/14/Database-Internals-Ch-6-BTrees-Variants/" class="article-date">
+  <time datetime="2020-06-14T23:19:13.000Z" itemprop="datePublished">2020-06-14</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>Abstracting Node Updates, allow to have different life cycles<ul>
+<li>on-disk pages</li>
+<li>in-memory raw binary cached versions</li>
+<li>in-memory language-native representations (materialized)</li>
+</ul>
+</li>
+<li>Three problems for in-place update B-Tree implementation<ul>
+<li><em>write amplification</em><ul>
+<li>updating a disk-resident page copy on every update</li>
+</ul>
+</li>
+<li><em>space amplification</em><ul>
+<li>preserve some unused buffer space for future insertion and update, and included in transferring</li>
+</ul>
+</li>
+<li><em>complexity of concurrency</em><ul>
+<li>solving concurrency and dealing with latches</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Copy-on-Write-B-Trees"><a href="#Copy-on-Write-B-Trees" class="headerlink" title="Copy-on-Write B-Trees"></a>Copy-on-Write B-Trees</h2><ul>
+<li>content updating<ul>
+<li>make a copy on the modified nodes</li>
+<li>on completion, switch the topmost pointer</li>
+</ul>
+</li>
+<li>pros<ul>
+<li>tree is immutable</li>
+<li>readers require no sync, no lock</li>
+<li>inherent structure of MVCC (multiversioned)</li>
+</ul>
+</li>
+<li>cons<ul>
+<li>requires extra page copying</li>
+<li>requires more space (but not too much since the shallow tree depth)\</li>
+</ul>
+</li>
+<li>ex. <em>Lightning Memory-Mapped Database</em> (LMDB)<ul>
+<li>k-v store used by the OpenLDAP</li>
+<li>single-level data store</li>
+<li>direct memory map, no application-level cache, no materialization</li>
+</ul>
+</li>
+</ul>
+<h2 id="Lazy-B-Trees"><a href="#Lazy-B-Trees" class="headerlink" title="Lazy B-Trees"></a>Lazy B-Trees</h2><ul>
+<li>buffer updates and propagate them with a delay</li>
+</ul>
+<h3 id="WiredTiger"><a href="#WiredTiger" class="headerlink" title="WiredTiger"></a>WiredTiger</h3><ul>
+<li>default MongoDB’s storage engine</li>
+<li>data structures:<ul>
+<li>for a node, <em>clean</em> page consists of just index, initially constructed from the on-disk page image</li>
+<li>for a node, <em>update buffer</em>, implemented using <em>skiplists</em>, complexity similar to search trees, better concurrency profile</li>
+</ul>
+</li>
+<li>operations<ul>
+<li>when content updating, save into the <em>update buffer</em> list</li>
+<li>when reading, the update buffers are merge with the on-disk page content</li>
+<li>when flushing, the update buffers contents are <em>reconciled</em> and persisted on disk<ul>
+<li>split or merge according to the reconciled page size</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>pros<ul>
+<li>page updates and structural modifications are performed by the background thread</li>
+</ul>
+</li>
+</ul>
+<h3 id="Lazy-Adaptive-Tree"><a href="#Lazy-Adaptive-Tree" class="headerlink" title="Lazy-Adaptive Tree"></a>Lazy-Adaptive Tree</h3><ul>
+<li><em>update buffers</em> attach to subtrees</li>
+<li>when buffer full, it’s propagating to lower tree levels’ buffer</li>
+<li>when the propagation reaching the leaf level and the buffer full, if flush to disk and change tree structure at once.</li>
+</ul>
+<h2 id="FD-Trees"><a href="#FD-Trees" class="headerlink" title="FD-Trees"></a>FD-Trees</h2><ul>
+<li>small mutable <em>head tree</em> &amp; multiple immutable sorted <em>runs</em><ul>
+<li>limit the surface area, where random write I/O in the <em>head tree</em></li>
+<li><em>head tree</em> is a small B-Tree buffering the updates</li>
+<li>once <em>head tree</em> get full, contents are transferred to the immutable <em>run</em></li>
+<li>propagating records from upper level run to lower level</li>
+</ul>
+</li>
+<li><em>Fractional Cascading</em><ul>
+<li>helps to reduce the cost of locating an item in the lower cascading levels</li>
+<li><em>bridges</em> between neighboring-level</li>
+<li>pull every N-th item from the lower level</li>
+</ul>
+</li>
+<li><em>Logarithmic Runs</em><ul>
+<li>increasing by factor k to previous level</li>
+<li>propagating from up to down when <em>run</em> get full</li>
+</ul>
+</li>
+</ul>
+<h2 id="Bw-Trees"><a href="#Bw-Trees" class="headerlink" title="Bw-Trees"></a>Bw-Trees</h2><ul>
+<li><em>Buzzword-Tree</em>, try to resolve the <em>three problems</em> at once</li>
+<li><em>Update Chains</em><ul>
+<li>each logical node for B-Tree consist of a linked list head from latest update: <em>delta</em> -&gt; <em>delta</em> -&gt; … -&gt; <em>base</em></li>
+<li><em>base node</em>: cache of the disk copy page contents</li>
+<li><em>delta node</em>: all the modifications, can represents inserts, updates, or deletes</li>
+<li>logical rather than physical<ul>
+<li>node sizes are unlikely to be page aligned</li>
+<li>no need to pre-allocate space</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>Concurrency</em><ul>
+<li>each logical node for B-Tree has a <em>logical identifier</em></li>
+<li>maintained with an in-memory <em>mapping table</em></li>
+<li>the mapping table contains virtual links to the <em>update chain</em>‘s head (latest delta node)</li>
+<li>updated with <em>Compare-and-Swap</em> (lock-free)</li>
+</ul>
+</li>
+<li><em>Structural Modification Operations</em><ul>
+<li>SMO</li>
+<li>Split<ul>
+<li>append a special <em>split delta</em> node to the splitting node</li>
+<li><em>split delta</em> node with the midpoint separator key &amp; the pointer to the new logical sibling node</li>
+<li>similar to <em>B_link-Tree</em>‘s <em>half-split</em></li>
+<li>update the parent with the new child node</li>
+</ul>
+</li>
+<li>Merge<ul>
+<li>append a special <em>remove delta</em> node to the <em>right</em> sibling, indicating the start of merge SMO</li>
+<li>append a special <em>merge delta</em> node to the <em>left</em> sibling to point to the right sibling so to logical merge the contents</li>
+<li>update the parent to remove the link to the right sibling</li>
+</ul>
+</li>
+<li>Prevent concurrent SMO<ul>
+<li>an <em>abort delta</em> node is installed on the parent, like a write lock</li>
+<li>remove when SMO completes</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>Consolidation &amp; GC</em><ul>
+<li>once the delta chain length reaches a threshold, consolidate the chain into a new node</li>
+<li>then write to disk and update the mapping table</li>
+<li>but need to wait for all reader complete to reclaim the memory, <em>epoch-based reclaimation</em></li>
+</ul>
+</li>
+<li>ex. <em>Sled</em>, <em>OpenBw-Tree</em> (by CMU Database Group)</li>
+</ul>
+<h2 id="Cache-Oblivious-B-Trees"><a href="#Cache-Oblivious-B-Trees" class="headerlink" title="Cache-Oblivious B-Trees"></a>Cache-Oblivious B-Trees</h2><ul>
+<li>automatically optimize the parameters, ex. block size, page size, cache line size for arbitrary adjacent two levels of memory hierarchy</li>
+<li><em>van Emde Boas Layout</em><ul>
+<li>split the B-tree from the middle level, recursive for the subtree</li>
+<li>result in the <code>sqrt(N)</code> size subtrees</li>
+<li>any recursive subtree is stored in a contiguous block of memory</li>
+<li><em>packed array</em> with parameter <em>density threshold</em> to allow gaps for insertion or update</li>
+<li>array grow or shrink when become too dense or sparse</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Database-Internals-Ch-5-Transaction-Processing-and-Recovery" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/28/Database-Internals-Ch-5-Transaction-Processing-and-Recovery/">Database-Internals-Ch-5-Transaction-Processing-and-Recovery</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/28/Database-Internals-Ch-5-Transaction-Processing-and-Recovery/" class="article-date">
+  <time datetime="2020-05-28T22:17:57.000Z" itemprop="datePublished">2020-05-28</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>A database transaction has to preserve <em>ACID</em></p>
+<ul>
+<li><em>Atomicity</em></li>
+<li><em>Consistency</em></li>
+<li><em>Isolation</em></li>
+<li><em>Durability</em></li>
+</ul>
+<p>Implementing transaction required components</p>
+<ul>
+<li><em>transaction manager</em><ul>
+<li>coordinates, schedules, tracks transactions and their individual steps</li>
+</ul>
+</li>
+<li><em>log manager</em><ul>
+<li>guards access to the resources and prevents concurrent access violating data integrity</li>
+</ul>
+</li>
+<li><em>page cache</em><ul>
+<li>serves as an intermediary between persistent storage and the rest of the storage engine</li>
+</ul>
+</li>
+<li><em>log manager</em><ul>
+<li>holds a history of operations</li>
+</ul>
+</li>
+</ul>
+<h2 id="Buffer-Management"><a href="#Buffer-Management" class="headerlink" title="Buffer Management"></a>Buffer Management</h2><p><em>page cache</em> (<em>buffer pool</em>)</p>
+<ul>
+<li>keeps cached page contents in memory</li>
+<li>allows modification to be <em>buffered</em></li>
+<li>when a requested page isn’t present in memory, it is <em>paged in</em> by the page cache</li>
+<li>if an already cached page is requested, its cached version is returned</li>
+<li>if there’s not enough space available, some other page is <em>evicted</em> and its contents are <em>flushed</em> to disk</li>
+</ul>
+<h3 id="Caching-Semantics"><a href="#Caching-Semantics" class="headerlink" title="Caching Semantics"></a>Caching Semantics</h3><ul>
+<li>many database using <code>O_DIRECT</code> flag to bypass the kernal page cache</li>
+<li>as an application specific equivalent of the kernal page cache</li>
+<li>accesses the block device directly</li>
+<li>decouples logical and physical write operations</li>
+<li>if the page is not <em>pinned</em> or <em>referenced</em>, it can be evicted right away</li>
+<li><em>dirty</em> pages have to be <em>flushed</em> before they are evicted</li>
+<li>PostgreSQL has a background flush writer cycles through the dirty pages that are likely to be evicted</li>
+<li>to make sure all the changes are persisted (<em>durability</em>), flushes are coordinated by the <em>checkpoint</em> process with WAL and page cache</li>
+</ul>
+<p>Trade-off objectives:</p>
+<ul>
+<li>Postpone flushed to reduce the number of disk accesses</li>
+<li>Preemptively flush pages to allow quick eviction</li>
+<li>Pick pages for eviction and flush in the optimal order</li>
+<li>Keep cache size within its memory bounds</li>
+<li>Avoid losing data as it is not persisted to the primary storage</li>
+</ul>
+<h4 id="Locking-Pages-in-Cache"><a href="#Locking-Pages-in-Cache" class="headerlink" title="Locking Pages in Cache"></a>Locking Pages in Cache</h4><ul>
+<li>the higher levels of B-Tree nodes could be <em>pinned</em> in cache permanently,<ul>
+<li>since it just a small fraction of the tree</li>
+<li>saving in every lookup path</li>
+<li>disk access only required in lower levels nodes</li>
+</ul>
+</li>
+</ul>
+<h4 id="Prefetching-amp-Immediate-Eviction"><a href="#Prefetching-amp-Immediate-Eviction" class="headerlink" title="Prefetching &amp; Immediate Eviction"></a>Prefetching &amp; Immediate Eviction</h4><ul>
+<li>Page cache also allows the storage engine to have fine-grained control over prefetching and eviction</li>
+<li>Prefetching<ul>
+<li>leaf nodes traversed in a range scan</li>
+</ul>
+</li>
+<li>Immediate Eviction<ul>
+<li>maintenance process, unlikely to be used for the in-flight queries</li>
+</ul>
+</li>
+</ul>
+<h3 id="Page-Replacement"><a href="#Page-Replacement" class="headerlink" title="Page Replacement"></a>Page Replacement</h3><ul>
+<li>FIFO (first in, first out)<ul>
+<li>impractical, ex. higher level of page nodes</li>
+</ul>
+</li>
+<li>LRU (least-recently used)<ul>
+<li>2Q LRU</li>
+<li>LRU-K keeping track of the last K accesses</li>
+</ul>
+</li>
+<li>CLOCK<ul>
+<li>as an approximated, compact version of LRU</li>
+<li>Linux uses a variant of CLOCK</li>
+<li>access bit<ul>
+<li>set to <code>1</code>, whenever the page is accessed</li>
+<li>around the circular buffer<ul>
+<li>if access bit is <code>1</code>, but the page is unreferenced, then set to <code>0</code></li>
+<li>if access bit is already <code>0</code>, then the page becomes a candidate and is scheduled for eviction</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>advantage<ul>
+<li>use compare-and-swap (CAS) operations, and do not require locking</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>LFU (least-frequency used)<ul>
+<li>frequency histogram</li>
+</ul>
+</li>
+<li>TinyLFU<ul>
+<li>three queues<ul>
+<li><em>Admission</em>: newly added elements with LRU policy</li>
+<li><em>Probation</em>: holding elements most likely to get evicted</li>
+<li><em>Protected</em>: holding elements that are to stay for longer</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Recovery"><a href="#Recovery" class="headerlink" title="Recovery"></a>Recovery</h2><h3 id="Write-Ahead-Log"><a href="#Write-Ahead-Log" class="headerlink" title="Write-Ahead Log"></a>Write-Ahead Log</h3><p>WAL (<em>write-ahead log</em>), <em>commit log</em></p>
+<ul>
+<li>an append-only auxiliary disk-resident structure</li>
+<li>used for crash and transaction recovery</li>
+<li>functionalities<ul>
+<li>allow page cache to buffer updates while ensuring durability</li>
+<li>persist all operations on disk until the cache copies of pages are synchronized</li>
+<li>allow lost in-memory changes to be reconstructed</li>
+</ul>
+</li>
+</ul>
+<p>LSN (<em>log sequence number</em>)</p>
+<ul>
+<li>a unique, monotonically increasing number</li>
+<li>with an internal counter or a timestamp</li>
+<li>as the order index of the operation records in the WAL</li>
+</ul>
+<p>Checkpoint</p>
+<ul>
+<li><em>sync checkpoint</em><ul>
+<li>force all dirty pages to be flushed on disk</li>
+<li>fully synchronizes the primary storage structure</li>
+<li>impractical, require pausing all operations</li>
+</ul>
+</li>
+<li><em>fuzzy checkpoint</em><ul>
+<li><code>last_checkpoint</code> pointer in log header, (with LSN of the <code>begin_checkpoint</code> record)</li>
+<li><code>begin_checkpoint</code> log record</li>
+<li>info about the dirty pages</li>
+<li>transaction table</li>
+<li><code>end_checkpoint</code> log record, until all the specified dirty pages are flushed</li>
+</ul>
+</li>
+</ul>
+<h3 id="Operation-Versus-Data-Log"><a href="#Operation-Versus-Data-Log" class="headerlink" title="Operation Versus Data Log"></a>Operation Versus Data Log</h3><ul>
+<li><em>physical log</em><ul>
+<li>before-image &lt;=&gt; after-image</li>
+<li>store complete page stat or byte-wise changes</li>
+</ul>
+</li>
+<li><em>logical log</em><ul>
+<li>redo &lt;=&gt; undo operation</li>
+<li>store operation that to be performed against the current state</li>
+</ul>
+</li>
+</ul>
+<h3 id="Steal-and-Force-Policies"><a href="#Steal-and-Force-Policies" class="headerlink" title="Steal and Force Policies"></a>Steal and Force Policies</h3><table>
+<thead>
+<tr>
+<th>Steal</th>
+<th>No-steal</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>allow flushing uncommitted</td>
+<td>only flushing committed</td>
+</tr>
+<tr>
+<td></td>
+<td>could use only <em>redo</em> entries in recovery</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Force</th>
+<th>No-force</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>only committing flushed</td>
+<td>allow committing unflushed</td>
+</tr>
+<tr>
+<td>no need additional work on recovery</td>
+<td></td>
+</tr>
+<tr>
+<td>take longer to commit due to necessary I/O</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="ARIES-Algorithm-for-Recovery-and-Isolation-Exploiting-Sematics"><a href="#ARIES-Algorithm-for-Recovery-and-Isolation-Exploiting-Sematics" class="headerlink" title="ARIES (Algorithm for Recovery and Isolation Exploiting Sematics)"></a>ARIES (Algorithm for Recovery and Isolation Exploiting Sematics)</h3><ul>
+<li>ARIES is a <em>steal/no-force</em> recovery algorithm</li>
+<li>uses<ul>
+<li>LSNs for identifying log records</li>
+<li>dirty page table to track page modified</li>
+<li>physical redo to improve performance during recovery</li>
+<li>logical undo to improve concurrency during normal operations</li>
+<li>fuzzy checkpointing</li>
+</ul>
+</li>
+<li>three phases in recovery proceeds<ul>
+<li><em>analysis phase</em>: identify dirty pages, identify the starting point for the redo phase</li>
+<li><em>redo phase</em>: repeat the history up to the point of a crash</li>
+<li><em>undo phase</em>: roll back all incomplete transactions and restore the database to the last consistent state</li>
+</ul>
+</li>
+</ul>
+<h2 id="Concurrency-Control"><a href="#Concurrency-Control" class="headerlink" title="Concurrency Control"></a>Concurrency Control</h2><ul>
+<li><em>Optimistic Concurrency Control</em> (OCC)<ul>
+<li>check conflict “before” the commit</li>
+</ul>
+</li>
+<li><em>Multiversion Concurrency Control</em> (MVCC)<ul>
+<li>allowing multiple timestamped versions of the record to be present</li>
+</ul>
+</li>
+<li><em>Pessimistic Concurrency Control</em> (PCC)<ul>
+<li>manage and grant access to shared resources</li>
+</ul>
+</li>
+</ul>
+<h3 id="Transaction-Isolation"><a href="#Transaction-Isolation" class="headerlink" title="Transaction Isolation"></a>Transaction Isolation</h3><ul>
+<li>Serializability<ul>
+<li>a <em>schedule</em> is a list of operations required to execute a set of transactions</li>
+<li>to be <em>serial</em> for a schedule is when transactions are executed completely independently without any interleaving</li>
+<li>a schedule is <em>serializable</em>, if it’s equivalent to some complete serial schedule</li>
+</ul>
+</li>
+<li>Read &amp; Write Anomalies<ul>
+<li><em>read anomalies</em><ul>
+<li><em>dirty read</em><ul>
+<li>a transaction can read uncommitted changes from other transactions</li>
+</ul>
+</li>
+<li><em>nonrepeatable read</em> (<em>fuzzy read</em>)<ul>
+<li>a transaction queries the same row twice and gets different results</li>
+</ul>
+</li>
+<li><em>phantom read</em><ul>
+<li>a transaction queries the same set of rows twice and gets different results</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>write anomalies</em><ul>
+<li><em>lost update</em><ul>
+<li>two transactions update the same record without awareness about each other’s existence</li>
+</ul>
+</li>
+<li><em>dirty write</em><ul>
+<li>transaction results are based on the values that have never been committed</li>
+</ul>
+</li>
+<li><em>write skew</em><ul>
+<li>the combination of individual transactions does not satisfy the required invariant</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Isolation Levels</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Dirty</th>
+<th>Non-Repeatable</th>
+<th>Phantom</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Read Uncommitted</td>
+<td>Allowed</td>
+<td>Allowed</td>
+<td>Allowed</td>
+</tr>
+<tr>
+<td>Read Committed</td>
+<td>-</td>
+<td>Allowed</td>
+<td>Allowed</td>
+</tr>
+<tr>
+<td>Repeatable Read</td>
+<td>-</td>
+<td>-</td>
+<td>Allowed</td>
+</tr>
+<tr>
+<td>Serializable</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Lost Update</th>
+<th>Dirty</th>
+<th>Write Skew</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Snapshot Isolation</td>
+<td>-</td>
+<td>-</td>
+<td>Allowed</td>
+</tr>
+</tbody></table>
+<h3 id="Optimistic-Concurrency-Control"><a href="#Optimistic-Concurrency-Control" class="headerlink" title="Optimistic Concurrency Control"></a>Optimistic Concurrency Control</h3><ul>
+<li>Transaction execution phases<ul>
+<li><em>Read Phase</em><ul>
+<li>Identify the <em>read set</em> &amp; <em>write set</em></li>
+</ul>
+</li>
+<li><em>Validation Phase</em><ul>
+<li>check serializability<ul>
+<li>if the read set out-of-date</li>
+<li>if the write set will overwrite the other transactions committing during the read phase</li>
+</ul>
+</li>
+<li>if conflict found, restart from the read phase</li>
+<li>else, start commit and write phase</li>
+</ul>
+</li>
+<li><em>Write Phase</em><ul>
+<li>commit the write set from private context to the database state</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>critical section: <em>Validation Phase</em> &amp; <em>Write Phase</em></li>
+<li>efficient if the validations usually succeeds and no need to retry</li>
+</ul>
+<h3 id="Multiversion-Concurrency-Control"><a href="#Multiversion-Concurrency-Control" class="headerlink" title="Multiversion Concurrency Control"></a>Multiversion Concurrency Control</h3><ul>
+<li>allowing multiple record versions</li>
+<li>using monotonically incremented transaction IDs or timestamps</li>
+<li>distinguishes between <em>committed</em> &amp; <em>uncommitted</em> versions<ul>
+<li>last committed version: <em>current</em></li>
+<li>to keep at most one uncommitted value at a time</li>
+</ul>
+</li>
+<li>major use cases for implementing snapshot isolation</li>
+</ul>
+<h3 id="Pessimistic-Concurrency-Control"><a href="#Pessimistic-Concurrency-Control" class="headerlink" title="Pessimistic Concurrency Control"></a>Pessimistic Concurrency Control</h3><h4 id="Lock-Free-Scheme"><a href="#Lock-Free-Scheme" class="headerlink" title="Lock-Free Scheme"></a>Lock-Free Scheme</h4><ul>
+<li><em>timestamp ordering</em><ul>
+<li><code>max_read_timestamp</code> and <code>max_write_timestamp</code></li>
+<li>if read operations attempt to read value, which timestamp lower than <code>max_write_timestamp</code>, then abort</li>
+<li>if write operations attempt to write value which timestamp lower than <code>max_read_timestamp</code>, then abort</li>
+<li>if write operations attempt to write value which timestamp lower than <code>max_write_timestamp</code>, then just ignore the outdated written values</li>
+</ul>
+</li>
+</ul>
+<h4 id="Lock-Based-Scheme"><a href="#Lock-Based-Scheme" class="headerlink" title="Lock-Based Scheme"></a>Lock-Based Scheme</h4><ul>
+<li><em>two phase locking</em> (2PL)<ul>
+<li><em>growing phase</em> (locks acquiring)</li>
+<li><em>shrinking phase</em> (locks releasing)</li>
+</ul>
+</li>
+<li><em>deadlocks</em><ul>
+<li>timeout and abort</li>
+<li>conservative 2PL<ul>
+<li>requires to acquire all the locks before any execution operations</li>
+<li>significant limit concurrency</li>
+</ul>
+</li>
+<li><em>wait-for graph</em><ul>
+<li>maintained by the transaction manager</li>
+<li>applying either one of the restrictions<ul>
+<li><em>wait-die</em>: a transaction can be blocked only by a transaction with lower priority</li>
+<li><em>wounds-wait</em>: a transaction can be blocked only by a transaction with higher priority</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="Locks-amp-Latches"><a href="#Locks-amp-Latches" class="headerlink" title="Locks &amp; Latches"></a>Locks &amp; Latches</h5><table>
+<thead>
+<tr>
+<th>Locks</th>
+<th>Latches</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Guard the logical data integrity</td>
+<td>Guard the physical data integrity</td>
+</tr>
+<tr>
+<td>Guard a specific key or key range</td>
+<td>Guard a page node in the storage structure</td>
+</tr>
+<tr>
+<td>Heavyweight</td>
+<td>Lightweight</td>
+</tr>
+<tr>
+<td></td>
+<td>Lock-free concurrency still need latches</td>
+</tr>
+</tbody></table>
+<ul>
+<li><em>reader-writer lock</em> (RW Lock)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Reader</th>
+<th>Writer</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Reader</td>
+<td>Shared</td>
+<td>Exclusive</td>
+</tr>
+<tr>
+<td>Writer</td>
+<td>Exclusive</td>
+<td>Exclusive</td>
+</tr>
+</tbody></table>
+<ul>
+<li>manage access to pages<ul>
+<li><em>busy-wait</em></li>
+<li><em>queueing</em>, <em>compare-and-swap</em> (CAS)</li>
+</ul>
+</li>
+<li><em>Latch Crabbing</em><ul>
+<li>read path: the parent node’s latch can be release, as soon as  the child node’s latch is acquired</li>
+<li>insert path: the parent node’s latch can be release, if the child node is not full</li>
+<li>delete path: the parent node’s latch can be release, if the child node holds enough elements</li>
+</ul>
+</li>
+<li><em>Latch Upgrading</em><ul>
+<li>acquisition of shared locks along the search path, then upgrading them to exclusive locks when necessary</li>
+<li>always latch root to avoid the root bottleneck (how?)</li>
+</ul>
+</li>
+</ul>
+<h5 id="B-link-Trees"><a href="#B-link-Trees" class="headerlink" title="B^link-Trees"></a><em>B^link-Trees</em></h5><ul>
+<li>B<em>-Trees with *high keys</em> and <em>sibling link</em> pointers</li>
+<li>allow the state of <em>half-split</em><ul>
+<li>referenced by sibling pointer, not child pointer</li>
+<li>if the search key larger than the high key, then follow the sibling link</li>
+</ul>
+</li>
+<li>therefore,<ul>
+<li>do not have to hold the parent lock when descending to the child level, even if child node splitting</li>
+<li>reduce the number of locks held</li>
+<li>allows reads concurrent to tree structural change, and prevents deadlocks</li>
+<li>slightly less efficient when encounter splitting (relative rare case)</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Database-Internals-Ch-4-Implementing-B-Trees" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/18/Database-Internals-Ch-4-Implementing-B-Trees/">Database-Internals-Ch-4-Implementing-B-Trees</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/18/Database-Internals-Ch-4-Implementing-B-Trees/" class="article-date">
+  <time datetime="2020-05-18T21:37:55.000Z" itemprop="datePublished">2020-05-18</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Page-Header"><a href="#Page-Header" class="headerlink" title="Page Header"></a>Page Header</h2><ul>
+<li>PostgreSQL: page size, layout version</li>
+<li>MySQL InnoDB: number of heap records, level, implementation-specific values</li>
+<li>SQLite: number of cells, a rightmost pointer</li>
+</ul>
+<h3 id="Magic-Numbers"><a href="#Magic-Numbers" class="headerlink" title="Magic Numbers"></a>Magic Numbers</h3><ul>
+<li>multibyte block, ex. <code>(50 41 47 45)</code></li>
+<li>validation &amp; sanity check</li>
+<li>identify version</li>
+</ul>
+<h3 id="Sibling-Links"><a href="#Sibling-Links" class="headerlink" title="Sibling Links"></a>Sibling Links</h3><ul>
+<li>forward / backward links</li>
+<li>help to locate neighboring nodes without ascending back to parent / root</li>
+<li>add complexity to split and merge<ul>
+<li>may required additional locking for the updating sibling node</li>
+<li>could be useful in <em>Blink-Trees</em> (discussed later)</li>
+</ul>
+</li>
+</ul>
+<h3 id="Rightmost-Pointers"><a href="#Rightmost-Pointers" class="headerlink" title="Rightmost Pointers"></a>Rightmost Pointers</h3><ul>
+<li>each cell has 1 separator key and 1 child pointer</li>
+<li>the rightmost pointer is stored in header</li>
+<li>used by SQLite</li>
+</ul>
+<h3 id="Node-High-Keys"><a href="#Node-High-Keys" class="headerlink" title="Node High Keys"></a>Node High Keys</h3><ul>
+<li><em>high key</em>, represents the highest possible key of the subtree</li>
+<li>used by PostgreSQL, called B^link-Trees</li>
+<li>pros:<ul>
+<li>pairwise store separator keys and child pointers</li>
+<li>less edge case handling</li>
+<li>more explicit search space</li>
+</ul>
+</li>
+</ul>
+<h3 id="Overflow-Pages"><a href="#Overflow-Pages" class="headerlink" title="Overflow Pages"></a>Overflow Pages</h3><ul>
+<li><em>primary page</em>, followed by multiple linked <em>overflow pages</em><ul>
+<li>page ID of the <em>next</em> page could be stored in the page header</li>
+</ul>
+</li>
+<li>most of implementation<ul>
+<li>using fixed size of payload (<code>max_payload_size</code>) in the primary page</li>
+<li>spill out to overflow page for the rest of payload</li>
+<li><code>max_payload_size</code> calculated by page size / fanout</li>
+</ul>
+</li>
+<li>require extra bookkeeping for defragmentation</li>
+<li>keys reside in the primary page for frequent comparison</li>
+<li>data records may need to traverse to locate in several overflow pages for the parts</li>
+</ul>
+<h2 id="Operation"><a href="#Operation" class="headerlink" title="Operation"></a>Operation</h2><h3 id="Propagating-Splits-and-Merges"><a href="#Propagating-Splits-and-Merges" class="headerlink" title="Propagating Splits and Merges"></a>Propagating Splits and Merges</h3><ul>
+<li><em>breadcrumbs</em><ul>
+<li>be used to maintain the track of traversal path</li>
+<li>PostgreSQL implements with BTStask</li>
+<li>equivalent as parent pointers, since the child nodes are always referred from the root and parent(s)</li>
+<li>build and maintained in memory</li>
+</ul>
+</li>
+<li><em>deadlocks</em> may happen when using <em>sibling pointers</em><ul>
+<li>WiredTiger uses parent pointers for leaf traversal</li>
+</ul>
+</li>
+</ul>
+<h3 id="Rebalancing"><a href="#Rebalancing" class="headerlink" title="Rebalancing"></a>Rebalancing</h3><ul>
+<li>Operation Cost<ul>
+<li>to postpone split &amp; merge operations</li>
+<li>to amortize the cost of split &amp; merge by <em>rebalancing</em></li>
+</ul>
+</li>
+<li>Occupancy<ul>
+<li>to improve the occupancy<ul>
+<li>B*-Trees keep distributing between the neighboring nodes until both are full</li>
+<li>then split the two nodes into three nodes</li>
+</ul>
+</li>
+<li>lower the tree height<ul>
+<li>fewer pages traversal</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>SQLite implements as the <em>balance-siblings</em> algorithm</li>
+</ul>
+<h3 id="Right-Only-Appends"><a href="#Right-Only-Appends" class="headerlink" title="Right-Only Appends"></a>Right-Only Appends</h3><ul>
+<li>An optimization for auto-incremented monotonically increasing primary index</li>
+<li><em>fastpath</em> in PostgreSQL<ul>
+<li>cache the rightmost leaf, to skip the whole read path from the root</li>
+</ul>
+</li>
+<li><em>quickbalance</em> in SQLite<ul>
+<li>when rightmost page being full, “creating” a new empty page instead of “splitting” to form a half full page</li>
+</ul>
+</li>
+<li><em>bulk loading</em><ul>
+<li>bulk loading presorted data or rebuild the tree</li>
+<li>compose bottom up, avoid splits &amp; merges<ul>
+<li>fill the leaf level pages</li>
+<li>propagate the first keys of each leaf node up to its parent node</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Immutable B-Trees or auto-incremented primary index<ul>
+<li>can fill up nodes with out leaving any space for future middle insertion</li>
+</ul>
+</li>
+</ul>
+<h3 id="Compression"><a href="#Compression" class="headerlink" title="Compression"></a>Compression</h3><ul>
+<li>Compression Level<ul>
+<li>entire index file<ul>
+<li>impractical</li>
+</ul>
+</li>
+<li>page-wise<ul>
+<li>may not align with the disk blocks</li>
+</ul>
+</li>
+<li>row-wise</li>
+<li>filed-wise</li>
+</ul>
+</li>
+<li>Compression Evaluation, ex. Squash Compression Benchmark<ul>
+<li>memory overhead</li>
+<li>compression performance</li>
+<li>decompression performance</li>
+<li>compression ratio</li>
+</ul>
+</li>
+</ul>
+<h3 id="Vacuum-amp-Maintenance"><a href="#Vacuum-amp-Maintenance" class="headerlink" title="Vacuum &amp; Maintenance"></a>Vacuum &amp; Maintenance</h3><ul>
+<li>Rewrite the page with the lived cell data</li>
+<li>Similar terminologies:<ul>
+<li><em>defragmentation</em></li>
+<li><em>garbage collection</em></li>
+<li><em>compaction</em></li>
+<li><em>vacuum</em></li>
+<li><em>maintenance</em></li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Database-Internals-Ch-3-File-Formats" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/11/Database-Internals-Ch-3-File-Formats/">Database-Internals-Ch-3-File-Formats</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/11/Database-Internals-Ch-3-File-Formats/" class="article-date">
+  <time datetime="2020-05-11T22:27:02.000Z" itemprop="datePublished">2020-05-11</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Motivation"><a href="#Motivation" class="headerlink" title="Motivation"></a>Motivation</h2><p>For on-disk layout structures, we have to deal with:</p>
+<ul>
+<li>fixed-size primitives structures &amp; variable size structures</li>
+<li>garbage collection &amp; fragmentation</li>
+<li>serialization &amp; deserialization</li>
+<li>tracking and management of the segments usage</li>
+</ul>
+<h2 id="Binary-Encoding"><a href="#Binary-Encoding" class="headerlink" title="Binary Encoding"></a>Binary Encoding</h2><ul>
+<li>numeric (fixed-size)<ul>
+<li><em>Big-endian</em>: most-significant byte (MSB)</li>
+<li><em>Little-endian</em>: least-significant byte (LSB)</li>
+<li>IEEE 754: 32-bit <code>float</code> for single-precision value<ul>
+<li>bit 31: sign</li>
+<li>bit 30-23: exponent</li>
+<li>bit 22-1: fraction</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>string</code> (variable-size)<ul>
+<li><code>(size|data)</code>: <em>UCSD String</em> or <em>Pascal String</em><ul>
+<li>could get length in constant time without iterating through</li>
+<li>could slice copy from memory</li>
+</ul>
+</li>
+<li><code>(data/null)</code>: <em>null-terminated string</em></li>
+</ul>
+</li>
+<li>bit-packed data<ul>
+<li>booleans</li>
+<li>enum</li>
+<li>flags, bitmasks</li>
+</ul>
+</li>
+</ul>
+<h2 id="Structures-amp-Layouts"><a href="#Structures-amp-Layouts" class="headerlink" title="Structures &amp; Layouts"></a>Structures &amp; Layouts</h2><h3 id="File-Organization"><a href="#File-Organization" class="headerlink" title="File Organization"></a>File Organization</h3><p><code>| header | page | page | page | ... | tailer |</code></p>
+<h3 id="Page-Organization-for-Fixed-size-Records"><a href="#Page-Organization-for-Fixed-size-Records" class="headerlink" title="Page Organization for Fixed-size Records"></a>Page Organization for Fixed-size Records</h3><p>Page for a B-Tree node:</p>
+<p><code>| P0 | k1 | v1 | P1 | k2 | v2 | ... | kn | vn | Pn | unused |</code></p>
+<p>Downside:</p>
+<ul>
+<li>key insertion requires relocating elements</li>
+<li>not allow managing or accessing variable-size records efficiently</li>
+</ul>
+<h3 id="Slotted-Pages"><a href="#Slotted-Pages" class="headerlink" title="Slotted Pages"></a>Slotted Pages</h3><p><code>| header | offset0 | offset1 | offset2 | ... | unused | ... | cell2 | cell1 | cell0 |</code></p>
+<p>Allow:</p>
+<ul>
+<li>storing variable-size of records with a minimal overhead</li>
+<li>reclaiming space occupied by the removed records</li>
+<li>dynamic layout to hide the exact location internally</li>
+</ul>
+<h3 id="Cells"><a href="#Cells" class="headerlink" title="Cells"></a>Cells</h3><ul>
+<li><em>separator key</em> cells</li>
+</ul>
+<p><code>| [int] key_size | [int] child_page_id | [bytes] key |</code></p>
+<ul>
+<li><em>key-value</em> cells</li>
+</ul>
+<p><code>| [int] key_size | [int] value_size | [bytes] key | [bytes] data_record |</code></p>
+<h3 id="Management-of-Cells-in-Slotted-Pages"><a href="#Management-of-Cells-in-Slotted-Pages" class="headerlink" title="Management of Cells in Slotted Pages"></a>Management of Cells in Slotted Pages</h3><ul>
+<li>Keep <em>offsets</em> sorted by keys<ul>
+<li>no need to relocate <em>cells</em></li>
+</ul>
+</li>
+<li>Maintain an <em>Availability List</em> for inserting a new cell<ul>
+<li>holds the list of offsets of freed segments and their sizes</li>
+<li><em>first fit strategy</em><ul>
+<li>larger overhead, effectively wasted</li>
+</ul>
+</li>
+<li><em>best fir strategy</em><ul>
+<li>find a segment leaves smallest remainder</li>
+</ul>
+</li>
+<li>if cannot find in availability list<ul>
+<li>and if there are enough <em>fragmented bytes</em> available<ul>
+<li>=&gt; defragmentation</li>
+</ul>
+</li>
+<li>if there are not enough available<ul>
+<li>=&gt; create an overflow page</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Versioning"><a href="#Versioning" class="headerlink" title="Versioning"></a>Versioning</h2><p>Could be done in several ways:</p>
+<ul>
+<li>identified by filename prefix (ex. Cassandra)</li>
+<li>separated file (ex. <em>PG_VERSION</em> in PostgreSQL)</li>
+<li>stored in index file header</li>
+<li>file format using magic number</li>
+</ul>
+<h2 id="Checksumming"><a href="#Checksumming" class="headerlink" title="Checksumming"></a>Checksumming</h2><p>Usually put the <em>page cheksum</em> in the page header.</p>
+<p>Distinct between:</p>
+<ul>
+<li><em>checksum</em><ul>
+<li>weakest form of guarantee and aren’t able to detect corruptiob in multiple bits</li>
+</ul>
+</li>
+<li><em>cyclic redundancy check</em> (CRC)<ul>
+<li>make sure there were no unintended and accidental changes in data</li>
+<li>not designed to resist attacks and intentional changes in data</li>
+</ul>
+</li>
+<li><em>cryptographic hash function</em><ul>
+<li>for security</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Database-Internals-Ch-2-B-Tree-Basics" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/04/Database-Internals-Ch-2-B-Tree-Basics/">Database-Internals-Ch-2-B-Tree-Basics</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/04/Database-Internals-Ch-2-B-Tree-Basics/" class="article-date">
+  <time datetime="2020-05-04T22:00:03.000Z" itemprop="datePublished">2020-05-04</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Binary-Search-Trees"><a href="#Binary-Search-Trees" class="headerlink" title="Binary Search Trees"></a>Binary Search Trees</h2><ul>
+<li>BST (Binary Search Trees)</li>
+<li>Tree balancing, <em>pathological</em> tree</li>
+<li>rebalancing, <em>pivot</em>, <em>rotate</em></li>
+</ul>
+<p>Considerations (impractical) on trees for disk-based storage:</p>
+<ul>
+<li><em>locality</em>: node child pointers may span across several disk pages</li>
+<li><em>tree height</em>: hight number of disk seek to located the searched element</li>
+</ul>
+<h2 id="Disk-Based-Structures"><a href="#Disk-Based-Structures" class="headerlink" title="Disk-Based Structures"></a>Disk-Based Structures</h2><ul>
+<li>HDD (Hard Disk Drives)<ul>
+<li>read/write <em>head movements</em> (seek for random access): most expensive</li>
+<li><em>sequential operations</em>: relatively cheap</li>
+<li>smallest transfer unit: <em>sector</em> (512Bytes - 4 KB)</li>
+</ul>
+</li>
+<li>SSD (Solid State Drives)<ul>
+<li>no disk spin or head movements<ul>
+<li>the diff between random versus sequential I/O is not as large as HDD</li>
+</ul>
+</li>
+<li>is built of<ul>
+<li><em>memory cells</em></li>
+<li><em>strings</em> (32 - 64 cells per string)</li>
+<li><em>arrays</em></li>
+<li><em>pages</em> (2 - 16 KB)</li>
+<li><em>blocks</em> (64 - 512 pages per blocks)</li>
+<li><em>planes</em></li>
+<li><em>dies</em></li>
+</ul>
+</li>
+<li>smallest unit for read/write: page (write to empty cells only)</li>
+<li>smallest unit for erase: block</li>
+<li>FTL (Flash Translation Layer), responsible for<ul>
+<li>mapping page ID to physical locations</li>
+<li>tracking empty, written, discarded pages</li>
+<li><em>garbage collection</em>, relocate live pages, erase unused blocks</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="On-Disk-Structures"><a href="#On-Disk-Structures" class="headerlink" title="On-Disk Structures"></a>On-Disk Structures</h3><ul>
+<li><em>Block Device</em> abstration<ul>
+<li>hide the internal disk structures provided by HDD &amp; SSD for OS</li>
+<li>even though garbage collection usually done in background, it may impact write performance in case of random and unaligned workloads</li>
+<li>writing <em>full block</em>, combining subsequent writes to the same block<ul>
+<li>buffering, immutability</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>Pointer</em> for disk structures<ul>
+<li>on disk, the data layout is managed manually</li>
+<li>offset are<ul>
+<li>precomputed: if the pointer is written before the referring part</li>
+<li>or cached in memory</li>
+</ul>
+</li>
+<li>preferred<ul>
+<li>to keep number of pointers and spans to minimum</li>
+<li>rather to have a long dependency chain</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Fewer disk access by reduce “out-of-page”pointers<ul>
+<li>Paged Binary Trees<ul>
+<li>group nodes into pages to improve locality</li>
+<li>but still need to update out-of-page pointers during balancing</li>
+</ul>
+</li>
+<li>B-Trees<ul>
+<li>increase node fanout</li>
+<li>reduce tree height</li>
+<li>reduce the node pointers</li>
+<li>reduce the frequency of balancing operations</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Ubiquitous-B-Trees"><a href="#Ubiquitous-B-Trees" class="headerlink" title="Ubiquitous B-Trees"></a>Ubiquitous B-Trees</h2><p>Using B-Tree, could query both <em>point</em> and <em>range</em>.</p>
+<h3 id="B-Tree-Hierarchy"><a href="#B-Tree-Hierarchy" class="headerlink" title="B-Tree Hierarchy"></a>B-Tree Hierarchy</h3><ul>
+<li><em>node</em>: holds up to N keys and N + 1 pointers</li>
+<li><em>key</em> in the node: <em>index entries</em>, <em>separator keys</em>, <em>divider cells</em></li>
+<li><em>root node</em>, <em>internal nodes</em>, <em>leaf nodes</em></li>
+<li><em>page</em> as <em>node</em></li>
+<li><em>occupancy</em><ul>
+<li>balancing operations are triggered when full or nearly empty</li>
+</ul>
+</li>
+<li><em>B+-Trees</em>: only holds value on the leaf nodes</li>
+<li>some variants also have <em>sibling node pointers</em>, to simplify range scan</li>
+</ul>
+<h3 id="B-Tree-Lookup"><a href="#B-Tree-Lookup" class="headerlink" title="B-Tree Lookup"></a>B-Tree Lookup</h3><ul>
+<li>Complexity<ul>
+<li>block transfers: <code>log_k(M)</code></li>
+<li>comparisons: <code>log_2(M)</code> (binary search within each node)</li>
+</ul>
+</li>
+<li>Lookup objective<ul>
+<li>exact match: point queries, updates, deletions</li>
+<li>predecessor: range scan, inserts</li>
+</ul>
+</li>
+</ul>
+<h3 id="B-Tree-Node-Splits-amp-Merges"><a href="#B-Tree-Node-Splits-amp-Merges" class="headerlink" title="B-Tree Node Splits &amp; Merges"></a>B-Tree Node Splits &amp; Merges</h3><table>
+<thead>
+<tr>
+<th>Splits</th>
+<th>Merges</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>insert</td>
+<td>delete</td>
+</tr>
+<tr>
+<td>when <em>overflow</em> the capacity</td>
+<td>when <em>underflow</em> the capacity</td>
+</tr>
+<tr>
+<td>leaf nodes: N k-v pairs</td>
+<td>(occupancy under a threshold)</td>
+</tr>
+<tr>
+<td>internal nodes: N + 1 pointers</td>
+<td>merge, otherwise rebalance</td>
+</tr>
+<tr>
+<td><em>promote</em> the <em>split point</em> (midpoint) to the parent node</td>
+<td><em>demote</em> / <em>delete</em> the separator key for internal / leaf node</td>
+</tr>
+</tbody></table>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Database-Internals-Ch-1-Intro" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/02/Database-Internals-Ch-1-Intro/">Database Internals Ch.1 Introduction and Overview</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/02/Database-Internals-Ch-1-Intro/" class="article-date">
+  <time datetime="2020-05-02T04:15:27.000Z" itemprop="datePublished">2020-05-02</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>storage medium<ul>
+<li>Memory- vs. Disk-Based</li>
+</ul>
+</li>
+<li>layout<ul>
+<li>Column- vs. Row-Oriented</li>
+</ul>
+</li>
+<li>other taxonomy (not discussed)<ul>
+<li>OLTP vs. OLAP vs. HTAP (Hybrid Transactional &amp; Analytical Processing)</li>
+<li>k-v store, relational, document-oriented, graph databases</li>
+</ul>
+</li>
+</ul>
+<h2 id="DBMS-Architecture"><a href="#DBMS-Architecture" class="headerlink" title="DBMS Architecture"></a>DBMS Architecture</h2><ul>
+<li>Transport<ul>
+<li>Cluster Communication</li>
+<li>Client Communication</li>
+</ul>
+</li>
+<li>Query Processor<ul>
+<li>Query Parser<ul>
+<li>parse, interpret, validate, access control</li>
+</ul>
+</li>
+<li>Query Optimizer<ul>
+<li>based on internal statistics, index cardinality, approx. intersection size</li>
+<li>data placement</li>
+<li>usually presented as dependency tree for execution plan/query plan</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Execution Engine<ul>
+<li>Remote Execution<ul>
+<li>read/write, replication</li>
+</ul>
+</li>
+<li>Local Execution</li>
+</ul>
+</li>
+<li>Storage Engine<ul>
+<li>Transaction Manager<ul>
+<li>schedule transaction</li>
+<li>ensure logical consistent</li>
+</ul>
+</li>
+<li>Lock Manager<ul>
+<li>ensure physical data integrity</li>
+</ul>
+</li>
+<li>Access Methods<ul>
+<li>manage access and organizing data on disk</li>
+<li>heap file, B-Trees, LSM Trees (discussed later)</li>
+</ul>
+</li>
+<li>Buffer Manager<ul>
+<li>cache data pages</li>
+</ul>
+</li>
+<li>Recovery Manager<ul>
+<li>operation logs and restoring</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Memory-Versus-Disk-Based-DBMS"><a href="#Memory-Versus-Disk-Based-DBMS" class="headerlink" title="Memory- Versus Disk-Based DBMS"></a>Memory- Versus Disk-Based DBMS</h2><table>
+<thead>
+<tr>
+<th>main memory</th>
+<th>disk-based</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>primary in memory</td>
+<td>primary in disk</td>
+</tr>
+<tr>
+<td>use disk for recovery &amp; logging</td>
+<td>use memory for caching</td>
+</tr>
+<tr>
+<td>usually simpler, because OS abstract memory management</td>
+<td>have to manage data references, serialization, freed memory, fragmentation</td>
+</tr>
+<tr>
+<td>limit by volatility, might change while NVM (Non-Volatile Memory) grow</td>
+<td></td>
+</tr>
+<tr>
+<td>because the random access capacity, can choose from a larger pool of data structures</td>
+<td>usually use wide and short tree</td>
+</tr>
+<tr>
+<td>make durability by backup copy, batch compaction, snapshot, checkpointing</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="Column-Versus-Row-Oriented-DBMS"><a href="#Column-Versus-Row-Oriented-DBMS" class="headerlink" title="Column- Versus Row-Oriented DBMS"></a>Column- Versus Row-Oriented DBMS</h2><ul>
+<li>According to how the data store on disk</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>column-oriented</th>
+<th>row-oriented</th>
+<th>wide column store</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>partition vertically</td>
+<td>partition horizontally</td>
+<td>group into column families, row-wise in each column family</td>
+</tr>
+<tr>
+<td>Parquet, ORC, RCFile, Kudu, ClickHouse</td>
+<td>MySQL, PostgreSQL</td>
+<td>BigTable, HBase</td>
+</tr>
+<tr>
+<td>analytical workloads</td>
+<td>transactional workloads</td>
+<td>retrieving by a sequence of keys</td>
+</tr>
+<tr>
+<td>reconstruct with implicit identifiers / or offset</td>
+<td>identified by key</td>
+<td>identified by key &amp; qualifier</td>
+</tr>
+<tr>
+<td>computational efficiency with CPU’s vectorized instructions</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>compression efficiency</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="Data-Files-and-Index-Files"><a href="#Data-Files-and-Index-Files" class="headerlink" title="Data Files and Index Files"></a>Data Files and Index Files</h2><p>DBMS use specialized file organization for the purposes of:</p>
+<ul>
+<li>storage efficiency</li>
+<li>access efficiency</li>
+<li>update efficiency</li>
+</ul>
+<p>Some terminologies:</p>
+<ul>
+<li><em>data records</em>: consisting of multiple fields</li>
+<li><em>index</em>:efficiently locate data records without scanning</li>
+<li><em>data files</em> &amp; <em>index files</em>: usually separated</li>
+<li><em>page</em>: files are partitioned into pages, as size of one or multiple disk blocks</li>
+<li><em>deletion markers</em> (<em>tombstones</em>): <em>shadow</em> the deleted record until reclaiming during garbage collection</li>
+</ul>
+<h3 id="Data-Files"><a href="#Data-Files" class="headerlink" title="Data Files"></a>Data Files</h3><p>Also called <em>primary files</em>.</p>
+<p>Implemented as:</p>
+<ul>
+<li><em>heap-organized tables</em><ul>
+<li>no ordering required</li>
+<li>append with new records</li>
+<li>require additional index structures to be searchable</li>
+</ul>
+</li>
+<li><em>hash-organized tables</em><ul>
+<li>records are stored in buckets</li>
+<li>inside the bucket, could be sorted or not</li>
+</ul>
+</li>
+<li><em>index-organized tables</em> (IOTs)<ul>
+<li>store data records in the index</li>
+<li>range scan could be done by sequentially scan</li>
+<li>reduce the disk seek by one</li>
+</ul>
+</li>
+</ul>
+<h3 id="Index-Files"><a href="#Index-Files" class="headerlink" title="Index Files"></a>Index Files</h3><p><em>Primary index</em> &amp; <em>Secondary index</em></p>
+<ul>
+<li>Primary index<ul>
+<li>is built over a primary key or a set of keys identified as primary</li>
+<li>unique entry per search key</li>
+</ul>
+</li>
+<li>Secondary index<ul>
+<li>all other indexes</li>
+<li>may holds several entries per search key</li>
+<li>may point to the same record from multiple secondary indexes</li>
+</ul>
+</li>
+</ul>
+<p><em>Clustered</em> &amp; <em>Non-clustered</em></p>
+<ul>
+<li>Clustered<ul>
+<li>the order of data records follows the search key order</li>
+<li>primary indexes are most often clustered</li>
+<li>IOTs are clustered by definition</li>
+<li>secondary indexes are non-clustered by definition</li>
+</ul>
+</li>
+</ul>
+<p>Referencing <em>directly</em> or <em>primary index as an indirection</em> (when search by secondary index)</p>
+<ul>
+<li>Referencing directly<ul>
+<li>reduce the number of disk seek</li>
+</ul>
+</li>
+<li>Indirection<ul>
+<li>reduce the cost of pointer updates while the record relocate</li>
+<li>ex. MySQL InnoDB</li>
+</ul>
+</li>
+<li>Hybrid<ul>
+<li>store both data file offset and primary keys</li>
+<li>try directly offset, if failed, go by primary key</li>
+<li>update index after finding a new offset</li>
+</ul>
+</li>
+</ul>
+<h2 id="Buffering-Immutability-and-Ordering"><a href="#Buffering-Immutability-and-Ordering" class="headerlink" title="Buffering, Immutability, and Ordering"></a>Buffering, Immutability, and Ordering</h2><p>Three common variables for storage structures.</p>
+<ul>
+<li><em>Buffering</em><ul>
+<li>ex. in-memory buffers to B-Tree nodes to amortize the I/O costs</li>
+<li>ex. two components LSM Trees combine buffering with immutability</li>
+</ul>
+</li>
+<li><em>Immutability</em><ul>
+<li>modifications are appended</li>
+<li><em>copy-on-write</em></li>
+<li>distinction between LSM and B-Trees is drawn as immutable against in-place update storage</li>
+</ul>
+</li>
+<li><em>Ordering</em><ul>
+<li>whether could efficiently range scan</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/01/21/hello-world/">Hello World</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/01/21/hello-world/" class="article-date">
+  <time datetime="2020-01-21T00:47:52.000Z" itemprop="datePublished">2020-01-21</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Hadoop-Application-Architectures-Ch-7-Near-Real-Time-Processing-with-Hadoop" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/23/Hadoop-Application-Architectures-Ch-7-Near-Real-Time-Processing-with-Hadoop/">Hadoop Application Architectures Ch.7 Near-Real-Time Processing with Hadoop</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/23/Hadoop-Application-Architectures-Ch-7-Near-Real-Time-Processing-with-Hadoop/" class="article-date">
+  <time datetime="2019-12-23T00:46:04.000Z" itemprop="datePublished">2019-12-23</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Straming processing tools</p>
+<ul>
+<li><em>Apache Storm</em></li>
+<li><em>Apache Spark Streaming</em></li>
+<li><em>Apache Samza</em></li>
+<li><em>Apache Flume</em> via Flume interceptors</li>
+<li><em>Apache Flink</em></li>
+</ul>
+<p>Not include</p>
+<ul>
+<li><em>Kafka</em><ul>
+<li>is only a message bus, not processing streaming data</li>
+</ul>
+</li>
+<li><em>Impala, Apache Drill, or Presto</em><ul>
+<li>are the low-latency, massively parallel processing (MPP) query engines</li>
+</ul>
+</li>
+</ul>
+<p>NRT, near-real-time, processing</p>
+<h2 id="Stream-Processing"><a href="#Stream-Processing" class="headerlink" title="Stream Processing"></a>Stream Processing</h2><p>Common functions,</p>
+<ul>
+<li>Aggregation</li>
+<li>Windowing averages</li>
+<li>Record level enrichment</li>
+<li>Record level alerting / validation</li>
+<li>Persistence of transient data (storing state)</li>
+<li>Support for Lambda Architectures</li>
+<li>Higher-level functions (sorting, grouping, partitioning, joining)</li>
+<li>Integration with HDFS / HBase</li>
+</ul>
+<h5 id="THE-LAMBDA-ARCHITECTURE"><a href="#THE-LAMBDA-ARCHITECTURE" class="headerlink" title="THE LAMBDA ARCHITECTURE"></a>THE LAMBDA ARCHITECTURE</h5><blockquote>
+<p>The Lambda Architecture, as defined by Nathan Marz and James Warren and described more thoroughly in their book Big Data (Manning), is a general framework for scalable and fault-tolerant processing of large volumes of data.</p>
+</blockquote>
+<ul>
+<li>Batch layer<ul>
+<li>immutable copy of the master data</li>
+<li>precomputes the <em>batch views</em></li>
+</ul>
+</li>
+<li>Serving layer<ul>
+<li>indexes the batch views, loads them, and makes them available for low-latency querying</li>
+</ul>
+</li>
+<li>Speed layer<ul>
+<li>is essentially the real-time layer in the architecture</li>
+<li>creates views on data as it arrives in the system</li>
+</ul>
+</li>
+</ul>
+<p>Processing Flow,</p>
+<ul>
+<li>new data will be sent to the <strong>batch</strong> and <strong>speed</strong> layers<ul>
+<li>in the batch layer, appended to the master data set</li>
+<li>in the speed layer, used to do incremental updates of the real-time views</li>
+</ul>
+</li>
+<li>at query time<ul>
+<li>data from both layers will be combined</li>
+<li>when the data is available in the <strong>batch</strong> and <strong>serving</strong> layers, it can be discarded from the <strong>speed</strong> layer</li>
+</ul>
+</li>
+</ul>
+<p>Advantage,</p>
+<ul>
+<li>fault tolerant</li>
+<li>low latency</li>
+<li>error correction</li>
+</ul>
+<h5 id="MICROBATCHING-VERSUS-STREAMING"><a href="#MICROBATCHING-VERSUS-STREAMING" class="headerlink" title="MICROBATCHING VERSUS STREAMING"></a>MICROBATCHING VERSUS STREAMING</h5><ul>
+<li>processing logic simplification</li>
+<li>message processing overhead (batch <em>puts</em>)</li>
+<li>exactly-once</li>
+<li>Storm, pure streaming tool</li>
+</ul>
+<h2 id="Apache-Storm"><a href="#Apache-Storm" class="headerlink" title="Apache Storm"></a>Apache Storm</h2><h3 id="Storm-High-Level-Architecture"><a href="#Storm-High-Level-Architecture" class="headerlink" title="Storm High-Level Architecture"></a>Storm High-Level Architecture</h3><p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-7-Near-Real-Time-Processing-with-Hadoop/storm_architecture.png" alt="Storm Architecture"></p>
+<h3 id="Storm-Topologies"><a href="#Storm-Topologies" class="headerlink" title="Storm Topologies"></a>Storm Topologies</h3><p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-7-Near-Real-Time-Processing-with-Hadoop/storm_topology.png" alt="Storm Topology"></p>
+<ul>
+<li>In Storm you are building a topology that is solving a problem.</li>
+<li>In Trident and Spark Streaming you are expressing how to solve a problem, and the topology is constructed for you behind the scenes.</li>
+</ul>
+<h3 id="Tuples-and-Streams"><a href="#Tuples-and-Streams" class="headerlink" title="Tuples and Streams"></a>Tuples and Streams</h3><p>A stream is an unbounded sequence of tuples between any two nodes in a topology.</p>
+<h3 id="Spouts-and-Bolts"><a href="#Spouts-and-Bolts" class="headerlink" title="Spouts and Bolts"></a>Spouts and Bolts</h3><ul>
+<li>Spouts<ul>
+<li>provide the source of streams in a topology</li>
+<li>read data from some external source, and emit one or more streams</li>
+</ul>
+</li>
+<li>Bolts<ul>
+<li>consume streams in a topology</li>
+<li>do some processing on the tuples in the stream</li>
+<li>then emit zero or more tuples to downstream bolts or external system as a data persistence layer</li>
+</ul>
+</li>
+</ul>
+<h3 id="Stream-Groupings"><a href="#Stream-Groupings" class="headerlink" title="Stream Groupings"></a>Stream Groupings</h3><p>An important feature of Storm, over Flume.</p>
+<p>Groupings,</p>
+<ul>
+<li>Shuffle grouping<ul>
+<li>evenly and randomly distributing tuples to each downstream bolts</li>
+</ul>
+</li>
+<li>Fields grouping<ul>
+<li>based on the specified field(s) in the tuples, send to the same bolt</li>
+<li>like partitioning by hash key</li>
+</ul>
+</li>
+<li>All grouping<ul>
+<li>fan-out</li>
+<li>replicates stream to all bolts</li>
+</ul>
+</li>
+<li>Global grouping<ul>
+<li>fan-in, collecting</li>
+<li>sends an entire stream to a single bolt</li>
+</ul>
+</li>
+</ul>
+<h3 id="Reliability-of-Storm-Applications"><a href="#Reliability-of-Storm-Applications" class="headerlink" title="Reliability of Storm Applications"></a>Reliability of Storm Applications</h3><p>The ability to guarantee message processing relies on having a reliable message source, ex. <em>Kafka</em>.</p>
+<ul>
+<li>At-most-once processing</li>
+<li>At-least-once processing</li>
+<li>Exactly-once processing<ul>
+<li>leverage an additional abstraction over core Storm, like Trident</li>
+</ul>
+</li>
+</ul>
+<h3 id="Storm-Example-Simple-Moving-Average"><a href="#Storm-Example-Simple-Moving-Average" class="headerlink" title="Storm Example: Simple Moving Average"></a>Storm Example: Simple Moving Average</h3><ul>
+<li>Linked list for the windowing buffer</li>
+<li><code>suffleGrouping</code> and <code>fieldGrouping(new Field(&quot;ticker&quot;))</code> in <code>buildTopology()</code></li>
+</ul>
+<h3 id="Evaluating-Storm"><a href="#Evaluating-Storm" class="headerlink" title="Evaluating Storm"></a>Evaluating Storm</h3><h5 id="SUPPORT-FOR-AGGREGATION-AND-WINDOWING"><a href="#SUPPORT-FOR-AGGREGATION-AND-WINDOWING" class="headerlink" title="SUPPORT FOR AGGREGATION AND WINDOWING"></a>SUPPORT FOR AGGREGATION AND WINDOWING</h5><ul>
+<li>easy to implement</li>
+<li>state, counters not fault-tolerant, since it uses local storage<ul>
+<li>if using external storage, like HBase or Memcached, notice the sync overhead, and progress loss trade-off</li>
+</ul>
+</li>
+</ul>
+<h5 id="ENRICHMENT-AND-ALERTING"><a href="#ENRICHMENT-AND-ALERTING" class="headerlink" title="ENRICHMENT AND ALERTING"></a>ENRICHMENT AND ALERTING</h5><h5 id="LAMDBA-ARCHITECTURE"><a href="#LAMDBA-ARCHITECTURE" class="headerlink" title="LAMDBA ARCHITECTURE"></a>LAMDBA ARCHITECTURE</h5><ul>
+<li>batch processes implemented with ex. MapReduce or Spark</li>
+</ul>
+<h2 id="Trident"><a href="#Trident" class="headerlink" title="Trident"></a>Trident</h2><ul>
+<li>a higher-level abstraction over Storm</li>
+<li>wrap Storm in order to provide support for transactions over Storm</li>
+<li>follows a declarative programming model similar to SQL</li>
+<li>use <em>operations</em> for processing, such as filters, splits, merges, joins, and groupings</li>
+<li>follows a microbatching model<ul>
+<li>providing a model where exactly-once semantics can be more easily supported</li>
+<li>provides the ability to replay tuples in the event of failure</li>
+<li>provides management of batches to ensure that tuples are processed exactly once</li>
+</ul>
+</li>
+</ul>
+<h3 id="Evaluating-Trident"><a href="#Evaluating-Trident" class="headerlink" title="Evaluating Trident"></a>Evaluating Trident</h3><h5 id="SUPPORT-FOR-AGGREGATION-AND-WINDOWING-1"><a href="#SUPPORT-FOR-AGGREGATION-AND-WINDOWING-1" class="headerlink" title="SUPPORT FOR AGGREGATION AND WINDOWING"></a>SUPPORT FOR AGGREGATION AND WINDOWING</h5><ul>
+<li>now can persist to external storage systems to maintain state with higher throughput</li>
+</ul>
+<h5 id="ENRICHMENT-AND-ALERTING-1"><a href="#ENRICHMENT-AND-ALERTING-1" class="headerlink" title="ENRICHMENT AND ALERTING"></a>ENRICHMENT AND ALERTING</h5><ul>
+<li>the batches are merely wrappers, nothing more than a marker at the end of a group of tuples</li>
+</ul>
+<h5 id="LAMDBA-ARCHITECTURE-1"><a href="#LAMDBA-ARCHITECTURE-1" class="headerlink" title="LAMDBA ARCHITECTURE"></a>LAMDBA ARCHITECTURE</h5><ul>
+<li>still need to implement the batch process in something like MapReduce or Spark</li>
+</ul>
+<h2 id="Spark-Streaming"><a href="#Spark-Streaming" class="headerlink" title="Spark Streaming"></a>Spark Streaming</h2><ul>
+<li>Reliable persistence of intermediate data for your counting and rolling averages.</li>
+<li>Supported integration with external storage systems like HBase.</li>
+<li>Reusable code between streaming and batch processing.</li>
+<li>The Spark Streaming microbatch model allows for processing patterns that help to mitigate the risk of duplicate events.</li>
+</ul>
+<p>Concept:</p>
+<ul>
+<li>normal <em>RDD</em>: a reference to a distributed immutable collection</li>
+<li><em>DStream</em>: a reference to a distributed immutable collection in relation to a batch window, chunk</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-7-Near-Real-Time-Processing-with-Hadoop/spark_stream_simple_count.png" alt="Spark Streaming simple count example"></p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-7-Near-Real-Time-Processing-with-Hadoop/spark_stream_multiple.png" alt="Spark Streaming multiple stream"></p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-7-Near-Real-Time-Processing-with-Hadoop/spark_stream_stateful.png" alt="Maintaining state in Spark Streaming"></p>
+<ul>
+<li><code>updateStateByKey()</code></li>
+<li><em>checkpoint</em></li>
+</ul>
+<h5 id="DSTREAMS-PROVIDES-FAULT-TOLERANCE"><a href="#DSTREAMS-PROVIDES-FAULT-TOLERANCE" class="headerlink" title="DSTREAMS PROVIDES FAULT TOLERANCE"></a>DSTREAMS PROVIDES FAULT TOLERANCE</h5><ul>
+<li>saved state to <em>checkpoint</em> directory every <em>N</em> microbatch</li>
+<li>recreate from cache in memory or disk</li>
+</ul>
+<h5 id="SPARK-STREAMING-FAULT-TOLERANCE"><a href="#SPARK-STREAMING-FAULT-TOLERANCE" class="headerlink" title="SPARK STREAMING FAULT TOLERANCE"></a>SPARK STREAMING FAULT TOLERANCE</h5><ul>
+<li>WAL for driver process failure recovery</li>
+<li>resilient RDD, configurable</li>
+</ul>
+<h3 id="Evaluating-Spark-Streaming"><a href="#Evaluating-Spark-Streaming" class="headerlink" title="Evaluating Spark Streaming"></a>Evaluating Spark Streaming</h3><h5 id="SUPPORT-FOR-AGGREGATION-AND-WINDOWING-2"><a href="#SUPPORT-FOR-AGGREGATION-AND-WINDOWING-2" class="headerlink" title="SUPPORT FOR AGGREGATION AND WINDOWING"></a>SUPPORT FOR AGGREGATION AND WINDOWING</h5><ul>
+<li>counting, windowing, and rolling averages are straightforward in Spark Streaming</li>
+</ul>
+<h5 id="ENRICHMENT-AND-ALERTING-2"><a href="#ENRICHMENT-AND-ALERTING-2" class="headerlink" title="ENRICHMENT AND ALERTING"></a>ENRICHMENT AND ALERTING</h5><ul>
+<li>have performance throughput advantages if it requires lookup from external systems like HBase to execute the enrichment and/or alerting</li>
+<li>major downside here is the latency, seconds level microbatching</li>
+</ul>
+<h5 id="LAMDBA-ARCHITECTURE-2"><a href="#LAMDBA-ARCHITECTURE-2" class="headerlink" title="LAMDBA ARCHITECTURE"></a>LAMDBA ARCHITECTURE</h5><ul>
+<li>code reuse for Spark &amp; Spark Streaming</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+  
+    <nav id="page-nav">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
+    </nav>
+  
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Database Internals Ch.1 Introduction and Overview | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="storage medium Memory- vs. Disk-Based   layout Column- vs. Row-Oriented   other taxonomy (not discussed) OLTP vs. OLAP vs. HTAP (Hybrid Transactional &amp; Analytical Processing) k-v store, relationa">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Database Internals Ch.1 Introduction and Overview">
+<meta property="og:url" content="https://weasellin.github.io/2020/05/02/Database-Internals-Ch-1-Intro/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="storage medium Memory- vs. Disk-Based   layout Column- vs. Row-Oriented   other taxonomy (not discussed) OLTP vs. OLAP vs. HTAP (Hybrid Transactional &amp; Analytical Processing) k-v store, relationa">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-05-02T04:15:27.000Z">
+<meta property="article:modified_time" content="2020-05-04T07:52:28.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="database_internals">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Database-Internals-Ch-1-Intro" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Database Internals Ch.1 Introduction and Overview
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/02/Database-Internals-Ch-1-Intro/" class="article-date">
+  <time datetime="2020-05-02T04:15:27.000Z" itemprop="datePublished">2020-05-02</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>storage medium<ul>
+<li>Memory- vs. Disk-Based</li>
+</ul>
+</li>
+<li>layout<ul>
+<li>Column- vs. Row-Oriented</li>
+</ul>
+</li>
+<li>other taxonomy (not discussed)<ul>
+<li>OLTP vs. OLAP vs. HTAP (Hybrid Transactional &amp; Analytical Processing)</li>
+<li>k-v store, relational, document-oriented, graph databases</li>
+</ul>
+</li>
+</ul>
+<h2 id="DBMS-Architecture"><a href="#DBMS-Architecture" class="headerlink" title="DBMS Architecture"></a>DBMS Architecture</h2><ul>
+<li>Transport<ul>
+<li>Cluster Communication</li>
+<li>Client Communication</li>
+</ul>
+</li>
+<li>Query Processor<ul>
+<li>Query Parser<ul>
+<li>parse, interpret, validate, access control</li>
+</ul>
+</li>
+<li>Query Optimizer<ul>
+<li>based on internal statistics, index cardinality, approx. intersection size</li>
+<li>data placement</li>
+<li>usually presented as dependency tree for execution plan/query plan</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Execution Engine<ul>
+<li>Remote Execution<ul>
+<li>read/write, replication</li>
+</ul>
+</li>
+<li>Local Execution</li>
+</ul>
+</li>
+<li>Storage Engine<ul>
+<li>Transaction Manager<ul>
+<li>schedule transaction</li>
+<li>ensure logical consistent</li>
+</ul>
+</li>
+<li>Lock Manager<ul>
+<li>ensure physical data integrity</li>
+</ul>
+</li>
+<li>Access Methods<ul>
+<li>manage access and organizing data on disk</li>
+<li>heap file, B-Trees, LSM Trees (discussed later)</li>
+</ul>
+</li>
+<li>Buffer Manager<ul>
+<li>cache data pages</li>
+</ul>
+</li>
+<li>Recovery Manager<ul>
+<li>operation logs and restoring</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Memory-Versus-Disk-Based-DBMS"><a href="#Memory-Versus-Disk-Based-DBMS" class="headerlink" title="Memory- Versus Disk-Based DBMS"></a>Memory- Versus Disk-Based DBMS</h2><table>
+<thead>
+<tr>
+<th>main memory</th>
+<th>disk-based</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>primary in memory</td>
+<td>primary in disk</td>
+</tr>
+<tr>
+<td>use disk for recovery &amp; logging</td>
+<td>use memory for caching</td>
+</tr>
+<tr>
+<td>usually simpler, because OS abstract memory management</td>
+<td>have to manage data references, serialization, freed memory, fragmentation</td>
+</tr>
+<tr>
+<td>limit by volatility, might change while NVM (Non-Volatile Memory) grow</td>
+<td></td>
+</tr>
+<tr>
+<td>because the random access capacity, can choose from a larger pool of data structures</td>
+<td>usually use wide and short tree</td>
+</tr>
+<tr>
+<td>make durability by backup copy, batch compaction, snapshot, checkpointing</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="Column-Versus-Row-Oriented-DBMS"><a href="#Column-Versus-Row-Oriented-DBMS" class="headerlink" title="Column- Versus Row-Oriented DBMS"></a>Column- Versus Row-Oriented DBMS</h2><ul>
+<li>According to how the data store on disk</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>column-oriented</th>
+<th>row-oriented</th>
+<th>wide column store</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>partition vertically</td>
+<td>partition horizontally</td>
+<td>group into column families, row-wise in each column family</td>
+</tr>
+<tr>
+<td>Parquet, ORC, RCFile, Kudu, ClickHouse</td>
+<td>MySQL, PostgreSQL</td>
+<td>BigTable, HBase</td>
+</tr>
+<tr>
+<td>analytical workloads</td>
+<td>transactional workloads</td>
+<td>retrieving by a sequence of keys</td>
+</tr>
+<tr>
+<td>reconstruct with implicit identifiers / or offset</td>
+<td>identified by key</td>
+<td>identified by key &amp; qualifier</td>
+</tr>
+<tr>
+<td>computational efficiency with CPU’s vectorized instructions</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>compression efficiency</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="Data-Files-and-Index-Files"><a href="#Data-Files-and-Index-Files" class="headerlink" title="Data Files and Index Files"></a>Data Files and Index Files</h2><p>DBMS use specialized file organization for the purposes of:</p>
+<ul>
+<li>storage efficiency</li>
+<li>access efficiency</li>
+<li>update efficiency</li>
+</ul>
+<p>Some terminologies:</p>
+<ul>
+<li><em>data records</em>: consisting of multiple fields</li>
+<li><em>index</em>:efficiently locate data records without scanning</li>
+<li><em>data files</em> &amp; <em>index files</em>: usually separated</li>
+<li><em>page</em>: files are partitioned into pages, as size of one or multiple disk blocks</li>
+<li><em>deletion markers</em> (<em>tombstones</em>): <em>shadow</em> the deleted record until reclaiming during garbage collection</li>
+</ul>
+<h3 id="Data-Files"><a href="#Data-Files" class="headerlink" title="Data Files"></a>Data Files</h3><p>Also called <em>primary files</em>.</p>
+<p>Implemented as:</p>
+<ul>
+<li><em>heap-organized tables</em><ul>
+<li>no ordering required</li>
+<li>append with new records</li>
+<li>require additional index structures to be searchable</li>
+</ul>
+</li>
+<li><em>hash-organized tables</em><ul>
+<li>records are stored in buckets</li>
+<li>inside the bucket, could be sorted or not</li>
+</ul>
+</li>
+<li><em>index-organized tables</em> (IOTs)<ul>
+<li>store data records in the index</li>
+<li>range scan could be done by sequentially scan</li>
+<li>reduce the disk seek by one</li>
+</ul>
+</li>
+</ul>
+<h3 id="Index-Files"><a href="#Index-Files" class="headerlink" title="Index Files"></a>Index Files</h3><p><em>Primary index</em> &amp; <em>Secondary index</em></p>
+<ul>
+<li>Primary index<ul>
+<li>is built over a primary key or a set of keys identified as primary</li>
+<li>unique entry per search key</li>
+</ul>
+</li>
+<li>Secondary index<ul>
+<li>all other indexes</li>
+<li>may holds several entries per search key</li>
+<li>may point to the same record from multiple secondary indexes</li>
+</ul>
+</li>
+</ul>
+<p><em>Clustered</em> &amp; <em>Non-clustered</em></p>
+<ul>
+<li>Clustered<ul>
+<li>the order of data records follows the search key order</li>
+<li>primary indexes are most often clustered</li>
+<li>IOTs are clustered by definition</li>
+<li>secondary indexes are non-clustered by definition</li>
+</ul>
+</li>
+</ul>
+<p>Referencing <em>directly</em> or <em>primary index as an indirection</em> (when search by secondary index)</p>
+<ul>
+<li>Referencing directly<ul>
+<li>reduce the number of disk seek</li>
+</ul>
+</li>
+<li>Indirection<ul>
+<li>reduce the cost of pointer updates while the record relocate</li>
+<li>ex. MySQL InnoDB</li>
+</ul>
+</li>
+<li>Hybrid<ul>
+<li>store both data file offset and primary keys</li>
+<li>try directly offset, if failed, go by primary key</li>
+<li>update index after finding a new offset</li>
+</ul>
+</li>
+</ul>
+<h2 id="Buffering-Immutability-and-Ordering"><a href="#Buffering-Immutability-and-Ordering" class="headerlink" title="Buffering, Immutability, and Ordering"></a>Buffering, Immutability, and Ordering</h2><p>Three common variables for storage structures.</p>
+<ul>
+<li><em>Buffering</em><ul>
+<li>ex. in-memory buffers to B-Tree nodes to amortize the I/O costs</li>
+<li>ex. two components LSM Trees combine buffering with immutability</li>
+</ul>
+</li>
+<li><em>Immutability</em><ul>
+<li>modifications are appended</li>
+<li><em>copy-on-write</em></li>
+<li>distinction between LSM and B-Trees is drawn as immutable against in-place update storage</li>
+</ul>
+</li>
+<li><em>Ordering</em><ul>
+<li>whether could efficiently range scan</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/05/04/Database-Internals-Ch-2-B-Tree-Basics/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Database-Internals-Ch-2-B-Tree-Basics
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/01/21/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Hello World</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

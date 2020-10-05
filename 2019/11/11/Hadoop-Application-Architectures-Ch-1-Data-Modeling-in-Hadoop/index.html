@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Hadoop Application Architectures Ch.1 Data Modeling in Hadoop | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="The power of context in Hadoop: “Schema-on-Read”, compares to “Schema-on-Write”:  the structure imposed at processing time based on the requirements shorter cycles of analysis, data modeling, ETL, tes">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop Application Architectures Ch.1 Data Modeling in Hadoop">
+<meta property="og:url" content="https://weasellin.github.io/2019/11/11/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="The power of context in Hadoop: “Schema-on-Read”, compares to “Schema-on-Write”:  the structure imposed at processing time based on the requirements shorter cycles of analysis, data modeling, ETL, tes">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/container_format_and_compression_block.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/region_table_topology.png">
+<meta property="article:published_time" content="2019-11-11T11:15:43.000Z">
+<meta property="article:modified_time" content="2020-01-21T00:47:52.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="hadoop">
+<meta property="article:tag" content="hadoop_application_architectures">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/container_format_and_compression_block.png">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Hadoop Application Architectures Ch.1 Data Modeling in Hadoop
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/11/11/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/" class="article-date">
+  <time datetime="2019-11-11T11:15:43.000Z" itemprop="datePublished">2019-11-11</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>The power of context in Hadoop: “Schema-on-Read”, compares to “Schema-on-Write”:</p>
+<ul>
+<li>the structure imposed at processing time based on the requirements</li>
+<li>shorter cycles of analysis, data modeling, ETL, testing, etc. before data can be processed</li>
+<li>agility on schema revolutions</li>
+</ul>
+<p>Considerations perspectives of storing:</p>
+<ul>
+<li>Data storage formats</li>
+<li>Multitenancy</li>
+<li>Schema Design</li>
+<li>Metadata Management</li>
+</ul>
+<p>Beyond the scope:</p>
+<ul>
+<li><a href="http://bit.ly/hadoop-security" target="_blank" rel="noopener">Hadoop Security</a></li>
+</ul>
+<h2 id="Data-Storage-Options"><a href="#Data-Storage-Options" class="headerlink" title="Data Storage Options"></a>Data Storage Options</h2><ul>
+<li>File format</li>
+<li>Compression</li>
+<li>Data storage system</li>
+</ul>
+<h3 id="Standard-File-Formats"><a href="#Standard-File-Formats" class="headerlink" title="Standard File Formats"></a>Standard File Formats</h3><h4 id="Text-data"><a href="#Text-data" class="headerlink" title="Text data"></a>Text data</h4><ul>
+<li>ex. server logs, emails, CSV files</li>
+<li>with “splittable” compression, for parallel processing<ul>
+<li>container format: SequenceFiles, Avro</li>
+</ul>
+</li>
+</ul>
+<h4 id="Structured-text-data"><a href="#Structured-text-data" class="headerlink" title="Structured text data"></a>Structured text data</h4><ul>
+<li>ex. XML, JSON</li>
+<li>challenging to make XML or JSON splittable<ul>
+<li>using container format such as Avro</li>
+<li><code>XMLLoader</code> in <code>PiggyBank</code> library</li>
+<li><code>LzoJaonInputFormat</code> in <code>Elephant Bird</code> project</li>
+</ul>
+</li>
+</ul>
+<h4 id="Binary-data"><a href="#Binary-data" class="headerlink" title="Binary data"></a>Binary data</h4><ul>
+<li>ex. images</li>
+<li>in most of cases, container format is preferred</li>
+<li>in the cases the binary data is larger than a certain size, ex. 64MB, consider not using container format.</li>
+</ul>
+<h3 id="Hadoop-File-Types"><a href="#Hadoop-File-Types" class="headerlink" title="Hadoop File Types"></a>Hadoop File Types</h3><p>Important characteristics:</p>
+<ul>
+<li>Splittable Compression<ul>
+<li>parallel processing</li>
+<li>data locality</li>
+</ul>
+</li>
+<li>Agnostic Compression<ul>
+<li>codec in header metadata</li>
+</ul>
+</li>
+</ul>
+<h4 id="File-based-data-structures"><a href="#File-based-data-structures" class="headerlink" title="File-based data structures"></a>File-based data structures</h4><ul>
+<li>ex. SequenceFiles, MapFiles, SetFiles, ArrayFiles, and BloomMapFiles</li>
+<li>MapReduce specific</li>
+<li>SequenceFiles<ul>
+<li>most common</li>
+<li>binary key-value pair</li>
+<li>formats:<ul>
+<li>uncompressed</li>
+<li>record-compressed (single record)</li>
+<li>block-compressed (batch, “not” HDFS block)</li>
+</ul>
+</li>
+<li>sync maker<ul>
+<li>to allow for seeking</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Serialization-Formats"><a href="#Serialization-Formats" class="headerlink" title="Serialization Formats"></a>Serialization Formats</h3><p>byte stream &lt;=&gt; data structures</p>
+<p>Term:</p>
+<ul>
+<li><strong>IDL</strong> (Interface Definition Language)</li>
+<li><strong>RPC</strong> (Remote Procedure Calls)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Summary</th>
+<th>Limitation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Writables</td>
+<td>- simple, efficient, serializable</td>
+<td>Only in Hadoop &amp; Java</td>
+</tr>
+<tr>
+<td>Thrift</td>
+<td>- language-natrual <br> - by Facebook <br> - use IDL <br> -robust RPC</td>
+<td>- no internal compression of records <br> - not splittable <br> - not native MapReduce support <br> (addressed by Elephant Bird)</td>
+</tr>
+<tr>
+<td>Protocol Buffers</td>
+<td>- language-natrual <br> - by Google <br> - use IDL, stub code generation</td>
+<td>same as Thrift</td>
+</tr>
+<tr>
+<td>Avro</td>
+<td>- language-natrual <br> - optional IDL: JSON, C-like <br> - native support for MapReduce <br> - compressible: Snappy, Deflate <br> - splittable: sync marker <br> - self-decribing: schema in each file header’s metadata</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>Additional refer: <a href="http://blog.maxkit.com.tw/2017/10/thrift-protobuf-avro.html" target="_blank" rel="noopener">http://blog.maxkit.com.tw/2017/10/thrift-protobuf-avro.html</a></p>
+<h3 id="Columnar-Formats"><a href="#Columnar-Formats" class="headerlink" title="Columnar Formats"></a>Columnar Formats</h3><ul>
+<li>skip I/O and decompression</li>
+<li>efficient columnar compression rate</li>
+</ul>
+<p>Term:</p>
+<ul>
+<li><strong>RCFile</strong> (Record Columnar File)</li>
+<li><strong>ORC</strong> (Optimized Row Columnar)</li>
+<li><strong>RLE</strong> (bit-packaging/run length encoding)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Summary</th>
+<th>Limitation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RCFile</td>
+<td>column-oriented storage within each row splits</td>
+<td>has some deficiencies that prevent optimal performance for query times and compression <br> (what’s this exactly?)</td>
+</tr>
+<tr>
+<td>ORC</td>
+<td>- lightweight, always-on compression <br> - zlib, LZO, Snappy <br> - predicate push down <br> - Hive type, including decimal, complex <br> - splittable</td>
+<td>- only designed for Hive, not general purpose</td>
+</tr>
+<tr>
+<td>Parquet</td>
+<td>- per-column level compression <br> - support nested data structure <br> - full metadata, self-documenting <br> - fully support Avro, Thrift API <br> - efficient and extensible encoding schemas, RLE</td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="Avro-and-Parquet"><a href="#Avro-and-Parquet" class="headerlink" title="Avro and Parquet"></a>Avro and Parquet</h5><ul>
+<li>single interface: recommended if you are choosing for the single interface</li>
+<li>compatibility: Parquet can be read and written to with Avro APIs and Avro schemas</li>
+</ul>
+<h3 id="Compression"><a href="#Compression" class="headerlink" title="Compression"></a>Compression</h3><ul>
+<li>disk &amp; network I/O</li>
+<li>source &amp; intermediate data</li>
+<li>trade with CPU loading</li>
+<li>splittability for parallelism and data locality</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Summary</th>
+<th>Limitation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Snappy</td>
+<td>- developed at Google <br> - high speed and reasonable compression rate</td>
+<td>- not inherently splittable <br> - intended to be used with a container format</td>
+</tr>
+<tr>
+<td>LZO</td>
+<td>- very efficient decompression <br> - splittable</td>
+<td>- requires additional indexing <br> - requires a separated installation from Hadoop because of license prevention</td>
+</tr>
+<tr>
+<td>Gzip</td>
+<td>- good compression rate, 2.5x to Snappy <br> - read almost as fast as Snappy</td>
+<td>- write speed about half to Snappy <br> - not splittable <br> - fewer blocks might lead to lower parallelism =&gt; using smaller blocks</td>
+</tr>
+<tr>
+<td>bzip2</td>
+<td>- excellent compression rate, 9% better than Gzip</td>
+<td>- slow read / write, 10x slower than Gzip <br> - only used in archival purposes</td>
+</tr>
+</tbody></table>
+<h4 id="Compression-Recommendation"><a href="#Compression-Recommendation" class="headerlink" title="Compression Recommendation"></a>Compression Recommendation</h4><ul>
+<li>Enable compression of the MapReduce intermediate data</li>
+<li>Compress on columnar chunks</li>
+<li>With splittable container formats, ex. Avro or SequenceFiles, make the compression &amp; decompression could be processed individually</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/container_format_and_compression_block.png" alt="Compression Block"></p>
+<h2 id="HDFS-Schema-Design"><a href="#HDFS-Schema-Design" class="headerlink" title="HDFS Schema Design"></a>HDFS Schema Design</h2><p>Standard directory structure:</p>
+<ul>
+<li>Easier to share data sets between teams</li>
+<li>Allows access and quota controls</li>
+<li>“Stage” data during process pipeline</li>
+<li>Tool conventions compliant</li>
+</ul>
+<h3 id="Location-of-HDFS-Files"><a href="#Location-of-HDFS-Files" class="headerlink" title="Location of HDFS Files"></a>Location of HDFS Files</h3><ul>
+<li><em>/user/&lt;username&gt;</em></li>
+<li><em>/etl</em><ul>
+<li>ex. <em>/etl/&lt;group&gt;/&lt;application&gt;/&lt;process&gt;/{input,processing,output,bad}</em></li>
+</ul>
+</li>
+<li><em>/tmp</em></li>
+<li><em>/data</em></li>
+<li><em>/app</em><ul>
+<li>ex. <em>/app/&lt;group&gt;/&lt;application&gt;/&lt;version&gt;/&lt;artifact directory&gt;/&lt;artifact&gt;</em></li>
+</ul>
+</li>
+<li><em>/metadata</em></li>
+</ul>
+<h3 id="Advanced-HDFS-Schema-Design"><a href="#Advanced-HDFS-Schema-Design" class="headerlink" title="Advanced HDFS Schema Design"></a>Advanced HDFS Schema Design</h3><h4 id="PARTITIONING"><a href="#PARTITIONING" class="headerlink" title="PARTITIONING"></a>PARTITIONING</h4><blockquote>
+<p>Unlike traditional data warehouses, however, HDFS doesn’t store indexes on the data. This lack of indexes plays a large role in speeding up data ingest, but it also means that every query will have to read the entire data set even when you’re processing only a small subset of the data (a pattern called full table scan).</p>
+</blockquote>
+<ul>
+<li>Main purpose: reduce the amount of I/O required</li>
+<li>Common pattern: <em>&lt;data set name&gt;/&lt;partition_column_name=partition_column_value&gt;/{files}</em></li>
+<li>Understood by: HCatalog, Hive, Impala, Pig, etc.</li>
+</ul>
+<h4 id="BUCKETING"><a href="#BUCKETING" class="headerlink" title="BUCKETING"></a>BUCKETING</h4><p>Not always the key is good for partitioning. ex. <em>physician</em>, may result in too many partitions and too small in file size.</p>
+<p><em>small files problem</em>:</p>
+<blockquote>
+<p>Storing a large number of small files in Hadoop can lead to excessive memory use for the NameNode, since metadata for each file stored in HDFS is held in memory. Also, many small files can lead to many processing tasks, causing excessive overhead in processing.</p>
+</blockquote>
+<p>Bucketing is the solution,</p>
+<ul>
+<li>be able to control the size of the data subsets</li>
+<li>good average bucket size is a few multiples of the HDFS block size</li>
+<li>having an even distribution of data when hashed on the bucketing column is important because it leads to consistent bucketing</li>
+<li>having the number of buckets as a power of two is quite common</li>
+</ul>
+<p><em>joining</em> with bucketing</p>
+<ul>
+<li>reduce-side join<ul>
+<li>if for two data sets, both are bucketed on the join key</li>
+<li>and the number of buckets is factor and multiple</li>
+<li>could be done by bucket individually join, to save reduce-side join complexity</li>
+</ul>
+</li>
+<li>map-side join<ul>
+<li>if the bucket size can be fit into memory, map-side join can further improve performance</li>
+</ul>
+</li>
+<li>merge join<ul>
+<li>if the data in the buckets is sorted, it is also possible to use a merge join</li>
+<li>requires less memory</li>
+</ul>
+</li>
+</ul>
+<p>Based on common query patterns,</p>
+<ul>
+<li>decide partitioning and bucketing</li>
+<li>for multiple patterns, consider to have multiple store</li>
+<li>trade space to query speed</li>
+</ul>
+<h4 id="DENORMALIZING"><a href="#DENORMALIZING" class="headerlink" title="DENORMALIZING"></a>DENORMALIZING</h4><p>In relational databases, data is often stored in <em>third normal form</em>. In Hadoop, however, joins are often the slowest operations and consume the most resources from the cluster.</p>
+<ul>
+<li>prejoined, preaggregated</li>
+<li>consolidates many of the small dimension tables into a few larger dimensions</li>
+<li>data preprocessing, like aggregation or data type conversion, <em>Materialized Views</em></li>
+</ul>
+<h2 id="HBase-Schema-Design"><a href="#HBase-Schema-Design" class="headerlink" title="HBase Schema Design"></a>HBase Schema Design</h2><p>Distributed key-value store which could operate,</p>
+<ul>
+<li>put</li>
+<li>get</li>
+<li>iterate</li>
+<li>value increment</li>
+<li>delete</li>
+</ul>
+<h3 id="Row-Key"><a href="#Row-Key" class="headerlink" title="Row Key"></a>Row Key</h3><h5 id="RECORD-RETRIEVAL"><a href="#RECORD-RETRIEVAL" class="headerlink" title="RECORD RETRIEVAL"></a>RECORD RETRIEVAL</h5><ul>
+<li>unlimited columns</li>
+<li>single key<ul>
+<li>may need to combine multiple pieces of information in a single key</li>
+</ul>
+</li>
+<li><code>get</code> single record is the fastest<ul>
+<li>put most common uses of the data into a single <code>get</code></li>
+<li>denormalized</li>
+<li>very “wide” table</li>
+</ul>
+</li>
+</ul>
+<h5 id="DISTRIBUTION"><a href="#DISTRIBUTION" class="headerlink" title="DISTRIBUTION"></a>DISTRIBUTION</h5><p>Row key determines scattering throughout various regions.<br>So, it’s usually best to choose row keys so the load on the cluster is fairly distributed.</p>
+<ul>
+<li>Anti-pattern: <em>use a timestamp for row keys</em><ul>
+<li>easy to hit into single region and defeats the parallelism</li>
+</ul>
+</li>
+</ul>
+<h5 id="BLOCK-CACHE"><a href="#BLOCK-CACHE" class="headerlink" title="BLOCK CACHE"></a>BLOCK CACHE</h5><p>HBase block in chunks of default 64 KB with least recently used (LRU) cache.</p>
+<ul>
+<li>Anti-pattern: <em>row key by hash of some attribute</em><ul>
+<li>records in the same block could be “un-relevance”, and to reduce the cache hit rate</li>
+</ul>
+</li>
+</ul>
+<h5 id="ABILITY-TO-SCAN"><a href="#ABILITY-TO-SCAN" class="headerlink" title="ABILITY TO SCAN"></a>ABILITY TO SCAN</h5><p>A wise selection of row key can be used to co-locate related records in the same region.</p>
+<ul>
+<li>HBase scan rates are about eight times slower than HDFS scan rates.</li>
+</ul>
+<h5 id="SIZE"><a href="#SIZE" class="headerlink" title="SIZE"></a>SIZE</h5><p>Trade-off:</p>
+<ul>
+<li>shorter row keys: lower storage overhead and faster read/write performance</li>
+<li>longer row keys: better <code>get</code>/<code>scan</code> properties</li>
+</ul>
+<h5 id="READABILITY"><a href="#READABILITY" class="headerlink" title="READABILITY"></a>READABILITY</h5><p>Recommend to use readable prefix.</p>
+<ul>
+<li>easier to identify and debug issues</li>
+<li>easier to use the HBase console</li>
+</ul>
+<h5 id="UNIQUENESS"><a href="#UNIQUENESS" class="headerlink" title="UNIQUENESS"></a>UNIQUENESS</h5><p>Require to be unique key.</p>
+<h3 id="Timestamp"><a href="#Timestamp" class="headerlink" title="Timestamp"></a>Timestamp</h3><p>timestamp’s important purposes:</p>
+<ul>
+<li>determines newer record <code>put</code></li>
+<li>determines the order when multiple versions are requested</li>
+<li>determines to remove while time-to-live (TTL)</li>
+</ul>
+<h3 id="Hops"><a href="#Hops" class="headerlink" title="Hops"></a>Hops</h3><p><em>Hops</em>: the number of synchronized <code>get</code> requests required to retrieve the requested info</p>
+<ul>
+<li>best to avoid them through better schema design. ex, by leveraging denormalization.</li>
+<li>every hop is a round-trip to HBase that incurs a significant performance overhead</li>
+</ul>
+<h3 id="Tables-and-Regions"><a href="#Tables-and-Regions" class="headerlink" title="Tables and Regions"></a>Tables and Regions</h3><p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/region_table_topology.png" alt="Region Table Topology"></p>
+<ul>
+<li>one region server per node</li>
+<li>multiple regions pre region server</li>
+<li>for a region, it’s pinned to a region server at a time</li>
+<li>tables are split into regions and scattered across region servers</li>
+</ul>
+<p>The number of regions for a table is a trade-off between <strong>put performance</strong> and <strong>compaction time</strong>.</p>
+<h5 id="Put-performance"><a href="#Put-performance" class="headerlink" title="Put performance"></a>Put performance</h5><p><em>memstore</em>:</p>
+<ul>
+<li>cache structure present on every HBase region server</li>
+<li>wrtie =&gt; cahce =&gt; sort =&gt; flush</li>
+<li>more regions in a region server =&gt; less memstore space pre region =&gt; smaller flush &amp; HFiles =&gt; less performant</li>
+<li>ideal flush size: 100 MB</li>
+</ul>
+<h5 id="Compaction-time"><a href="#Compaction-time" class="headerlink" title="Compaction time"></a>Compaction time</h5><p>region size limit: 20GB (default) - 120GB</p>
+<p>region assignment:</p>
+<ul>
+<li>auto splitting<ul>
+<li>forever-growing data set, only update most recent data, with periodic TTL-based compaction, no need to compact the ole regions</li>
+</ul>
+</li>
+<li>assign the region number<ul>
+<li>recommended in most of cases</li>
+<li>set the region size to a high enough value (e.g., 100 GB per region) to avoid autosplitting</li>
+<li>split policy selected, <code>ConstantSizeRegionSplitPolicy</code> or <code>DisabledRegionSplitPolicy</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="Using-Columns"><a href="#Using-Columns" class="headerlink" title="Using Columns"></a>Using Columns</h3><p>Two different schema structures:</p>
+<ul>
+<li><p>Physical Columns</p>
+<table>
+<thead>
+<tr>
+<th>RowKey</th>
+<th>TimeStamp</th>
+<th>Column</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>101</td>
+<td>1395531114</td>
+<td>F</td>
+<td>A1</td>
+</tr>
+<tr>
+<td>101</td>
+<td>1395531114</td>
+<td>B</td>
+<td>B1</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>Combined Logical Columns</p>
+<table>
+<thead>
+<tr>
+<th>RowKey</th>
+<th>TimeStamp</th>
+<th>Column</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>101</td>
+<td>1395531114</td>
+<td>X</td>
+<td>A1|B1</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<p>Considerations:</p>
+<ul>
+<li>dependency on read, write, TTL</li>
+<li>number of records can fit in the block cache</li>
+<li>amount of data can fit through the WAL</li>
+<li>number of records can fit into the memstore</li>
+<li>compaction time</li>
+</ul>
+<h3 id="Using-Column-Families"><a href="#Using-Column-Families" class="headerlink" title="Using Column Families"></a>Using Column Families</h3><p><em>column families</em>: a column family is essentially a container for columns, each column family has its own set of HFiles and gets compacted independently of other column families in the same table.</p>
+<p>Use case: the <code>get</code>/<code>put</code> rate of the subset of columns are significant different, separate them to different culomn families would be beneficial of</p>
+<ul>
+<li>lower compaction cost (by <code>put</code>)</li>
+<li>better use of block cache (by <code>get</code>)</li>
+</ul>
+<h3 id="Time-to-Live"><a href="#Time-to-Live" class="headerlink" title="Time-to-Live"></a>Time-to-Live</h3><p><em>TTL</em>: built-in feature of HBase that ages out data based on its timestamp</p>
+<ul>
+<li>ignore outdated records during the major compaction</li>
+<li>the HFile record timestamp will be used</li>
+<li>if TTL not used, but delete records manually, it’d require full scan and insert the “delete records” (could be TBs), and also need the major compaction eventually</li>
+</ul>
+<h2 id="Managing-Metadata"><a href="#Managing-Metadata" class="headerlink" title="Managing Metadata"></a>Managing Metadata</h2><h3 id="What-Is-Metadata"><a href="#What-Is-Metadata" class="headerlink" title="What Is Metadata?"></a>What Is Metadata?</h3><p>In general, refers to data about the data.</p>
+<ul>
+<li>about logical data sets, usually stored in a separate metadata repository<ul>
+<li>location<ul>
+<li>dir path in HDFS</li>
+<li>table name in HBase</li>
+</ul>
+</li>
+<li>schema</li>
+<li>partitioning and sorting properties</li>
+<li>format</li>
+</ul>
+</li>
+<li>about files on HDFS, usually stored and managed by Hadoop NameNode<ul>
+<li>permissions and ownership</li>
+<li>location of various blocks of that file on data nodes</li>
+</ul>
+</li>
+<li>about tables in HBase, stored and managed by HBase itself<ul>
+<li>table names</li>
+<li>associated namespace</li>
+<li>associated attributes (e.g., MAX_FILESIZE, READONLY, etc.)</li>
+<li>names of column families</li>
+</ul>
+</li>
+<li>about data ingest and transformations<ul>
+<li>which user generated a given data set</li>
+<li>where the data set came from</li>
+<li>how long it took to generate it</li>
+<li>how many records there are</li>
+<li>the size of the data loaded</li>
+</ul>
+</li>
+<li>about data set statistics, useful for various tools that can leverage it for optimizing their execution plans but also for data analysts, who can do quick analysis based on it<ul>
+<li>the number of rows in a data set</li>
+<li>the number of unique values in each column</li>
+<li>a histogram of the distribution of data</li>
+<li>maximum and minimum values</li>
+</ul>
+</li>
+</ul>
+<h3 id="Why-Care-About-Metadata"><a href="#Why-Care-About-Metadata" class="headerlink" title="Why Care About Metadata?"></a>Why Care About Metadata?</h3><p>It allows to,</p>
+<ul>
+<li>interact with higher-level logical abstraction</li>
+<li>supply information that can then be leveraged by various tools</li>
+<li>data management tools to “hook” into this metadata and allow you to perform data discovery and lineage analysis</li>
+</ul>
+<h3 id="Where-to-Store-Metadata"><a href="#Where-to-Store-Metadata" class="headerlink" title="Where to Store Metadata?"></a>Where to Store Metadata?</h3><ul>
+<li>Hive metastore (database &amp; service)<ul>
+<li>deployed mode<ul>
+<li>embedded metastore</li>
+<li>local metastore</li>
+<li>remote metastore<ul>
+<li>MySQL (most common), PostgreSQL, Derby, and Oracle</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>could be used by Hive, Impala seamless</li>
+</ul>
+</li>
+<li>HCatalog<ul>
+<li>WebHCat REST API<ul>
+<li>could be used for MapReduce, Pig, and standalone applications</li>
+</ul>
+</li>
+<li>Java API<ul>
+<li>could be used for MapReduce, Spark, or Cascading</li>
+</ul>
+</li>
+<li>CLI</li>
+</ul>
+</li>
+</ul>
+<h3 id="Limitations-of-the-Hive-Metastore-and-HCatalog"><a href="#Limitations-of-the-Hive-Metastore-and-HCatalog" class="headerlink" title="Limitations of the Hive Metastore and HCatalog"></a>Limitations of the Hive Metastore and HCatalog</h3><ul>
+<li>High availability<ul>
+<li>HA for metastore database</li>
+<li>HA for metastore service<ul>
+<li>concurrency issue unresolved, HIVE-4759</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Fixed schema<ul>
+<li>only for tabular abstraction data sets</li>
+<li>ex. not for image or video data sets</li>
+</ul>
+</li>
+<li>Additional dependency<ul>
+<li>the metastore database itself is just another dependent component</li>
+</ul>
+</li>
+</ul>
+<h3 id="Other-Ways-of-Storing-Metadata"><a href="#Other-Ways-of-Storing-Metadata" class="headerlink" title="Other Ways of Storing Metadata"></a>Other Ways of Storing Metadata</h3><ul>
+<li>Embedded in HDFS paths<ul>
+<li>partitioned data sets</li>
+<li><em>&lt;data set name&gt;/&lt;partition_column_name=partition_column_value&gt;/{files}</em></li>
+</ul>
+</li>
+<li>Store in HDFS<ul>
+<li>maintain &amp; manage by your own<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;data&#x2F;event_log</span><br><span class="line">&#x2F;data&#x2F;event_log&#x2F;file1.avro</span><br><span class="line">&#x2F;data&#x2F;event_log&#x2F;.metadata</span><br></pre></td></tr></table></figure></li>
+<li>Kite SDK<ul>
+<li>supports multiple metadata providers</li>
+<li>allows easily transform metadata from one source (say HCatalog) to another (say the <em>.metadata</em> directory in HDFS)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/11/12/Hadoop-SequenceFile-Sync-Marker/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Hadoop SequenceFile Sync Marker
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/07/01/How-to-Setup-My-Develop-Environment/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">How to Setup My Develop Environment</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Hadoop SequenceFile Sync Marker | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="From Hadoop wiki,  The sync marker permits seeking to a random point in a file and then re-synchronizing input with record boundaries. This is required to be able to efficiently split large files for">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop SequenceFile Sync Marker">
+<meta property="og:url" content="https://weasellin.github.io/2019/11/12/Hadoop-SequenceFile-Sync-Marker/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="From Hadoop wiki,  The sync marker permits seeking to a random point in a file and then re-synchronizing input with record boundaries. This is required to be able to efficiently split large files for">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2019-11-12T00:33:21.000Z">
+<meta property="article:modified_time" content="2020-01-21T00:47:52.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Hadoop-SequenceFile-Sync-Marker" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Hadoop SequenceFile Sync Marker
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/11/12/Hadoop-SequenceFile-Sync-Marker/" class="article-date">
+  <time datetime="2019-11-12T00:33:21.000Z" itemprop="datePublished">2019-11-12</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>From Hadoop <a href="https://cwiki.apache.org/confluence/display/HADOOP2/SequenceFile" target="_blank" rel="noopener">wiki</a>,</p>
+<blockquote>
+<p>The sync marker permits seeking to a random point in a file and then re-synchronizing input with record boundaries. This is required to be able to efficiently split large files for MapReduce processing.</p>
+</blockquote>
+<p>But what it actually marks? And how it could be used in “seeking”?</p>
+<p>Here is my starting investigation.</p>
+<p>The code piece for sync marker generation.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Writer</span> <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Closeable</span>, <span class="title">Syncable</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">    MessageDigest digester = MessageDigest.getInstance(<span class="string">"MD5"</span>);</span><br><span class="line">    <span class="keyword">long</span> time = Time.now();</span><br><span class="line">    digester.update((<span class="keyword">new</span> UID()+<span class="string">"@"</span>+time).getBytes(StandardCharsets.UTF_8));</span><br><span class="line">    sync = digester.digest();</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L869" target="_blank" rel="noopener">code</a></p>
+<p>and the piece for insertion.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sync</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (sync != <span class="keyword">null</span> &amp;&amp; lastSyncPos != out.getPos()) &#123;</span><br><span class="line">    out.writeInt(SYNC_ESCAPE);                <span class="comment">// mark the start of the sync</span></span><br><span class="line">    out.write(sync);                          <span class="comment">// write sync</span></span><br><span class="line">    lastSyncPos = out.getPos();               <span class="comment">// update lastSyncPos</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L1338" target="_blank" rel="noopener">code</a></p>
+<p>From these codes, the sync marker seems just being generated in the “Writer” initialization once, and write into the file header and the output while the output buffer full over a certain size.</p>
+<ul>
+<li>In <code>Writer</code> &amp; <code>RecordCompressWriter</code>: refer to the <code>SYNC_INTERVAL</code><ul>
+<li>refer to this <a href="https://github.com/apache/hadoop/commit/07825f2b49384dbec92bfae87ea661cef9ffab49" target="_blank" rel="noopener">commit</a>, it has been changed from <code>100 * SYNC_SIZE</code> to <code>5 * 1024 * SYNC_SIZE</code></li>
+</ul>
+</li>
+<li>In <code>BlobkCompressWriter</code>:  refer to <code>IO_SEQFILE_COMPRESS_BLOCKSIZE_KEY/DEFAULT</code> (default: 1,000,000)</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span></span></span><br><span class="line"><span class="comment"> * &lt;a href="&#123;<span class="doctag">@docRoot</span>&#125;/../hadoop-project-dist/hadoop-common/core-default.xml"&gt;</span></span><br><span class="line"><span class="comment"> * core-default.xml&lt;/a&gt;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String  IO_SEQFILE_COMPRESS_BLOCKSIZE_KEY =</span><br><span class="line">  <span class="string">"io.seqfile.compress.blocksize"</span>;</span><br><span class="line"><span class="comment">/** Default value for IO_SEQFILE_COMPRESS_BLOCKSIZE_KEY */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span>     IO_SEQFILE_COMPRESS_BLOCKSIZE_DEFAULT = <span class="number">1000000</span>;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/CommonConfigurationKeysPublic.java#L227" target="_blank" rel="noopener">code</a></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The number of bytes between sync points. 100 KB, default.</span></span><br><span class="line"><span class="comment"> * Computed as 5 KB * 20 = 100 KB</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SYNC_INTERVAL = <span class="number">5</span> * <span class="number">1024</span> * SYNC_SIZE; <span class="comment">// 5KB*(16+4)</span></span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L218" target="_blank" rel="noopener">code</a></p>
+<p>Then, in the reading part, the sync marker will be read in the <code>Reader</code> <code>init</code>.</p>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L2029" target="_blank" rel="noopener">code</a></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Seek to the next sync mark past a given position.*/</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">sync</span><span class="params">(<span class="keyword">long</span> position)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (position+SYNC_SIZE &gt;= end) &#123;</span><br><span class="line">    seek(end);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (position &lt; headerEnd) &#123;</span><br><span class="line">    <span class="comment">// seek directly to first record</span></span><br><span class="line">    in.seek(headerEnd);</span><br><span class="line">    <span class="comment">// note the sync marker "seen" in the header</span></span><br><span class="line">    syncSeen = <span class="keyword">true</span>;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    seek(position+<span class="number">4</span>);                         <span class="comment">// skip escape</span></span><br><span class="line">    in.readFully(syncCheck);</span><br><span class="line">    <span class="keyword">int</span> syncLen = sync.length;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; in.getPos() &lt; end; i++) &#123;</span><br><span class="line">      <span class="keyword">int</span> j = <span class="number">0</span>;</span><br><span class="line">      <span class="keyword">for</span> (; j &lt; syncLen; j++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (sync[j] != syncCheck[(i+j)%syncLen])</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (j == syncLen) &#123;</span><br><span class="line">        in.seek(in.getPos() - SYNC_SIZE);     <span class="comment">// position before sync</span></span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      syncCheck[i%syncLen] = in.readByte();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (ChecksumException e) &#123;             <span class="comment">// checksum failure</span></span><br><span class="line">    handleChecksumException(e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L2726" target="_blank" rel="noopener">code</a></p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><ul>
+<li>This sync marker allows the seeking operation to <strong>align</strong> to records or blocks boundary.</li>
+<li>But it relies on an existing seeking operation, which is implemented in <code>Seekable.seek()</code>.</li>
+<li>Next question, “How is the seek implemented among a distributed file”.</li>
+</ul>
+<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><ul>
+<li><a href="https://hadoop.apache.org/docs/r2.8.0/api/org/apache/hadoop/io/SequenceFile.html" target="_blank" rel="noopener">https://hadoop.apache.org/docs/r2.8.0/api/org/apache/hadoop/io/SequenceFile.html</a></li>
+<li><a href="https://www.reddit.com/r/hadoop/comments/4negaa/what_is_the_sequence_file_sync_marker_how_does_it/" target="_blank" rel="noopener">https://www.reddit.com/r/hadoop/comments/4negaa/what_is_the_sequence_file_sync_marker_how_does_it/</a></li>
+<li><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java" target="_blank" rel="noopener">https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java</a></li>
+<li><a href="https://github.com/apache/hadoop/blob/release-2.8.0-RC3/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java" target="_blank" rel="noopener">https://github.com/apache/hadoop/blob/release-2.8.0-RC3/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java</a></li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/11/24/Hadoop-Application-Architectures-Ch-2-Data-Movement/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Hadoop Application Architectures Ch.2 Data Movement
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/11/11/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Hadoop Application Architectures Ch.1 Data Modeling in Hadoop</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

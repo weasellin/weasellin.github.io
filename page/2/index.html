@@ -1,0 +1,2234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Ansel&#39;s Note">
+<meta property="og:url" content="https://weasellin.github.io/page/2/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="Ansel Lin">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-Hadoop-Application-Architectures-Ch-6-Orchestration" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/16/Hadoop-Application-Architectures-Ch-6-Orchestration/">Hadoop Application Architectures Ch.6 Orchestration</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/16/Hadoop-Application-Architectures-Ch-6-Orchestration/" class="article-date">
+  <time datetime="2019-12-16T07:23:45.000Z" itemprop="datePublished">2019-12-16</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h2><p>System of,</p>
+<ul>
+<li><em>workflow orchestration</em></li>
+<li><em>workflow automation</em></li>
+<li><em>business process automation</em></li>
+<li>scheduling, coordinating, and managing workflows</li>
+</ul>
+<p>Each of jobs, referred to as an <em>action</em>, could be</p>
+<ul>
+<li>scheduled<ul>
+<li>at a particular time</li>
+<li>periodic interval</li>
+<li>triggered by events or status</li>
+</ul>
+</li>
+<li>coordinated<ul>
+<li>when a previous action finishes successfully</li>
+</ul>
+</li>
+<li>managing to<ul>
+<li>send notification mails</li>
+<li>record the time taken</li>
+</ul>
+</li>
+</ul>
+<p>Good workflow orchestration engines will</p>
+<ul>
+<li>expressed as a <strong>DAG</strong></li>
+<li>help defining the <strong>interfaces</strong> between workflow components</li>
+<li>support metadata and data lineage tracking</li>
+<li>integration between various software system</li>
+<li>data lifecycle management</li>
+<li>track and report data quality</li>
+<li>workflow components repository</li>
+<li>flexible scheduling</li>
+<li>dependency management</li>
+<li>centralized status monitoring</li>
+<li>workflow failure recovery</li>
+<li>workflow rolling back</li>
+<li>report generation</li>
+<li>parameterized workflow</li>
+<li>arguments passing</li>
+</ul>
+<h2 id="Orchestration-Framworks"><a href="#Orchestration-Framworks" class="headerlink" title="Orchestration Framworks"></a>Orchestration Framworks</h2><table>
+<thead>
+<tr>
+<th>Workflow Engine</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Apache Oozie</td>
+<td>developed by Yahoo!, in order to support its growing Hadoop clusters and the increasing number of jobs and workflows running on those clusters</td>
+</tr>
+<tr>
+<td>Azkaban</td>
+<td>developed by LinkedIn, with the goal of being a visual and easy way to manage workflows</td>
+</tr>
+<tr>
+<td>Luigi</td>
+<td>an open source Python package from Spotify, that allows you to orchestrate long-running batch jobs and has built-in support for Hadoop</td>
+</tr>
+<tr>
+<td>Airflow</td>
+<td>created by Airbnb, an open source Python workflow management system designed for authoring, scheduling, and monitoring workflows</td>
+</tr>
+</tbody></table>
+<p>Considerations,</p>
+<ul>
+<li>ease of installation</li>
+<li>community involvement and uptake</li>
+<li>UI support</li>
+<li>testing</li>
+<li>logs</li>
+<li>workflow management</li>
+<li>error handling</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/oozie_architecture.png" alt="Oozie Architecture"></p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/azkaban_architecture.png" alt="Azkaban Architecture"></p>
+<h2 id="Workflow-Patterns"><a href="#Workflow-Patterns" class="headerlink" title="Workflow Patterns"></a>Workflow Patterns</h2><p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/point_to_point_workflow.png" alt="Point-to-Point Workflow"></p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/fan_out_workflow.png" alt="Fan-out Workflow"></p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/capture_decision_workflow.png" alt="Capture-and-Decision Workflow"></p>
+<h2 id="Scheduling-Patterns"><a href="#Scheduling-Patterns" class="headerlink" title="Scheduling Patterns"></a>Scheduling Patterns</h2><ul>
+<li>Frequency Scheduling<ul>
+<li>Note: DST cause that a day (with Timezone info) will not always be 24 hours</li>
+</ul>
+</li>
+<li>Time and Data Triggers</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Hadoop-Application-Architectures-Ch-5-Graph-Processing-on-Hadoop" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/16/Hadoop-Application-Architectures-Ch-5-Graph-Processing-on-Hadoop/">Hadoop Application Architectures Ch.5 Graph Processing on Hadoop</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/16/Hadoop-Application-Architectures-Ch-5-Graph-Processing-on-Hadoop/" class="article-date">
+  <time datetime="2019-12-16T06:32:23.000Z" itemprop="datePublished">2019-12-16</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Use cases:</p>
+<ul>
+<li>page ranking</li>
+<li>social network</li>
+<li>investment funds underlying equities</li>
+<li>route planning</li>
+</ul>
+<p><em>gragh querying</em> v.s. <em>graph processing</em></p>
+<p><em>onion joining</em> v.s. <em>message sending</em></p>
+<h3 id="The-Bulk-Synchronous-Parallel-BSP-Model"><a href="#The-Bulk-Synchronous-Parallel-BSP-Model" class="headerlink" title="The Bulk Synchronous Parallel (BSP) Model"></a>The Bulk Synchronous Parallel (BSP) Model</h3><ul>
+<li>proposed by Leslie Valiant of Harvard, a British computer scientist</li>
+<li>at the core of the Google graph processing solution, Pregel</li>
+<li>the distributed processes can send <strong>messages</strong> to each other, but they cannot act upon those messages until the next <strong>superstep</strong></li>
+</ul>
+<h2 id="Graph"><a href="#Graph" class="headerlink" title="Graph"></a>Graph</h2><ul>
+<li>an open source implementation of Google’s Pregel</li>
+<li>main stages<ul>
+<li>read and partition the data</li>
+<li>batch-process the graph with BSP</li>
+<li>write the graph back to disk</li>
+</ul>
+</li>
+</ul>
+<h2 id="GraphX"><a href="#GraphX" class="headerlink" title="GraphX"></a>GraphX</h2><ul>
+<li>contains an implementation of the Pregel API built on the Spark DAG engine</li>
+<li>RDD representation of EdgeRDD and VertexRDD</li>
+<li>could be mixed with Spark transformations</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Join-in-Distributed-SQL-Engine" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/11/Join-in-Distributed-SQL-Engine/">Join in Distributed SQL Engine</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/11/Join-in-Distributed-SQL-Engine/" class="article-date">
+  <time datetime="2019-12-11T13:37:04.000Z" itemprop="datePublished">2019-12-11</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="Join-in-MapReduce"><a href="#Join-in-MapReduce" class="headerlink" title="Join in MapReduce"></a>Join in MapReduce</h4><p><a href="https://www.edureka.co/blog/mapreduce-example-reduce-side-join/" target="_blank" rel="noopener">https://www.edureka.co/blog/mapreduce-example-reduce-side-join/</a></p>
+<ul>
+<li>Replicated Join (Map Side Join)</li>
+<li>Reduce Side Join</li>
+<li>Reduce Side Join with Bloom Filter</li>
+<li>Composite Join</li>
+</ul>
+<h4 id="Join-in-Spark-SQL"><a href="#Join-in-Spark-SQL" class="headerlink" title="Join in Spark SQL"></a>Join in Spark SQL</h4><p><a href="https://medium.com/datakaresolutions/optimize-spark-sql-joins-c81b4e3ed7da" target="_blank" rel="noopener">https://medium.com/datakaresolutions/optimize-spark-sql-joins-c81b4e3ed7da</a></p>
+<ul>
+<li>Sort-Merge Join</li>
+<li>Broadcast Join</li>
+<li>Shuffle Hash Join</li>
+</ul>
+<h4 id="Join-in-Impala"><a href="#Join-in-Impala" class="headerlink" title="Join in Impala"></a>Join in Impala</h4><p><a href="https://impala.apache.org/docs/build/html/topics/impala_perf_joins.html" target="_blank" rel="noopener">https://impala.apache.org/docs/build/html/topics/impala_perf_joins.html</a></p>
+<ul>
+<li>Broadcast Join</li>
+<li>Partitioned Join</li>
+</ul>
+<h4 id="Join-in-Presto"><a href="#Join-in-Presto" class="headerlink" title="Join in Presto"></a>Join in Presto</h4><p><a href="https://prestodb.io/docs/current/admin/properties.html#general-properties" target="_blank" rel="noopener">https://prestodb.io/docs/current/admin/properties.html#general-properties</a></p>
+<ul>
+<li>Broadcast Join</li>
+<li>Distributed Hash Join</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Hadoop-Application-Architectures-Ch-4-Common-Hadoop-Processing-Patterns" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/10/Hadoop-Application-Architectures-Ch-4-Common-Hadoop-Processing-Patterns/">Hadoop Application Architectures Ch.4 Common Hadoop Processing Patterns</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/10/Hadoop-Application-Architectures-Ch-4-Common-Hadoop-Processing-Patterns/" class="article-date">
+  <time datetime="2019-12-10T09:13:22.000Z" itemprop="datePublished">2019-12-10</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Examples:</p>
+<ul>
+<li>Removing Duplicate Records by Primary Key (Compaction)</li>
+<li>Using Windowing Analysis</li>
+<li>Updating Time Series Data</li>
+</ul>
+<h2 id="Removing-Duplicate-Records-by-Primary-Key"><a href="#Removing-Duplicate-Records-by-Primary-Key" class="headerlink" title="Removing Duplicate Records by Primary Key"></a>Removing Duplicate Records by Primary Key</h2><ul>
+<li>Spark<ul>
+<li><code>map()</code> to <code>keyedRDD</code>, <code>reduceByKey()</code> to compaction</li>
+</ul>
+</li>
+<li>SQL<ul>
+<li><code>GROUP BY</code> primary key, <code>SELECT</code> <code>MAX(TIME_STAMP)</code></li>
+<li><code>JOIN</code> back to filter on the original table</li>
+</ul>
+</li>
+</ul>
+<h2 id="Windowing-Analysis"><a href="#Windowing-Analysis" class="headerlink" title="Windowing Analysis"></a>Windowing Analysis</h2><p>Find the <em>valley</em> and <em>peak</em>.</p>
+<ul>
+<li>Spark<ul>
+<li>partition by primary key’s hash, sorted by timestamp</li>
+<li><code>mapPartitions</code><ul>
+<li>iterate the sorted partition to address <code>peak</code> and <code>valley</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>SQL<ul>
+<li><code>SELECT</code> <code>LEAD()</code> and <code>LAG()</code> <code>OVER (PARTITION BY PRIMARY_KEY ORDER BY POSITION)</code></li>
+<li><code>SELECT</code> <code>CASE</code><ul>
+<li><code>WHEN VALUE &gt; LEAD</code> and <code>LAG</code>, <code>THEN &#39;PEAK&#39;</code></li>
+<li><code>WHEN VALUE &lt; LEAD</code> and <code>LAG</code>, <code>THEN &#39;VALLEY&#39;</code></li>
+</ul>
+</li>
+<li>Note: multiple windowing operations with SQL will increase the disk I/O overhead and lead to performance decrease</li>
+</ul>
+</li>
+</ul>
+<h2 id="Time-Series-Modifications"><a href="#Time-Series-Modifications" class="headerlink" title="Time Series Modifications"></a>Time Series Modifications</h2><p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-4-Common-Hadoop-Processing-Patterns/time_series.png" alt=""></p>
+<ul>
+<li>HBase and Versioning<ul>
+<li>advantage:<ul>
+<li>modifications are very fast, simply update</li>
+</ul>
+</li>
+<li>disadvantage:<ul>
+<li>penalty in getting historical versions</li>
+<li>performing large scans or block cache reads</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>HBase with a RowKey of RecordKey and StartTime<ul>
+<li><code>get</code> existing record</li>
+<li><code>put</code> back with update stop time</li>
+<li><code>put</code> the new current record</li>
+<li>advantage:<ul>
+<li>faster version retrieve</li>
+</ul>
+</li>
+<li>disadvantage:<ul>
+<li>slower update, requires 1 <code>get</code> and 2 <code>put</code>s</li>
+<li>still has the large scan and block cache problems</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Partitions on HDFS for Current and Historical Records<ul>
+<li>partitioning into<ul>
+<li>most current records partition</li>
+<li>historic records partition</li>
+</ul>
+</li>
+<li>batch update<ul>
+<li>for updated “current” records, update the stop time and append to historic records partition</li>
+<li>add new update into most current records partition</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/04/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/">Hadoop Application Architectures Ch.3 Processing Data in Hadoop</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/04/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/" class="article-date">
+  <time datetime="2019-12-04T12:01:29.000Z" itemprop="datePublished">2019-12-04</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>MapReduce</li>
+<li>Spark</li>
+<li>Hive, Pig, Crunch, Cascading</li>
+</ul>
+<p><em>Shared Nothing Architectures</em></p>
+<ul>
+<li>scalability</li>
+<li>fault-tolerant</li>
+</ul>
+<h2 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h2><h3 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h3><ul>
+<li>introduced by <em>Jeffrey Dean</em> and <em>Sanjay Ghemawat</em> from <em>Google</em> with <a href="">paper</a></li>
+<li>map phase / sort &amp; shuffle phase / reduce phase</li>
+<li>input / output of each phase are <em>key-value</em> pairs</li>
+<li>output of mapper and reducer is written to disk<ul>
+<li><em>syncronization barrier</em> (inefficient for iterative processing)</li>
+</ul>
+</li>
+<li>mapper processes a single pair at a time</li>
+<li>mapper pass key-value pairs as output to reducers</li>
+<li>mapper can’t pass information to other mappers</li>
+</ul>
+<h3 id="Mapper"><a href="#Mapper" class="headerlink" title="Mapper"></a>Mapper</h3><ul>
+<li><code>InputFormat</code> class<ul>
+<li><code>getSplits()</code><ul>
+<li>determines the number of map processes</li>
+<li>determines the cluster nodes on which they will execute</li>
+<li>commonly used <code>TextInputFormat</code> generates an input split per block</li>
+</ul>
+</li>
+<li><code>getReader()</code><ul>
+<li>provides a reader to map tasks</li>
+<li>could be overridden</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>RecordReader</code> class<ul>
+<li>reads the data blocks, returns key-value records</li>
+<li>implementations: text delimited, SequenceFile, Avro, Parquet, etc.</li>
+</ul>
+</li>
+<li><code>Mapper.setup()</code><ul>
+<li><code>Configuration</code> object</li>
+</ul>
+</li>
+<li><code>Mapper.map()</code><ul>
+<li>inputs: <code>key</code>, <code>value</code>, and a <code>context</code></li>
+<li>output data would be buffered and sorted, <code>io.sort.mb</code></li>
+</ul>
+</li>
+<li><code>Partitioner</code><ul>
+<li>default, key hashed</li>
+<li>custom partitioner<ul>
+<li>ex. secondary sort<ul>
+<li>key as <code>ticker-time</code> for sorted, partitioner on <code>ticker symbol</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>Mapper.cleanup()</code><ul>
+<li>flies closing, logging message, etc.</li>
+</ul>
+</li>
+<li><code>Combiner.combine()</code><ul>
+<li>aggregate locally</li>
+<li>output has to be identical format with <code>map()</code></li>
+<li>could assumes the input is sorted</li>
+</ul>
+</li>
+</ul>
+<h3 id="Reducer"><a href="#Reducer" class="headerlink" title="Reducer"></a>Reducer</h3><ul>
+<li><code>Shuffle</code><ul>
+<li>copy the output of the mappers from the map nodes to the reduce nodes</li>
+</ul>
+</li>
+<li><code>Reducer.setup()</code><ul>
+<li>initialize variables and file handles</li>
+</ul>
+</li>
+<li><code>Reducer.reduce()</code><ul>
+<li>sorted key</li>
+<li>input with <code>values</code></li>
+<li>a key and all its values will never be split across more than one reducer<ul>
+<li>skewness, review partitioning</li>
+</ul>
+</li>
+<li>output to <code>outputFileFormat</code></li>
+</ul>
+</li>
+<li><code>Reducer.cleanup()</code><ul>
+<li>flies closing, logging message, etc.</li>
+</ul>
+</li>
+<li><code>OutputFormat</code><ul>
+<li>a single reducer will always write a single file<ul>
+<li>ex. <code>part-r-00000</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Join"><a href="#Join" class="headerlink" title="Join"></a>Join</h3><p>Reference: <a href="https://www.edureka.co/blog/mapreduce-example-reduce-side-join/" target="_blank" rel="noopener">https://www.edureka.co/blog/mapreduce-example-reduce-side-join/</a></p>
+<h5 id="Map-side-Join"><a href="#Map-side-Join" class="headerlink" title="Map-side Join"></a>Map-side Join</h5><blockquote>
+<p>The join operation is performed in the map phase itself. Therefore, in the map side join, the mapper performs the join and it is mandatory that the input to each map is partitioned and sorted according to the keys.</p>
+</blockquote>
+<h5 id="Reduce-side-Join"><a href="#Reduce-side-Join" class="headerlink" title="Reduce-side Join"></a>Reduce-side Join</h5><blockquote>
+<ul>
+<li>Mapper reads the input data which are to be combined based on common column or join key.</li>
+</ul>
+</blockquote>
+<ul>
+<li>The mapper processes the input and adds a tag to the input to distinguish the input belonging from different sources or data sets or databases.</li>
+<li>The mapper outputs the intermediate key-value pair where the key is nothing but the join key.</li>
+<li>After the sorting and shuffling phase, a key and the list of values is generated for the reducer.</li>
+<li>Now, the reducer joins the values present in the list with the key to give the final aggregated output.</li>
+</ul>
+<h3 id="When-to-Use-MapReduce"><a href="#When-to-Use-MapReduce" class="headerlink" title="When to Use MapReduce"></a>When to Use MapReduce</h3><ul>
+<li>is a very low-level framework</li>
+<li>for experienced Java developers who are comfortable with the MapReduce programming paradigm</li>
+<li>where detailed control of the execution has significant advantages</li>
+</ul>
+<h2 id="Spark"><a href="#Spark" class="headerlink" title="Spark"></a>Spark</h2><h3 id="Overview-1"><a href="#Overview-1" class="headerlink" title="Overview"></a>Overview</h3><ul>
+<li>In 2009 <em>Matei Zaharia</em> and his team at <em>UC Berkeley’s AMPLab</em> researched possible improvements to the MapReduce framework.</li>
+<li>Improves on<ul>
+<li>iterative machine learning</li>
+<li>interactive data analysis</li>
+<li>reusing a data set cached in memory for multiple processing tasks</li>
+<li>DAG model (directed acyclic graphs)<ul>
+<li>ex. Oozie for MapReduce</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>reference books<ul>
+<li><a href="http://bit.ly/learning-spark" target="_blank" rel="noopener">Learning Spark</a></li>
+<li><a href="http://bit.ly/advanced-spark" target="_blank" rel="noopener">Advanced Analytics with Spark</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="Spark-Components"><a href="#Spark-Components" class="headerlink" title="Spark Components"></a>Spark Components</h3><ul>
+<li><em>Driver</em><ul>
+<li><em>main</em> function to define the RDD (<em>resilient distributed datasets</em>) and their transformations / actions</li>
+</ul>
+</li>
+<li><em>Dag Scheduler</em><ul>
+<li>optimize the code and arrive an efficient DAG</li>
+</ul>
+</li>
+<li><em>Task Scheduler</em><ul>
+<li>cluster manager: YARN, Mesos, etc. has info<ul>
+<li>workers</li>
+<li>assigned threads</li>
+<li>location of data blocks</li>
+<li>assigning tasks to workers</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>Worker</em><ul>
+<li>receives work and data</li>
+<li>executes task without knowledge of the entire DAG</li>
+</ul>
+</li>
+</ul>
+<h3 id="Basic-Spark-Concepts"><a href="#Basic-Spark-Concepts" class="headerlink" title="Basic Spark Concepts"></a>Basic Spark Concepts</h3><h5 id="RDD-RESILIENT-DISTRIBUTED-DATASETS"><a href="#RDD-RESILIENT-DISTRIBUTED-DATASETS" class="headerlink" title="RDD (RESILIENT DISTRIBUTED DATASETS)"></a>RDD (RESILIENT DISTRIBUTED DATASETS)</h5><ul>
+<li>RDDs are collections of serializable elements, and such a collection may be partitioned, in which case it is stored on multiple nodes</li>
+<li>Spark determines the number of partitions by the input format</li>
+<li>RDDs store their <strong>lineage</strong> — the set of transformations that was used to create the current state, starting from the first input format that was used to create the RDD</li>
+<li>If the data is lost, Spark will <strong>replay</strong> the lineage to rebuild the lost RDDs so the job can continue</li>
+<li>Spark would replay the “Good Replay” boxes and the “Lost Block” boxes to get the data needed to execute the final step</li>
+</ul>
+<h5 id="SHARED-VARIABLES"><a href="#SHARED-VARIABLES" class="headerlink" title="SHARED VARIABLES"></a>SHARED VARIABLES</h5><ul>
+<li><em>broadcast</em> variables</li>
+<li><em>accumulator</em> variables</li>
+</ul>
+<h5 id="SPARKCONTEXT"><a href="#SPARKCONTEXT" class="headerlink" title="SPARKCONTEXT"></a>SPARKCONTEXT</h5><ul>
+<li>represents the connection to a Spark cluster</li>
+<li>used to create RDDs, broadcast data, and initialize accumulators</li>
+</ul>
+<h5 id="TRANSFORMATIONS"><a href="#TRANSFORMATIONS" class="headerlink" title="TRANSFORMATIONS"></a>TRANSFORMATIONS</h5><ul>
+<li>transformations take one RDD and return another RDD</li>
+<li>RDDs are <strong>immutable</strong></li>
+<li>transformations in Spark are always <strong>lazy</strong></li>
+<li>calling a transformation function only creates a new RDD with this specific <strong>lineage</strong></li>
+<li>transformations is only executed when an <strong>action</strong> is called<ul>
+<li>allows optimize the execution graph</li>
+</ul>
+</li>
+</ul>
+<p>Some core transformations:</p>
+<ul>
+<li><code>map()</code></li>
+<li><code>filter()</code></li>
+<li><code>keyBy()</code></li>
+<li><code>join()</code></li>
+<li><code>groupByKey()</code></li>
+<li><code>sort()</code></li>
+</ul>
+<h5 id="ACTION"><a href="#ACTION" class="headerlink" title="ACTION"></a>ACTION</h5><ul>
+<li>take an RDD, perform a computation, and return the result to the driver application</li>
+<li>result of the computation can be <em>a collection</em>, <em>values printed to the screen</em>, <em>values saved to file</em>, or similar</li>
+<li>an action will never return an RDD</li>
+</ul>
+<h3 id="Benefits-of-Using-Spark"><a href="#Benefits-of-Using-Spark" class="headerlink" title="Benefits of Using Spark"></a>Benefits of Using Spark</h3><h5 id="SIMPLICITY"><a href="#SIMPLICITY" class="headerlink" title="SIMPLICITY"></a>SIMPLICITY</h5><ul>
+<li>simpler than those of MapReduce</li>
+</ul>
+<h5 id="VERSATILITY"><a href="#VERSATILITY" class="headerlink" title="VERSATILITY"></a>VERSATILITY</h5><ul>
+<li>extensible, general-purpose parallel processing framework</li>
+<li>support a stream-processing framework called Spark Streaming</li>
+<li>a graph processing engine called GraphX</li>
+</ul>
+<h5 id="REDUCED-DISK-I-O"><a href="#REDUCED-DISK-I-O" class="headerlink" title="REDUCED DISK I/O"></a>REDUCED DISK I/O</h5><ul>
+<li>Spark’s RDDs can be stored in memory and processed in multiple steps or iterations without additional I/O</li>
+</ul>
+<h5 id="STORAGE"><a href="#STORAGE" class="headerlink" title="STORAGE"></a>STORAGE</h5><ul>
+<li>the developer controls the persistence</li>
+</ul>
+<h5 id="MULTILANGUAGE"><a href="#MULTILANGUAGE" class="headerlink" title="MULTILANGUAGE"></a>MULTILANGUAGE</h5><ul>
+<li>Spark APIs are implemented for Java, Scala, and Python</li>
+</ul>
+<h5 id="RESOURCE-MANAGER-INDEPENDENCE"><a href="#RESOURCE-MANAGER-INDEPENDENCE" class="headerlink" title="RESOURCE MANAGER INDEPENDENCE"></a>RESOURCE MANAGER INDEPENDENCE</h5><ul>
+<li>Spark supports YARN, Mesos, &amp; Kubernetes</li>
+</ul>
+<h5 id="INTERACTIVE-SHELL"><a href="#INTERACTIVE-SHELL" class="headerlink" title="INTERACTIVE SHELL"></a>INTERACTIVE SHELL</h5><ul>
+<li>REPL (read-eval-print loop)</li>
+</ul>
+<h5 id="APACHE-TEZ-AN-ADDITIONAL-DAG-BASED-PROCESSING-FRAMEWORK"><a href="#APACHE-TEZ-AN-ADDITIONAL-DAG-BASED-PROCESSING-FRAMEWORK" class="headerlink" title="APACHE TEZ: AN ADDITIONAL DAG-BASED PROCESSING FRAMEWORK"></a>APACHE TEZ: AN ADDITIONAL DAG-BASED PROCESSING FRAMEWORK</h5><ul>
+<li>Tez is a framework that allows for expressing complex DAGs for processing data</li>
+<li>the architecture of Tez is intended to provide performance improvements and better resource management than MapReduce</li>
+</ul>
+<h2 id="Abstraction"><a href="#Abstraction" class="headerlink" title="Abstraction"></a>Abstraction</h2><ul>
+<li>ETL Model: Pig, Crunch, and Cascading</li>
+<li>Query Model: Hive</li>
+</ul>
+<h3 id="Apache-Pig"><a href="#Apache-Pig" class="headerlink" title="Apache Pig"></a>Apache Pig</h3><ul>
+<li>developed at <em>Yahoo</em>, and released to Apache in 2007</li>
+<li>Pig-specific workflow language, <em>Pig Latin</em></li>
+<li>compiled into a logical plan and then into a physical plan</li>
+<li>Data container<ul>
+<li><em>relations</em>, <em>bag</em>, <em>tuples</em></li>
+</ul>
+</li>
+<li>Transformation functions<ul>
+<li>no execution is done until the STORE command is called - nothing is done until the saveToTextFile is called</li>
+</ul>
+</li>
+<li><code>DESCRIBE</code> and <code>EXPLAIN</code></li>
+<li>support UDFs</li>
+<li>CLI to access HDFS</li>
+</ul>
+<h3 id="Apache-Crunch"><a href="#Apache-Crunch" class="headerlink" title="Apache Crunch"></a>Apache Crunch</h3><ul>
+<li>based on Google’s <em>FlumeJava</em></li>
+<li>in Java</li>
+<li>full access to all MapReduce functionality</li>
+<li>separation of business logic from integration logic</li>
+<li><code>Pipeline</code> object</li>
+<li>actual execution of a Crunch pipeline occurs with a call to the <code>done()</code> method</li>
+<li><code>MRPipeline</code>, <code>SparkPipeline</code>, <code>PCollection</code>, <code>PTable</code></li>
+</ul>
+<h3 id="Cascading"><a href="#Cascading" class="headerlink" title="Cascading"></a>Cascading</h3><ul>
+<li>in Java</li>
+<li>like Crunch, full access to all MapReduce functionality</li>
+<li>like Crunch, separation of business logic from integration logic</li>
+</ul>
+<h2 id="Hive"><a href="#Hive" class="headerlink" title="Hive"></a>Hive</h2><h3 id="Overview-2"><a href="#Overview-2" class="headerlink" title="Overview"></a>Overview</h3><ul>
+<li>SQL on Hadoop</li>
+<li>cornerstone of newer SQL implementations<ul>
+<li>Impala, Presto, Spark SQL, Apache Drill</li>
+</ul>
+</li>
+<li>biggest drawback, <strong>performance</strong>, due to MapReduce execution engine<ul>
+<li>addressed by<ul>
+<li><code>Hive-on-Tez</code>, from 0.13.0</li>
+<li><code>Hive-on-Spark</code>, <a href="https://issues.apache.org/jira/browse/HIVE-7292" target="_blank" rel="noopener">HIVE-7292</a></li>
+<li><em>Vectorized query execution</em>, from 0.13.0, supports on ORC and Parquet</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Hive Metastore, becomes the standard for metadata management and sharing among different systems</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/hive_architecture.png" alt="Hive Architecture"></p>
+<ul>
+<li>In <code>CREATE TABLE</code><ul>
+<li><em>external table</em>, underlying data remains intact while table deletion</li>
+<li>storage format declarartion</li>
+</ul>
+</li>
+<li><code>ANALYZE STATISTICS</code><ul>
+<li><code>ANALYZE TABLE foo COMPUTE STATISTICS;</code></li>
+<li><code>hive.stats.autogater</code>, default <code>true</code>, but only triggered by <code>INSERT</code></li>
+<li>import or moving still need explicit <code>ANALYZE</code> command</li>
+</ul>
+</li>
+<li>optimized <code>join</code><ul>
+<li>available in newer version only</li>
+<li><code>hive.auto.convert.join</code><ul>
+<li><em>map join</em></li>
+<li><em>bucketed join</em></li>
+<li><em>sorted bucketed merge join</em></li>
+<li><em>regular join</em></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>SQL is great for query, but not for<ul>
+<li>machine learning, text processing, graph algorithms</li>
+</ul>
+</li>
+<li>should always reviewing under the hood, ex. by <code>EXPLAIN</code></li>
+</ul>
+<h3 id="When-to-Use-Hive"><a href="#When-to-Use-Hive" class="headerlink" title="When to Use Hive"></a>When to Use Hive</h3><ul>
+<li>Hive Metastore</li>
+<li>SQL</li>
+<li>Pluggable<ul>
+<li>custom data format, serialization / deserialization</li>
+<li>execution engine, MapReduce, Tez, Spark</li>
+</ul>
+</li>
+<li>Batch processing</li>
+<li>Fault-tolerant</li>
+<li>Feature-rich<ul>
+<li>nested types</li>
+</ul>
+</li>
+</ul>
+<h2 id="Impala"><a href="#Impala" class="headerlink" title="Impala"></a>Impala</h2><ul>
+<li>2012, Google had published <a href="https://ai.google/research/pubs/pub38125" target="_blank" rel="noopener">F1</a> and <a href="https://ai.google/research/pubs/pub36632" target="_blank" rel="noopener">Dremel</a></li>
+<li>Impala was inspired by Dremel</li>
+<li>massively parallel processing (MPP) data warehouses<ul>
+<li>such as Netezza, Greenplum, and Teradata</li>
+</ul>
+</li>
+<li>delivers query latency and concurrency<ul>
+<li>significantly lower than that of Hive running on MapReduce</li>
+</ul>
+</li>
+<li>uses Hive SQL dialect and Hive Metastore</li>
+<li>supports both HDFS and HBase as data sources, like Hive</li>
+<li>supports the popular data formats<ul>
+<li>delimited text, SequenceFiles, Avro, and Parquet</li>
+</ul>
+</li>
+</ul>
+<h3 id="Overview-3"><a href="#Overview-3" class="headerlink" title="Overview"></a>Overview</h3><ul>
+<li>shared nothing architecture</li>
+<li>Impala daemons, <em>impalad</em><ul>
+<li>running on each nodes, identical and interchangeable</li>
+<li>responsible for<ul>
+<li>query planner</li>
+<li>query coordinator</li>
+<li>query execution engine</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>focus on the core functionality, <strong>executing queries as fast as possible</strong><ul>
+<li>off-loaded data store to HDFS and HBase</li>
+<li>off-loaded database and table management to Hive Metastore</li>
+</ul>
+</li>
+<li>distributed join strategies<ul>
+<li><em>broadcast hash joins</em></li>
+<li><em>partitioned hash joins</em></li>
+</ul>
+</li>
+<li>query profiles<ul>
+<li>table scan rates</li>
+<li>actual data sizes</li>
+<li>amount of memory used</li>
+<li>execution times</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/impala_architecture.png" alt="Impala Architecture"></p>
+<h3 id="Speed-Oriented-Design"><a href="#Speed-Oriented-Design" class="headerlink" title="Speed-Oriented Design"></a>Speed-Oriented Design</h3><ul>
+<li>in-memory processing<ul>
+<li>could spill to disk from 2.0 and later</li>
+<li>minimum of 128GB to 256GB of RAM</li>
+<li>not fault-tolerant, node lose will cause query failed</li>
+</ul>
+</li>
+<li>long running daemons<ul>
+<li>no startup cost</li>
+<li>high concurrency</li>
+<li>colocate for data locality</li>
+<li>could be managed by YARN or Linux CGroups</li>
+</ul>
+</li>
+<li>efficient execution engine<ul>
+<li>implemented in C++<ul>
+<li>better advantage of vectorization, CPU instructions for text parsing, CRC32 computation, etc.</li>
+<li>no JVM overhead</li>
+<li>no Java GC latency</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>use of LLVM<ul>
+<li>Low Level Virtual Machine</li>
+<li>compile the query to optimized machine code</li>
+<li>machine code improves the efficiency of the code execution in the CPU by getting rid of the polymorphism</li>
+<li>machine code generated uses optimizations available in modern CPUs (such as Sandy Bridge) to improve its I/O efficiency</li>
+<li>the entire query and its functions are compiled into a single context of execution, Impala doesn’t have the same overhead of context switching because all function calls are inlined and there are no branches in the instruction pipeline, which makes execution even faster</li>
+</ul>
+</li>
+</ul>
+<h3 id="When-to-Use-Impala"><a href="#When-to-Use-Impala" class="headerlink" title="When to Use Impala"></a>When to Use Impala</h3><ul>
+<li>much faster than Hive</li>
+<li>compare to Hive<ul>
+<li>not fault-tolerant</li>
+<li>not supports nested data types</li>
+<li>not supports custom data format</li>
+</ul>
+</li>
+</ul>
+<h2 id="Other-Tools"><a href="#Other-Tools" class="headerlink" title="Other Tools"></a>Other Tools</h2><ul>
+<li>RHadoop<ul>
+<li>for R</li>
+</ul>
+</li>
+<li>Apache Mahout<ul>
+<li>machine learning tasks</li>
+</ul>
+</li>
+<li>Oryx<ul>
+<li>machine learning application</li>
+<li>Lambda architecture</li>
+</ul>
+</li>
+<li>Python<ul>
+<li><a href="https://www.slideshare.net/InfoQ/a-guide-to-python-frameworks-for-hadoop" target="_blank" rel="noopener">A Guide to Python Frameworks for Hadoop</a></li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Hadoop-Application-Architectures-Ch-2-Data-Movement" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/11/24/Hadoop-Application-Architectures-Ch-2-Data-Movement/">Hadoop Application Architectures Ch.2 Data Movement</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/11/24/Hadoop-Application-Architectures-Ch-2-Data-Movement/" class="article-date">
+  <time datetime="2019-11-24T23:55:50.000Z" itemprop="datePublished">2019-11-24</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>Ingestion</li>
+<li>Extraction</li>
+</ul>
+<h2 id="Data-Ingestion-Considerations"><a href="#Data-Ingestion-Considerations" class="headerlink" title="Data Ingestion Considerations"></a>Data Ingestion Considerations</h2><p>Common data sources:</p>
+<ul>
+<li>data management system such as relational databases</li>
+<li>logs, event data</li>
+<li>files from existing storage system</li>
+</ul>
+<p>Considerations:</p>
+<ul>
+<li>Timeliness of data ingestion and accessibility</li>
+<li>Incremental updates</li>
+<li>Data access and processing</li>
+<li>Source system and data structure</li>
+<li>Partitioning and splitting of data</li>
+<li>Storage format</li>
+<li>Data transformation</li>
+</ul>
+<h3 id="Timeliness-of-Data-Ingestion"><a href="#Timeliness-of-Data-Ingestion" class="headerlink" title="Timeliness of Data Ingestion"></a>Timeliness of Data Ingestion</h3><p>Timeliness classification:</p>
+<ul>
+<li>Macro batch (15 mins -)</li>
+<li>Microbatch (2 mins -)</li>
+<li>Near-Real-Time Decision Support (2 secs -)</li>
+<li>Near-Real-Time Event Processing (100 msecs -)</li>
+<li>Real Time</li>
+</ul>
+<p>System complexity, cost, disk or memory.</p>
+<h3 id="Incremental-Updates"><a href="#Incremental-Updates" class="headerlink" title="Incremental Updates"></a>Incremental Updates</h3><ul>
+<li><code>append</code><ul>
+<li>notice the <em>small files problem</em>, may require periodic process to merge small files</li>
+<li>write to</li>
+</ul>
+</li>
+<li><code>update</code><ul>
+<li>HDFS<ul>
+<li><em>delta file</em> and <em>compaction job</em></li>
+<li>only work for multi-minute timeliness intervals</li>
+</ul>
+</li>
+<li>HBase<ul>
+<li>milliseconds timeliness</li>
+<li>8 - 10 times slower scan (compare to HDFS)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Access-Patterns"><a href="#Access-Patterns" class="headerlink" title="Access Patterns"></a>Access Patterns</h3><ul>
+<li>scan: HDFS (supports memory cache from Hadoop 2.3.0)</li>
+<li>random access: HBase</li>
+<li>search: Solr</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Use cases</th>
+<th>Storage device</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MapReduce</td>
+<td>Large batch processes</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Hive</td>
+<td>Batch processing with SQL-like language</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Pig</td>
+<td>Batch processing with a data flow language</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Spark</td>
+<td>Fast interactive processing</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Giraph</td>
+<td>Batch graph processing</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Impala</td>
+<td>MPP style SQL</td>
+<td>HDFS is preferred for most cases</td>
+</tr>
+<tr>
+<td>HBase API</td>
+<td>Atomic puts, gets, and deletes on record-level data</td>
+<td>HBase</td>
+</tr>
+</tbody></table>
+<h3 id="Original-Source-System-and-Data-Structure"><a href="#Original-Source-System-and-Data-Structure" class="headerlink" title="Original Source System and Data Structure"></a>Original Source System and Data Structure</h3><h5 id="READ-SPEED-OF-THE-DEVICES-ON-SOURCE-SYSTEMS"><a href="#READ-SPEED-OF-THE-DEVICES-ON-SOURCE-SYSTEMS" class="headerlink" title="READ SPEED OF THE DEVICES ON SOURCE SYSTEMS"></a>READ SPEED OF THE DEVICES ON SOURCE SYSTEMS</h5><blockquote>
+<p>Disk I/O: often a major bottleneck in any processing pipeline.<br>Generally, with Hadoop we’ll see read speeds of anywhere from 20 MBps to 100 MBps, and there are limitations on the motherboard or controller for reading from all the disks on the system.<br>To maximize read speeds, make sure to take advantage of as many disks as possible on the source system.<br>On a typical drive three threads is normally required to maximize throughput, although this number will vary.</p>
+</blockquote>
+<ul>
+<li>to use as many as multiple disks</li>
+<li>multi-threads</li>
+</ul>
+<h5 id="ORIGINAL-FILE-TYPE"><a href="#ORIGINAL-FILE-TYPE" class="headerlink" title="ORIGINAL FILE TYPE"></a>ORIGINAL FILE TYPE</h5><h5 id="COMPRESSION"><a href="#COMPRESSION" class="headerlink" title="COMPRESSION"></a>COMPRESSION</h5><h5 id="RELATIONAL-DATABASE-MANAGEMENT-SYSTEMS"><a href="#RELATIONAL-DATABASE-MANAGEMENT-SYSTEMS" class="headerlink" title="RELATIONAL DATABASE MANAGEMENT SYSTEMS"></a>RELATIONAL DATABASE MANAGEMENT SYSTEMS</h5><p>Apache Sqoop: a very rich tool with lots of options, but at the same time it is simple and easy to learn</p>
+<ul>
+<li>batch process: slow timeliness<ul>
+<li>Sqoop</li>
+</ul>
+</li>
+<li>data pipeline split: one to RDBMS, one to HDFS<ul>
+<li>Flume or Kafka</li>
+</ul>
+</li>
+<li>network limited: edge node<ul>
+<li>RDBMS file dump</li>
+</ul>
+</li>
+</ul>
+<h5 id="STREAMING-DATA"><a href="#STREAMING-DATA" class="headerlink" title="STREAMING DATA"></a>STREAMING DATA</h5><h5 id="LOGFILES"><a href="#LOGFILES" class="headerlink" title="LOGFILES"></a>LOGFILES</h5><ul>
+<li>anti-pattern: read the logfiles from disk as they are written<ul>
+<li>because this is almost impossible to implement without losing data</li>
+</ul>
+</li>
+<li>recommend: Flume or Kafka</li>
+</ul>
+<h3 id="Transformations"><a href="#Transformations" class="headerlink" title="Transformations"></a>Transformations</h3><p>Options:</p>
+<ul>
+<li>Transformation</li>
+<li>Partitioning</li>
+<li>Splitting</li>
+</ul>
+<p>For timeliness,</p>
+<ul>
+<li>batch transformation<ul>
+<li>Hive, Pig, MapReduce, Spark</li>
+<li>checkpoint for failure</li>
+<li>all-or-nothing</li>
+</ul>
+</li>
+<li>streaming ingestion<ul>
+<li>Flume<ul>
+<li>interceptors<ul>
+<li>notice the performance issue, external call, GC, etc.</li>
+</ul>
+</li>
+<li>selectors<ul>
+<li>decide which of the roads of event data will go down</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Network-Bottlenecks"><a href="#Network-Bottlenecks" class="headerlink" title="Network Bottlenecks"></a>Network Bottlenecks</h3><ul>
+<li>increase bandwidth</li>
+<li>compress data</li>
+</ul>
+<h3 id="Network-Security"><a href="#Network-Security" class="headerlink" title="Network Security"></a>Network Security</h3><ul>
+<li>encrypt with OpenSSL</li>
+</ul>
+<h3 id="Push-or-Pull"><a href="#Push-or-Pull" class="headerlink" title="Push or Pull"></a>Push or Pull</h3><p>requirements:</p>
+<ul>
+<li>Keeping track of what has been sent</li>
+<li>Handling retries or failover options in case of failure</li>
+<li>Being respectful of the source system that data is being ingested from</li>
+<li>Access and security</li>
+</ul>
+<h5 id="SQOOP"><a href="#SQOOP" class="headerlink" title="SQOOP"></a>SQOOP</h5><p>a pull solution, requires</p>
+<ul>
+<li>connection information for the source database</li>
+<li>one or more tables to extract</li>
+<li>ensure at a defined extraction rate</li>
+<li>scheduled to not interfere with the source system’s peak load time</li>
+</ul>
+<h5 id="FLUME"><a href="#FLUME" class="headerlink" title="FLUME"></a>FLUME</h5><ul>
+<li>Log4J appender<ul>
+<li>pushing events through a pipeline</li>
+</ul>
+</li>
+<li>spooling directory source or the JMS source<ul>
+<li>events are being pulled</li>
+</ul>
+</li>
+</ul>
+<h3 id="Failure-Handling"><a href="#Failure-Handling" class="headerlink" title="Failure Handling"></a>Failure Handling</h3><blockquote>
+<p>Failure scenarios need to be documented, including failure delay expectations and how data loss will be handled.</p>
+</blockquote>
+<ul>
+<li>File transfer<ul>
+<li>using directories for different stages<ul>
+<li><em>ToLoad</em></li>
+<li><em>InProgress</em></li>
+<li><em>Failure</em></li>
+<li><em>Successful</em></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Streaming ingestion<ul>
+<li>areas for failure<ul>
+<li>publisher failure</li>
+<li>broker failure</li>
+<li>consumer failure</li>
+</ul>
+</li>
+<li>deduplication<ul>
+<li>is a heavy performance cost</li>
+<li>some other works<ul>
+<li><a href="https://segment.com/blog/exactly-once-delivery/" target="_blank" rel="noopener">https://segment.com/blog/exactly-once-delivery/</a></li>
+<li><a href="http://eng.tapjoy.com/blog-list/real-time-deduping-at-scale" target="_blank" rel="noopener">http://eng.tapjoy.com/blog-list/real-time-deduping-at-scale</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Level-of-Complexity"><a href="#Level-of-Complexity" class="headerlink" title="Level of Complexity"></a>Level of Complexity</h3><p>ease of use, ex. HDFS CLI, FUSE, or NFS</p>
+<h2 id="Data-Ingestion-Options"><a href="#Data-Ingestion-Options" class="headerlink" title="Data Ingestion Options"></a>Data Ingestion Options</h2><p>In here,</p>
+<ul>
+<li>File transfer</li>
+<li>Sqoop</li>
+<li>Flume</li>
+<li>Kafka</li>
+</ul>
+<h3 id="File-Transfers"><a href="#File-Transfers" class="headerlink" title="File Transfers"></a>File Transfers</h3><p>Hadoop client’s <code>hadoop fs -put</code> and <code>hadoop fs -get</code></p>
+<ul>
+<li>simplest</li>
+<li>all-or-nothing batch processing</li>
+<li>single-threaded</li>
+<li>no transformations</li>
+<li>any file types</li>
+</ul>
+<h5 id="HDFS-CLIENT-COMMANDS"><a href="#HDFS-CLIENT-COMMANDS" class="headerlink" title="HDFS CLIENT COMMANDS"></a>HDFS CLIENT COMMANDS</h5><ul>
+<li>configurable replicas, common default 3</li>
+<li>checksum file accompanies each block</li>
+<li><em>double-hop</em> from a edge node due to some network policy</li>
+</ul>
+<h5 id="MOUNTABLE-HDFS"><a href="#MOUNTABLE-HDFS" class="headerlink" title="MOUNTABLE HDFS"></a>MOUNTABLE HDFS</h5><ul>
+<li>allow to use common filesystem commands</li>
+<li>not full POSIX semantic</li>
+<li>not support random write</li>
+<li>potential misuse: small files problem<ul>
+<li>mitigated by Solr for indexing, HBase, container format as Avro</li>
+</ul>
+</li>
+</ul>
+<p>implementations example</p>
+<ul>
+<li>Fuse-DFS<ul>
+<li>no need to modify the Linux kernel</li>
+<li>multiple hops, poor consistency model</li>
+<li>not yet production ready</li>
+</ul>
+</li>
+<li>NFSv3<ul>
+<li>scaling by Hadoop NFS Gateway nodes</li>
+<li>recommended to use only in small, manual data transfers</li>
+</ul>
+</li>
+</ul>
+<h4 id="Considerations"><a href="#Considerations" class="headerlink" title="Considerations"></a>Considerations</h4><ul>
+<li>single sink or multiple sinks</li>
+<li>reliability or not</li>
+<li>transformation or not</li>
+</ul>
+<h3 id="Sqoop-Batch-Transfer-Between-Hadoop-and-Relational-Databases"><a href="#Sqoop-Batch-Transfer-Between-Hadoop-and-Relational-Databases" class="headerlink" title="Sqoop: Batch Transfer Between Hadoop and Relational Databases"></a>Sqoop: Batch Transfer Between Hadoop and Relational Databases</h3><blockquote>
+<p>When used for importing data into Hadoop, Sqoop generates map-only MapReduce jobs where each mapper connects to the database using a Java database connectivity (JDBC) driver, selects a portion of the table to be imported, and writes the data to HDFS.</p>
+</blockquote>
+<h5 id="CHOOSING-A-SPLIT-BY-COLUMN"><a href="#CHOOSING-A-SPLIT-BY-COLUMN" class="headerlink" title="CHOOSING A SPLIT-BY COLUMN"></a>CHOOSING A SPLIT-BY COLUMN</h5><ul>
+<li><code>split-by</code></li>
+<li><code>num-mappers</code></li>
+</ul>
+<h5 id="USING-DATABASE-SPECIFIC-CONNECTORS-WHENEVER-AVAILABLE"><a href="#USING-DATABASE-SPECIFIC-CONNECTORS-WHENEVER-AVAILABLE" class="headerlink" title="USING DATABASE-SPECIFIC CONNECTORS WHENEVER AVAILABLE"></a>USING DATABASE-SPECIFIC CONNECTORS WHENEVER AVAILABLE</h5><h5 id="USING-THE-GOLDILOCKS-METHOD-OF-SQOOP-PERFORMANCE-TUNING"><a href="#USING-THE-GOLDILOCKS-METHOD-OF-SQOOP-PERFORMANCE-TUNING" class="headerlink" title="USING THE GOLDILOCKS METHOD OF SQOOP PERFORMANCE TUNING"></a>USING THE GOLDILOCKS METHOD OF SQOOP PERFORMANCE TUNING</h5><ul>
+<li>start with a very low number of mappers</li>
+<li>gradually increase it to achieve a balance</li>
+</ul>
+<h5 id="LOADING-MANY-TABLES-IN-PARALLEL-WITH-FAIR-SCHEDULER-THROTTLING"><a href="#LOADING-MANY-TABLES-IN-PARALLEL-WITH-FAIR-SCHEDULER-THROTTLING" class="headerlink" title="LOADING MANY TABLES IN PARALLEL WITH FAIR SCHEDULER THROTTLING"></a>LOADING MANY TABLES IN PARALLEL WITH FAIR SCHEDULER THROTTLING</h5><ul>
+<li><p>Load the tables sequentially<br><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/load_sequentially.png" alt=""></p>
+</li>
+<li><p>Load the tables in parallel (Fair Scheduler)<br><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/load_parallel.png" alt=""></p>
+</li>
+</ul>
+<h5 id="DIAGNOSING-BOTTLENECKS"><a href="#DIAGNOSING-BOTTLENECKS" class="headerlink" title="DIAGNOSING BOTTLENECKS"></a>DIAGNOSING BOTTLENECKS</h5><ul>
+<li>Network bandwidth<ul>
+<li>likely to be either 1 GbE or 10 GbE (120 MBps or 1.2 GBps)</li>
+</ul>
+</li>
+<li>RDBMS<ul>
+<li>review the query generated by the mappers</li>
+<li>in Sqoop incremental mode<ul>
+<li>make sure using index</li>
+</ul>
+</li>
+<li>ingest entire table<ul>
+<li>full table scans are typically preferred</li>
+</ul>
+</li>
+<li>monitor the database</li>
+<li>schedule the execution time</li>
+</ul>
+</li>
+<li>Data skew<ul>
+<li>default splitting range evenly with min to max of split_by column values</li>
+<li>choose <code>--split-by</code></li>
+<li>define <code>--boundary-query</code></li>
+</ul>
+</li>
+<li>Connector<ul>
+<li>RDBMS-specific connector is preferred</li>
+</ul>
+</li>
+<li>Hadoop<ul>
+<li>check disk I/O, CPU utilization, and swapping on the DataNodes where the mappers are running</li>
+</ul>
+</li>
+<li>Inefficient access path<ul>
+<li>incredibly important the split column is either the <strong>partition key</strong> or has an <strong>index</strong></li>
+<li>if no such column, then use only one mapper</li>
+</ul>
+</li>
+</ul>
+<h5 id="KEEPING-HADOOP-UPDATED"><a href="#KEEPING-HADOOP-UPDATED" class="headerlink" title="KEEPING HADOOP UPDATED"></a>KEEPING HADOOP UPDATED</h5><ul>
+<li>small table<ul>
+<li>just overwrite it</li>
+</ul>
+</li>
+<li>large table<ul>
+<li>delta<ul>
+<li>Incremental Sequence ID</li>
+<li>Timestamp</li>
+</ul>
+</li>
+<li>write to a new directory<ul>
+<li>check <code>{output_dir}/_SUCCESS</code></li>
+</ul>
+</li>
+<li>compaction with <code>sqoop-merge</code><ul>
+<li>sorted and partitioned data set could be optimized in merge, map-only job</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Flume-Event-Based-Data-Collection-and-Processing"><a href="#Flume-Event-Based-Data-Collection-and-Processing" class="headerlink" title="Flume: Event-Based Data Collection and Processing"></a>Flume: Event-Based Data Collection and Processing</h3><h5 id="FLUME-ARCHITECTURE"><a href="#FLUME-ARCHITECTURE" class="headerlink" title="FLUME ARCHITECTURE"></a>FLUME ARCHITECTURE</h5><p>[Flume Components]</p>
+<p>Main components inside of the Flume agent JVM:</p>
+<ul>
+<li>Sources<ul>
+<li>consume events from external sources and forward to channels</li>
+<li>including AvroSource, SpoolDirectorySource, HTTPSource, and JMSSource</li>
+</ul>
+</li>
+<li>Interceptors<ul>
+<li>allow events to be intercepted and modified in flight</li>
+<li>anything that can be implemented in a Java class</li>
+<li>formatting, partitioning, filtering, splitting, validating, or applying metadata to events</li>
+</ul>
+</li>
+<li>Selectors<ul>
+<li>routing for events</li>
+<li>fork to multiple channels, or send to a specific channel based on the event</li>
+</ul>
+</li>
+<li>Channels<ul>
+<li>store events until they’re consumed by a sink</li>
+<li>memory channel, file channel, balancing performance with durability</li>
+</ul>
+</li>
+<li>Sinks<ul>
+<li>remove events from a channel and deliver to a destination</li>
+</ul>
+</li>
+</ul>
+<h5 id="FLUME-PATTERNS"><a href="#FLUME-PATTERNS" class="headerlink" title="FLUME PATTERNS"></a>FLUME PATTERNS</h5><h6 id="Fan-in"><a href="#Fan-in" class="headerlink" title="Fan-in"></a>Fan-in</h6><p>Agents on Hadoop edge nodes.</p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/flume_ingest_fan_in.png" alt=""></p>
+<h6 id="Splitting-data-on-ingest"><a href="#Splitting-data-on-ingest" class="headerlink" title="Splitting data on ingest"></a>Splitting data on ingest</h6><p>Backup HDFS cluster for disaster recovery (DR).</p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/flume_ingest_split.png" alt=""></p>
+<h6 id="Partitioning-data-on-ingest"><a href="#Partitioning-data-on-ingest" class="headerlink" title="Partitioning data on ingest"></a>Partitioning data on ingest</h6><p>Ex. partition events by timestamp.</p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/flume_ingest_partition.png" alt=""></p>
+<h6 id="Splitting-events-for-streaming-analytics"><a href="#Splitting-events-for-streaming-analytics" class="headerlink" title="Splitting events for streaming analytics"></a>Splitting events for streaming analytics</h6><p>Send to streaming such as Storm or Spark Streaming. (point a Flume Avro sink to Spark Streaming’s Flume Stream)</p>
+<h5 id="FILE-FORMATS"><a href="#FILE-FORMATS" class="headerlink" title="FILE FORMATS"></a>FILE FORMATS</h5><ul>
+<li>Text files<ul>
+<li>with container format SequenceFiles or Avro</li>
+<li>Avro is preferred because<ul>
+<li>it stores schema as part of the file,</li>
+<li>and also compresses more efficiently.</li>
+<li>providing better failure handling.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Columnar formats<ul>
+<li>RCFile, ORC, or Parquet are also <strong>not</strong> well suited for Flume</li>
+<li>more data lose risk due to batch processing</li>
+</ul>
+</li>
+<li>Customized <em>event serializers</em><ul>
+<li>override the EventSerializer interface to apply your own logic and create a custom output format</li>
+</ul>
+</li>
+</ul>
+<h5 id="RECOMMENDATIONS"><a href="#RECOMMENDATIONS" class="headerlink" title="RECOMMENDATIONS"></a>RECOMMENDATIONS</h5><h6 id="Flume-sources"><a href="#Flume-sources" class="headerlink" title="Flume sources"></a>Flume sources</h6><ul>
+<li>Batch size<ul>
+<li>notice of the network latency for sending acknowledge</li>
+<li>start from 1,000</li>
+</ul>
+</li>
+<li>Threads<ul>
+<li>pushing source: add more clients or client threads</li>
+<li>pulling source: configure more sources in the agent</li>
+</ul>
+</li>
+</ul>
+<h6 id="Flume-sinks"><a href="#Flume-sinks" class="headerlink" title="Flume sinks"></a>Flume sinks</h6><ul>
+<li>Number of sinks<ul>
+<li>channel to sink, is one-to-many</li>
+<li>sink is single thread</li>
+<li>limitation with more sinks should be the network or the CPU</li>
+</ul>
+</li>
+<li>Batch Sizes<ul>
+<li>overhead of an <em>fsync</em> system call</li>
+<li>only big downside to large batches with a sink is an increased risk of duplicate events</li>
+<li>balance between throughput and potential duplicates</li>
+</ul>
+</li>
+</ul>
+<h6 id="Flume-interceptors"><a href="#Flume-interceptors" class="headerlink" title="Flume interceptors"></a>Flume interceptors</h6><ul>
+<li>capability to take an event or group of events and modify them, filter them, or split them</li>
+<li>custom code comes with risk of issues like memory leaks or consuming excessive CPU</li>
+</ul>
+<h6 id="Flume-memory-channels"><a href="#Flume-memory-channels" class="headerlink" title="Flume memory channels"></a>Flume memory channels</h6><ul>
+<li>if performance is your primary consideration, and data loss is not an issue</li>
+<li>better for streaming analytics sink</li>
+</ul>
+<h6 id="Flume-file-channels"><a href="#Flume-file-channels" class="headerlink" title="Flume file channels"></a>Flume file channels</h6><ul>
+<li>it’s more durable than the memory channel</li>
+<li>to use multiple disks</li>
+<li>if using multiple file channels, use distinct directories, and preferably separate disks, for each channel</li>
+<li>use dual checkpoint directories</li>
+<li>better for persistent sink</li>
+</ul>
+<h6 id="JDBC-channels"><a href="#JDBC-channels" class="headerlink" title="JDBC channels"></a>JDBC channels</h6><ul>
+<li>persists events to any JDBC-compliant data store</li>
+<li>most durable channel, but also the least performant</li>
+</ul>
+<h6 id="Sizing-Channels"><a href="#Sizing-Channels" class="headerlink" title="Sizing Channels"></a>Sizing Channels</h6><ul>
+<li>Memory channels<ul>
+<li>can be fed by multiple sources</li>
+<li>can be fetched from by multiple sinks</li>
+<li>so for a pipeline, one channel in a node usually is enough</li>
+</ul>
+</li>
+<li>Channel size<ul>
+<li>large memory channel could have <strong>garbage collection</strong> activity that could slow down the whole agent</li>
+</ul>
+</li>
+</ul>
+<h5 id="FINDING-FLUME-BOTTLENECKS"><a href="#FINDING-FLUME-BOTTLENECKS" class="headerlink" title="FINDING FLUME BOTTLENECKS"></a>FINDING FLUME BOTTLENECKS</h5><ul>
+<li>Latency between nodes<ul>
+<li>batch size or more threads</li>
+</ul>
+</li>
+<li>Throughput between nodes<ul>
+<li>data compression</li>
+</ul>
+</li>
+<li>Number of threads</li>
+<li>Number of sinks</li>
+<li>Channel</li>
+<li>Garbage collection issues</li>
+</ul>
+<h3 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a>Kafka</h3><ul>
+<li><em>producers</em>, <em>brokers</em>, <em>consumers</em></li>
+<li><em>topic</em>, <em>partition</em>, <em>offset</em></li>
+</ul>
+<p>Large number of partitions:</p>
+<ul>
+<li>Each partition can be consumed by at most one consumer from the same group</li>
+<li>Therefore, we recommend at least as many partitions per node as there are servers in the cluster, possibly planning for a few years of growth.</li>
+<li>There are no real downsides to having a few hundred partitions per topic.</li>
+</ul>
+<h5 id="KAFKA-FAULT-TOLERANCE"><a href="#KAFKA-FAULT-TOLERANCE" class="headerlink" title="KAFKA FAULT TOLERANCE"></a>KAFKA FAULT TOLERANCE</h5><ul>
+<li><em>replica</em></li>
+<li><em>leader</em>, <em>followers</em></li>
+</ul>
+<p>Producer acknowledge:</p>
+<ul>
+<li>all synchronized replicas</li>
+<li>leader only</li>
+<li>asynchronized</li>
+</ul>
+<p>Consumer only read <em>committed</em> (all synchronized) messages.</p>
+<p>Supported semantics,</p>
+<ul>
+<li><em>at least once</em><ul>
+<li>consumer advances the offset <strong>after</strong> processing the messages</li>
+</ul>
+</li>
+<li><em>at most once</em><ul>
+<li>consumer advances the offset <strong>before</strong> processing the messages</li>
+</ul>
+</li>
+<li><em>exactly once</em><ul>
+<li>consumer advances the offset, and processes the messages <strong>at the same time</strong> with two-phase commits</li>
+</ul>
+</li>
+</ul>
+<p>Multiple data centers deployment.</p>
+<h5 id="KAFKA-AND-HADOOP"><a href="#KAFKA-AND-HADOOP" class="headerlink" title="KAFKA AND HADOOP"></a>KAFKA AND HADOOP</h5><table>
+<thead>
+<tr>
+<th></th>
+<th>Kafka</th>
+<th>Flume</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Hadoop ingest solution</td>
+<td>less</td>
+<td>more</td>
+</tr>
+<tr>
+<td>Required code writing</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Fault tolerant</td>
+<td>higher</td>
+<td>lower</td>
+</tr>
+<tr>
+<td>Performance</td>
+<td>higher</td>
+<td>lower</td>
+</tr>
+</tbody></table>
+<h6 id="Flume-with-Kafka"><a href="#Flume-with-Kafka" class="headerlink" title="Flume with Kafka"></a>Flume with Kafka</h6><ul>
+<li>Kafka source<ul>
+<li>consumer, reads data from Kafka and sends it to the Flume channel</li>
+<li>adding multiple sources with the same <em>groupId</em> for load balancing and high availability</li>
+<li>batch size tuning</li>
+</ul>
+</li>
+<li>Kafka sink<ul>
+<li>producer, sends data from a Flume channel to Kafka</li>
+<li>batch size tuning</li>
+</ul>
+</li>
+<li>Kafka channel<ul>
+<li>combines a producer and a consumer</li>
+<li>each batch will be sent to a separate Kafka partition, so the writes will be load-balanced</li>
+</ul>
+</li>
+</ul>
+<h6 id="Camus"><a href="#Camus" class="headerlink" title="Camus"></a>Camus</h6><ul>
+<li>ingesting data from Kafka to HDFS</li>
+<li>automatic discovery of Kafka topics from ZooKeeper</li>
+<li>conversion of messages to Avro and Avro schema management</li>
+<li>automatic partitioning</li>
+<li>all-or-nothing batch processing</li>
+<li>need to write decoder to convert Kafka messages to Avro</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/camus.png" alt=""></p>
+<h2 id="Data-Extraction"><a href="#Data-Extraction" class="headerlink" title="Data Extraction"></a>Data Extraction</h2><ul>
+<li>Moving data from Hadoop to an RDBMS or data warehouse<ul>
+<li>In most cases, Sqoop will be the appropriate choice for ingesting the transformed data into the target database.</li>
+</ul>
+</li>
+<li>Moving data between Hadoop clusters<ul>
+<li>DistCp uses MapReduce to perform parallel transfers of large volumes of data.</li>
+<li>DistCp is also suitable when either the source or target is a non-HDFS filesystem—for example, an increasingly common need is to move data into a cloud-based system, such as Amazon’s Simple Storage System (S3).</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Hadoop-SequenceFile-Sync-Marker" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/11/12/Hadoop-SequenceFile-Sync-Marker/">Hadoop SequenceFile Sync Marker</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/11/12/Hadoop-SequenceFile-Sync-Marker/" class="article-date">
+  <time datetime="2019-11-12T00:33:21.000Z" itemprop="datePublished">2019-11-12</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>From Hadoop <a href="https://cwiki.apache.org/confluence/display/HADOOP2/SequenceFile" target="_blank" rel="noopener">wiki</a>,</p>
+<blockquote>
+<p>The sync marker permits seeking to a random point in a file and then re-synchronizing input with record boundaries. This is required to be able to efficiently split large files for MapReduce processing.</p>
+</blockquote>
+<p>But what it actually marks? And how it could be used in “seeking”?</p>
+<p>Here is my starting investigation.</p>
+<p>The code piece for sync marker generation.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Writer</span> <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Closeable</span>, <span class="title">Syncable</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">    MessageDigest digester = MessageDigest.getInstance(<span class="string">"MD5"</span>);</span><br><span class="line">    <span class="keyword">long</span> time = Time.now();</span><br><span class="line">    digester.update((<span class="keyword">new</span> UID()+<span class="string">"@"</span>+time).getBytes(StandardCharsets.UTF_8));</span><br><span class="line">    sync = digester.digest();</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L869" target="_blank" rel="noopener">code</a></p>
+<p>and the piece for insertion.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sync</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (sync != <span class="keyword">null</span> &amp;&amp; lastSyncPos != out.getPos()) &#123;</span><br><span class="line">    out.writeInt(SYNC_ESCAPE);                <span class="comment">// mark the start of the sync</span></span><br><span class="line">    out.write(sync);                          <span class="comment">// write sync</span></span><br><span class="line">    lastSyncPos = out.getPos();               <span class="comment">// update lastSyncPos</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L1338" target="_blank" rel="noopener">code</a></p>
+<p>From these codes, the sync marker seems just being generated in the “Writer” initialization once, and write into the file header and the output while the output buffer full over a certain size.</p>
+<ul>
+<li>In <code>Writer</code> &amp; <code>RecordCompressWriter</code>: refer to the <code>SYNC_INTERVAL</code><ul>
+<li>refer to this <a href="https://github.com/apache/hadoop/commit/07825f2b49384dbec92bfae87ea661cef9ffab49" target="_blank" rel="noopener">commit</a>, it has been changed from <code>100 * SYNC_SIZE</code> to <code>5 * 1024 * SYNC_SIZE</code></li>
+</ul>
+</li>
+<li>In <code>BlobkCompressWriter</code>:  refer to <code>IO_SEQFILE_COMPRESS_BLOCKSIZE_KEY/DEFAULT</code> (default: 1,000,000)</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span></span></span><br><span class="line"><span class="comment"> * &lt;a href="&#123;<span class="doctag">@docRoot</span>&#125;/../hadoop-project-dist/hadoop-common/core-default.xml"&gt;</span></span><br><span class="line"><span class="comment"> * core-default.xml&lt;/a&gt;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String  IO_SEQFILE_COMPRESS_BLOCKSIZE_KEY =</span><br><span class="line">  <span class="string">"io.seqfile.compress.blocksize"</span>;</span><br><span class="line"><span class="comment">/** Default value for IO_SEQFILE_COMPRESS_BLOCKSIZE_KEY */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span>     IO_SEQFILE_COMPRESS_BLOCKSIZE_DEFAULT = <span class="number">1000000</span>;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/CommonConfigurationKeysPublic.java#L227" target="_blank" rel="noopener">code</a></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The number of bytes between sync points. 100 KB, default.</span></span><br><span class="line"><span class="comment"> * Computed as 5 KB * 20 = 100 KB</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SYNC_INTERVAL = <span class="number">5</span> * <span class="number">1024</span> * SYNC_SIZE; <span class="comment">// 5KB*(16+4)</span></span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L218" target="_blank" rel="noopener">code</a></p>
+<p>Then, in the reading part, the sync marker will be read in the <code>Reader</code> <code>init</code>.</p>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L2029" target="_blank" rel="noopener">code</a></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Seek to the next sync mark past a given position.*/</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">sync</span><span class="params">(<span class="keyword">long</span> position)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (position+SYNC_SIZE &gt;= end) &#123;</span><br><span class="line">    seek(end);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (position &lt; headerEnd) &#123;</span><br><span class="line">    <span class="comment">// seek directly to first record</span></span><br><span class="line">    in.seek(headerEnd);</span><br><span class="line">    <span class="comment">// note the sync marker "seen" in the header</span></span><br><span class="line">    syncSeen = <span class="keyword">true</span>;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    seek(position+<span class="number">4</span>);                         <span class="comment">// skip escape</span></span><br><span class="line">    in.readFully(syncCheck);</span><br><span class="line">    <span class="keyword">int</span> syncLen = sync.length;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; in.getPos() &lt; end; i++) &#123;</span><br><span class="line">      <span class="keyword">int</span> j = <span class="number">0</span>;</span><br><span class="line">      <span class="keyword">for</span> (; j &lt; syncLen; j++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (sync[j] != syncCheck[(i+j)%syncLen])</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (j == syncLen) &#123;</span><br><span class="line">        in.seek(in.getPos() - SYNC_SIZE);     <span class="comment">// position before sync</span></span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      syncCheck[i%syncLen] = in.readByte();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (ChecksumException e) &#123;             <span class="comment">// checksum failure</span></span><br><span class="line">    handleChecksumException(e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java#L2726" target="_blank" rel="noopener">code</a></p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><ul>
+<li>This sync marker allows the seeking operation to <strong>align</strong> to records or blocks boundary.</li>
+<li>But it relies on an existing seeking operation, which is implemented in <code>Seekable.seek()</code>.</li>
+<li>Next question, “How is the seek implemented among a distributed file”.</li>
+</ul>
+<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><ul>
+<li><a href="https://hadoop.apache.org/docs/r2.8.0/api/org/apache/hadoop/io/SequenceFile.html" target="_blank" rel="noopener">https://hadoop.apache.org/docs/r2.8.0/api/org/apache/hadoop/io/SequenceFile.html</a></li>
+<li><a href="https://www.reddit.com/r/hadoop/comments/4negaa/what_is_the_sequence_file_sync_marker_how_does_it/" target="_blank" rel="noopener">https://www.reddit.com/r/hadoop/comments/4negaa/what_is_the_sequence_file_sync_marker_how_does_it/</a></li>
+<li><a href="https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java" target="_blank" rel="noopener">https://github.com/apache/hadoop/blob/release-3.2.0-RC1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java</a></li>
+<li><a href="https://github.com/apache/hadoop/blob/release-2.8.0-RC3/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java" target="_blank" rel="noopener">https://github.com/apache/hadoop/blob/release-2.8.0-RC3/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SequenceFile.java</a></li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/11/11/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/">Hadoop Application Architectures Ch.1 Data Modeling in Hadoop</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/11/11/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/" class="article-date">
+  <time datetime="2019-11-11T11:15:43.000Z" itemprop="datePublished">2019-11-11</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>The power of context in Hadoop: “Schema-on-Read”, compares to “Schema-on-Write”:</p>
+<ul>
+<li>the structure imposed at processing time based on the requirements</li>
+<li>shorter cycles of analysis, data modeling, ETL, testing, etc. before data can be processed</li>
+<li>agility on schema revolutions</li>
+</ul>
+<p>Considerations perspectives of storing:</p>
+<ul>
+<li>Data storage formats</li>
+<li>Multitenancy</li>
+<li>Schema Design</li>
+<li>Metadata Management</li>
+</ul>
+<p>Beyond the scope:</p>
+<ul>
+<li><a href="http://bit.ly/hadoop-security" target="_blank" rel="noopener">Hadoop Security</a></li>
+</ul>
+<h2 id="Data-Storage-Options"><a href="#Data-Storage-Options" class="headerlink" title="Data Storage Options"></a>Data Storage Options</h2><ul>
+<li>File format</li>
+<li>Compression</li>
+<li>Data storage system</li>
+</ul>
+<h3 id="Standard-File-Formats"><a href="#Standard-File-Formats" class="headerlink" title="Standard File Formats"></a>Standard File Formats</h3><h4 id="Text-data"><a href="#Text-data" class="headerlink" title="Text data"></a>Text data</h4><ul>
+<li>ex. server logs, emails, CSV files</li>
+<li>with “splittable” compression, for parallel processing<ul>
+<li>container format: SequenceFiles, Avro</li>
+</ul>
+</li>
+</ul>
+<h4 id="Structured-text-data"><a href="#Structured-text-data" class="headerlink" title="Structured text data"></a>Structured text data</h4><ul>
+<li>ex. XML, JSON</li>
+<li>challenging to make XML or JSON splittable<ul>
+<li>using container format such as Avro</li>
+<li><code>XMLLoader</code> in <code>PiggyBank</code> library</li>
+<li><code>LzoJaonInputFormat</code> in <code>Elephant Bird</code> project</li>
+</ul>
+</li>
+</ul>
+<h4 id="Binary-data"><a href="#Binary-data" class="headerlink" title="Binary data"></a>Binary data</h4><ul>
+<li>ex. images</li>
+<li>in most of cases, container format is preferred</li>
+<li>in the cases the binary data is larger than a certain size, ex. 64MB, consider not using container format.</li>
+</ul>
+<h3 id="Hadoop-File-Types"><a href="#Hadoop-File-Types" class="headerlink" title="Hadoop File Types"></a>Hadoop File Types</h3><p>Important characteristics:</p>
+<ul>
+<li>Splittable Compression<ul>
+<li>parallel processing</li>
+<li>data locality</li>
+</ul>
+</li>
+<li>Agnostic Compression<ul>
+<li>codec in header metadata</li>
+</ul>
+</li>
+</ul>
+<h4 id="File-based-data-structures"><a href="#File-based-data-structures" class="headerlink" title="File-based data structures"></a>File-based data structures</h4><ul>
+<li>ex. SequenceFiles, MapFiles, SetFiles, ArrayFiles, and BloomMapFiles</li>
+<li>MapReduce specific</li>
+<li>SequenceFiles<ul>
+<li>most common</li>
+<li>binary key-value pair</li>
+<li>formats:<ul>
+<li>uncompressed</li>
+<li>record-compressed (single record)</li>
+<li>block-compressed (batch, “not” HDFS block)</li>
+</ul>
+</li>
+<li>sync maker<ul>
+<li>to allow for seeking</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Serialization-Formats"><a href="#Serialization-Formats" class="headerlink" title="Serialization Formats"></a>Serialization Formats</h3><p>byte stream &lt;=&gt; data structures</p>
+<p>Term:</p>
+<ul>
+<li><strong>IDL</strong> (Interface Definition Language)</li>
+<li><strong>RPC</strong> (Remote Procedure Calls)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Summary</th>
+<th>Limitation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Writables</td>
+<td>- simple, efficient, serializable</td>
+<td>Only in Hadoop &amp; Java</td>
+</tr>
+<tr>
+<td>Thrift</td>
+<td>- language-natrual <br> - by Facebook <br> - use IDL <br> -robust RPC</td>
+<td>- no internal compression of records <br> - not splittable <br> - not native MapReduce support <br> (addressed by Elephant Bird)</td>
+</tr>
+<tr>
+<td>Protocol Buffers</td>
+<td>- language-natrual <br> - by Google <br> - use IDL, stub code generation</td>
+<td>same as Thrift</td>
+</tr>
+<tr>
+<td>Avro</td>
+<td>- language-natrual <br> - optional IDL: JSON, C-like <br> - native support for MapReduce <br> - compressible: Snappy, Deflate <br> - splittable: sync marker <br> - self-decribing: schema in each file header’s metadata</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>Additional refer: <a href="http://blog.maxkit.com.tw/2017/10/thrift-protobuf-avro.html" target="_blank" rel="noopener">http://blog.maxkit.com.tw/2017/10/thrift-protobuf-avro.html</a></p>
+<h3 id="Columnar-Formats"><a href="#Columnar-Formats" class="headerlink" title="Columnar Formats"></a>Columnar Formats</h3><ul>
+<li>skip I/O and decompression</li>
+<li>efficient columnar compression rate</li>
+</ul>
+<p>Term:</p>
+<ul>
+<li><strong>RCFile</strong> (Record Columnar File)</li>
+<li><strong>ORC</strong> (Optimized Row Columnar)</li>
+<li><strong>RLE</strong> (bit-packaging/run length encoding)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Summary</th>
+<th>Limitation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RCFile</td>
+<td>column-oriented storage within each row splits</td>
+<td>has some deficiencies that prevent optimal performance for query times and compression <br> (what’s this exactly?)</td>
+</tr>
+<tr>
+<td>ORC</td>
+<td>- lightweight, always-on compression <br> - zlib, LZO, Snappy <br> - predicate push down <br> - Hive type, including decimal, complex <br> - splittable</td>
+<td>- only designed for Hive, not general purpose</td>
+</tr>
+<tr>
+<td>Parquet</td>
+<td>- per-column level compression <br> - support nested data structure <br> - full metadata, self-documenting <br> - fully support Avro, Thrift API <br> - efficient and extensible encoding schemas, RLE</td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="Avro-and-Parquet"><a href="#Avro-and-Parquet" class="headerlink" title="Avro and Parquet"></a>Avro and Parquet</h5><ul>
+<li>single interface: recommended if you are choosing for the single interface</li>
+<li>compatibility: Parquet can be read and written to with Avro APIs and Avro schemas</li>
+</ul>
+<h3 id="Compression"><a href="#Compression" class="headerlink" title="Compression"></a>Compression</h3><ul>
+<li>disk &amp; network I/O</li>
+<li>source &amp; intermediate data</li>
+<li>trade with CPU loading</li>
+<li>splittability for parallelism and data locality</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Summary</th>
+<th>Limitation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Snappy</td>
+<td>- developed at Google <br> - high speed and reasonable compression rate</td>
+<td>- not inherently splittable <br> - intended to be used with a container format</td>
+</tr>
+<tr>
+<td>LZO</td>
+<td>- very efficient decompression <br> - splittable</td>
+<td>- requires additional indexing <br> - requires a separated installation from Hadoop because of license prevention</td>
+</tr>
+<tr>
+<td>Gzip</td>
+<td>- good compression rate, 2.5x to Snappy <br> - read almost as fast as Snappy</td>
+<td>- write speed about half to Snappy <br> - not splittable <br> - fewer blocks might lead to lower parallelism =&gt; using smaller blocks</td>
+</tr>
+<tr>
+<td>bzip2</td>
+<td>- excellent compression rate, 9% better than Gzip</td>
+<td>- slow read / write, 10x slower than Gzip <br> - only used in archival purposes</td>
+</tr>
+</tbody></table>
+<h4 id="Compression-Recommendation"><a href="#Compression-Recommendation" class="headerlink" title="Compression Recommendation"></a>Compression Recommendation</h4><ul>
+<li>Enable compression of the MapReduce intermediate data</li>
+<li>Compress on columnar chunks</li>
+<li>With splittable container formats, ex. Avro or SequenceFiles, make the compression &amp; decompression could be processed individually</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/container_format_and_compression_block.png" alt="Compression Block"></p>
+<h2 id="HDFS-Schema-Design"><a href="#HDFS-Schema-Design" class="headerlink" title="HDFS Schema Design"></a>HDFS Schema Design</h2><p>Standard directory structure:</p>
+<ul>
+<li>Easier to share data sets between teams</li>
+<li>Allows access and quota controls</li>
+<li>“Stage” data during process pipeline</li>
+<li>Tool conventions compliant</li>
+</ul>
+<h3 id="Location-of-HDFS-Files"><a href="#Location-of-HDFS-Files" class="headerlink" title="Location of HDFS Files"></a>Location of HDFS Files</h3><ul>
+<li><em>/user/&lt;username&gt;</em></li>
+<li><em>/etl</em><ul>
+<li>ex. <em>/etl/&lt;group&gt;/&lt;application&gt;/&lt;process&gt;/{input,processing,output,bad}</em></li>
+</ul>
+</li>
+<li><em>/tmp</em></li>
+<li><em>/data</em></li>
+<li><em>/app</em><ul>
+<li>ex. <em>/app/&lt;group&gt;/&lt;application&gt;/&lt;version&gt;/&lt;artifact directory&gt;/&lt;artifact&gt;</em></li>
+</ul>
+</li>
+<li><em>/metadata</em></li>
+</ul>
+<h3 id="Advanced-HDFS-Schema-Design"><a href="#Advanced-HDFS-Schema-Design" class="headerlink" title="Advanced HDFS Schema Design"></a>Advanced HDFS Schema Design</h3><h4 id="PARTITIONING"><a href="#PARTITIONING" class="headerlink" title="PARTITIONING"></a>PARTITIONING</h4><blockquote>
+<p>Unlike traditional data warehouses, however, HDFS doesn’t store indexes on the data. This lack of indexes plays a large role in speeding up data ingest, but it also means that every query will have to read the entire data set even when you’re processing only a small subset of the data (a pattern called full table scan).</p>
+</blockquote>
+<ul>
+<li>Main purpose: reduce the amount of I/O required</li>
+<li>Common pattern: <em>&lt;data set name&gt;/&lt;partition_column_name=partition_column_value&gt;/{files}</em></li>
+<li>Understood by: HCatalog, Hive, Impala, Pig, etc.</li>
+</ul>
+<h4 id="BUCKETING"><a href="#BUCKETING" class="headerlink" title="BUCKETING"></a>BUCKETING</h4><p>Not always the key is good for partitioning. ex. <em>physician</em>, may result in too many partitions and too small in file size.</p>
+<p><em>small files problem</em>:</p>
+<blockquote>
+<p>Storing a large number of small files in Hadoop can lead to excessive memory use for the NameNode, since metadata for each file stored in HDFS is held in memory. Also, many small files can lead to many processing tasks, causing excessive overhead in processing.</p>
+</blockquote>
+<p>Bucketing is the solution,</p>
+<ul>
+<li>be able to control the size of the data subsets</li>
+<li>good average bucket size is a few multiples of the HDFS block size</li>
+<li>having an even distribution of data when hashed on the bucketing column is important because it leads to consistent bucketing</li>
+<li>having the number of buckets as a power of two is quite common</li>
+</ul>
+<p><em>joining</em> with bucketing</p>
+<ul>
+<li>reduce-side join<ul>
+<li>if for two data sets, both are bucketed on the join key</li>
+<li>and the number of buckets is factor and multiple</li>
+<li>could be done by bucket individually join, to save reduce-side join complexity</li>
+</ul>
+</li>
+<li>map-side join<ul>
+<li>if the bucket size can be fit into memory, map-side join can further improve performance</li>
+</ul>
+</li>
+<li>merge join<ul>
+<li>if the data in the buckets is sorted, it is also possible to use a merge join</li>
+<li>requires less memory</li>
+</ul>
+</li>
+</ul>
+<p>Based on common query patterns,</p>
+<ul>
+<li>decide partitioning and bucketing</li>
+<li>for multiple patterns, consider to have multiple store</li>
+<li>trade space to query speed</li>
+</ul>
+<h4 id="DENORMALIZING"><a href="#DENORMALIZING" class="headerlink" title="DENORMALIZING"></a>DENORMALIZING</h4><p>In relational databases, data is often stored in <em>third normal form</em>. In Hadoop, however, joins are often the slowest operations and consume the most resources from the cluster.</p>
+<ul>
+<li>prejoined, preaggregated</li>
+<li>consolidates many of the small dimension tables into a few larger dimensions</li>
+<li>data preprocessing, like aggregation or data type conversion, <em>Materialized Views</em></li>
+</ul>
+<h2 id="HBase-Schema-Design"><a href="#HBase-Schema-Design" class="headerlink" title="HBase Schema Design"></a>HBase Schema Design</h2><p>Distributed key-value store which could operate,</p>
+<ul>
+<li>put</li>
+<li>get</li>
+<li>iterate</li>
+<li>value increment</li>
+<li>delete</li>
+</ul>
+<h3 id="Row-Key"><a href="#Row-Key" class="headerlink" title="Row Key"></a>Row Key</h3><h5 id="RECORD-RETRIEVAL"><a href="#RECORD-RETRIEVAL" class="headerlink" title="RECORD RETRIEVAL"></a>RECORD RETRIEVAL</h5><ul>
+<li>unlimited columns</li>
+<li>single key<ul>
+<li>may need to combine multiple pieces of information in a single key</li>
+</ul>
+</li>
+<li><code>get</code> single record is the fastest<ul>
+<li>put most common uses of the data into a single <code>get</code></li>
+<li>denormalized</li>
+<li>very “wide” table</li>
+</ul>
+</li>
+</ul>
+<h5 id="DISTRIBUTION"><a href="#DISTRIBUTION" class="headerlink" title="DISTRIBUTION"></a>DISTRIBUTION</h5><p>Row key determines scattering throughout various regions.<br>So, it’s usually best to choose row keys so the load on the cluster is fairly distributed.</p>
+<ul>
+<li>Anti-pattern: <em>use a timestamp for row keys</em><ul>
+<li>easy to hit into single region and defeats the parallelism</li>
+</ul>
+</li>
+</ul>
+<h5 id="BLOCK-CACHE"><a href="#BLOCK-CACHE" class="headerlink" title="BLOCK CACHE"></a>BLOCK CACHE</h5><p>HBase block in chunks of default 64 KB with least recently used (LRU) cache.</p>
+<ul>
+<li>Anti-pattern: <em>row key by hash of some attribute</em><ul>
+<li>records in the same block could be “un-relevance”, and to reduce the cache hit rate</li>
+</ul>
+</li>
+</ul>
+<h5 id="ABILITY-TO-SCAN"><a href="#ABILITY-TO-SCAN" class="headerlink" title="ABILITY TO SCAN"></a>ABILITY TO SCAN</h5><p>A wise selection of row key can be used to co-locate related records in the same region.</p>
+<ul>
+<li>HBase scan rates are about eight times slower than HDFS scan rates.</li>
+</ul>
+<h5 id="SIZE"><a href="#SIZE" class="headerlink" title="SIZE"></a>SIZE</h5><p>Trade-off:</p>
+<ul>
+<li>shorter row keys: lower storage overhead and faster read/write performance</li>
+<li>longer row keys: better <code>get</code>/<code>scan</code> properties</li>
+</ul>
+<h5 id="READABILITY"><a href="#READABILITY" class="headerlink" title="READABILITY"></a>READABILITY</h5><p>Recommend to use readable prefix.</p>
+<ul>
+<li>easier to identify and debug issues</li>
+<li>easier to use the HBase console</li>
+</ul>
+<h5 id="UNIQUENESS"><a href="#UNIQUENESS" class="headerlink" title="UNIQUENESS"></a>UNIQUENESS</h5><p>Require to be unique key.</p>
+<h3 id="Timestamp"><a href="#Timestamp" class="headerlink" title="Timestamp"></a>Timestamp</h3><p>timestamp’s important purposes:</p>
+<ul>
+<li>determines newer record <code>put</code></li>
+<li>determines the order when multiple versions are requested</li>
+<li>determines to remove while time-to-live (TTL)</li>
+</ul>
+<h3 id="Hops"><a href="#Hops" class="headerlink" title="Hops"></a>Hops</h3><p><em>Hops</em>: the number of synchronized <code>get</code> requests required to retrieve the requested info</p>
+<ul>
+<li>best to avoid them through better schema design. ex, by leveraging denormalization.</li>
+<li>every hop is a round-trip to HBase that incurs a significant performance overhead</li>
+</ul>
+<h3 id="Tables-and-Regions"><a href="#Tables-and-Regions" class="headerlink" title="Tables and Regions"></a>Tables and Regions</h3><p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-1-Data-Modeling-in-Hadoop/region_table_topology.png" alt="Region Table Topology"></p>
+<ul>
+<li>one region server per node</li>
+<li>multiple regions pre region server</li>
+<li>for a region, it’s pinned to a region server at a time</li>
+<li>tables are split into regions and scattered across region servers</li>
+</ul>
+<p>The number of regions for a table is a trade-off between <strong>put performance</strong> and <strong>compaction time</strong>.</p>
+<h5 id="Put-performance"><a href="#Put-performance" class="headerlink" title="Put performance"></a>Put performance</h5><p><em>memstore</em>:</p>
+<ul>
+<li>cache structure present on every HBase region server</li>
+<li>wrtie =&gt; cahce =&gt; sort =&gt; flush</li>
+<li>more regions in a region server =&gt; less memstore space pre region =&gt; smaller flush &amp; HFiles =&gt; less performant</li>
+<li>ideal flush size: 100 MB</li>
+</ul>
+<h5 id="Compaction-time"><a href="#Compaction-time" class="headerlink" title="Compaction time"></a>Compaction time</h5><p>region size limit: 20GB (default) - 120GB</p>
+<p>region assignment:</p>
+<ul>
+<li>auto splitting<ul>
+<li>forever-growing data set, only update most recent data, with periodic TTL-based compaction, no need to compact the ole regions</li>
+</ul>
+</li>
+<li>assign the region number<ul>
+<li>recommended in most of cases</li>
+<li>set the region size to a high enough value (e.g., 100 GB per region) to avoid autosplitting</li>
+<li>split policy selected, <code>ConstantSizeRegionSplitPolicy</code> or <code>DisabledRegionSplitPolicy</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="Using-Columns"><a href="#Using-Columns" class="headerlink" title="Using Columns"></a>Using Columns</h3><p>Two different schema structures:</p>
+<ul>
+<li><p>Physical Columns</p>
+<table>
+<thead>
+<tr>
+<th>RowKey</th>
+<th>TimeStamp</th>
+<th>Column</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>101</td>
+<td>1395531114</td>
+<td>F</td>
+<td>A1</td>
+</tr>
+<tr>
+<td>101</td>
+<td>1395531114</td>
+<td>B</td>
+<td>B1</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>Combined Logical Columns</p>
+<table>
+<thead>
+<tr>
+<th>RowKey</th>
+<th>TimeStamp</th>
+<th>Column</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>101</td>
+<td>1395531114</td>
+<td>X</td>
+<td>A1|B1</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<p>Considerations:</p>
+<ul>
+<li>dependency on read, write, TTL</li>
+<li>number of records can fit in the block cache</li>
+<li>amount of data can fit through the WAL</li>
+<li>number of records can fit into the memstore</li>
+<li>compaction time</li>
+</ul>
+<h3 id="Using-Column-Families"><a href="#Using-Column-Families" class="headerlink" title="Using Column Families"></a>Using Column Families</h3><p><em>column families</em>: a column family is essentially a container for columns, each column family has its own set of HFiles and gets compacted independently of other column families in the same table.</p>
+<p>Use case: the <code>get</code>/<code>put</code> rate of the subset of columns are significant different, separate them to different culomn families would be beneficial of</p>
+<ul>
+<li>lower compaction cost (by <code>put</code>)</li>
+<li>better use of block cache (by <code>get</code>)</li>
+</ul>
+<h3 id="Time-to-Live"><a href="#Time-to-Live" class="headerlink" title="Time-to-Live"></a>Time-to-Live</h3><p><em>TTL</em>: built-in feature of HBase that ages out data based on its timestamp</p>
+<ul>
+<li>ignore outdated records during the major compaction</li>
+<li>the HFile record timestamp will be used</li>
+<li>if TTL not used, but delete records manually, it’d require full scan and insert the “delete records” (could be TBs), and also need the major compaction eventually</li>
+</ul>
+<h2 id="Managing-Metadata"><a href="#Managing-Metadata" class="headerlink" title="Managing Metadata"></a>Managing Metadata</h2><h3 id="What-Is-Metadata"><a href="#What-Is-Metadata" class="headerlink" title="What Is Metadata?"></a>What Is Metadata?</h3><p>In general, refers to data about the data.</p>
+<ul>
+<li>about logical data sets, usually stored in a separate metadata repository<ul>
+<li>location<ul>
+<li>dir path in HDFS</li>
+<li>table name in HBase</li>
+</ul>
+</li>
+<li>schema</li>
+<li>partitioning and sorting properties</li>
+<li>format</li>
+</ul>
+</li>
+<li>about files on HDFS, usually stored and managed by Hadoop NameNode<ul>
+<li>permissions and ownership</li>
+<li>location of various blocks of that file on data nodes</li>
+</ul>
+</li>
+<li>about tables in HBase, stored and managed by HBase itself<ul>
+<li>table names</li>
+<li>associated namespace</li>
+<li>associated attributes (e.g., MAX_FILESIZE, READONLY, etc.)</li>
+<li>names of column families</li>
+</ul>
+</li>
+<li>about data ingest and transformations<ul>
+<li>which user generated a given data set</li>
+<li>where the data set came from</li>
+<li>how long it took to generate it</li>
+<li>how many records there are</li>
+<li>the size of the data loaded</li>
+</ul>
+</li>
+<li>about data set statistics, useful for various tools that can leverage it for optimizing their execution plans but also for data analysts, who can do quick analysis based on it<ul>
+<li>the number of rows in a data set</li>
+<li>the number of unique values in each column</li>
+<li>a histogram of the distribution of data</li>
+<li>maximum and minimum values</li>
+</ul>
+</li>
+</ul>
+<h3 id="Why-Care-About-Metadata"><a href="#Why-Care-About-Metadata" class="headerlink" title="Why Care About Metadata?"></a>Why Care About Metadata?</h3><p>It allows to,</p>
+<ul>
+<li>interact with higher-level logical abstraction</li>
+<li>supply information that can then be leveraged by various tools</li>
+<li>data management tools to “hook” into this metadata and allow you to perform data discovery and lineage analysis</li>
+</ul>
+<h3 id="Where-to-Store-Metadata"><a href="#Where-to-Store-Metadata" class="headerlink" title="Where to Store Metadata?"></a>Where to Store Metadata?</h3><ul>
+<li>Hive metastore (database &amp; service)<ul>
+<li>deployed mode<ul>
+<li>embedded metastore</li>
+<li>local metastore</li>
+<li>remote metastore<ul>
+<li>MySQL (most common), PostgreSQL, Derby, and Oracle</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>could be used by Hive, Impala seamless</li>
+</ul>
+</li>
+<li>HCatalog<ul>
+<li>WebHCat REST API<ul>
+<li>could be used for MapReduce, Pig, and standalone applications</li>
+</ul>
+</li>
+<li>Java API<ul>
+<li>could be used for MapReduce, Spark, or Cascading</li>
+</ul>
+</li>
+<li>CLI</li>
+</ul>
+</li>
+</ul>
+<h3 id="Limitations-of-the-Hive-Metastore-and-HCatalog"><a href="#Limitations-of-the-Hive-Metastore-and-HCatalog" class="headerlink" title="Limitations of the Hive Metastore and HCatalog"></a>Limitations of the Hive Metastore and HCatalog</h3><ul>
+<li>High availability<ul>
+<li>HA for metastore database</li>
+<li>HA for metastore service<ul>
+<li>concurrency issue unresolved, HIVE-4759</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Fixed schema<ul>
+<li>only for tabular abstraction data sets</li>
+<li>ex. not for image or video data sets</li>
+</ul>
+</li>
+<li>Additional dependency<ul>
+<li>the metastore database itself is just another dependent component</li>
+</ul>
+</li>
+</ul>
+<h3 id="Other-Ways-of-Storing-Metadata"><a href="#Other-Ways-of-Storing-Metadata" class="headerlink" title="Other Ways of Storing Metadata"></a>Other Ways of Storing Metadata</h3><ul>
+<li>Embedded in HDFS paths<ul>
+<li>partitioned data sets</li>
+<li><em>&lt;data set name&gt;/&lt;partition_column_name=partition_column_value&gt;/{files}</em></li>
+</ul>
+</li>
+<li>Store in HDFS<ul>
+<li>maintain &amp; manage by your own<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;data&#x2F;event_log</span><br><span class="line">&#x2F;data&#x2F;event_log&#x2F;file1.avro</span><br><span class="line">&#x2F;data&#x2F;event_log&#x2F;.metadata</span><br></pre></td></tr></table></figure></li>
+<li>Kite SDK<ul>
+<li>supports multiple metadata providers</li>
+<li>allows easily transform metadata from one source (say HCatalog) to another (say the <em>.metadata</em> directory in HDFS)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-How-to-Setup-My-Develop-Environment" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/07/01/How-to-Setup-My-Develop-Environment/">How to Setup My Develop Environment</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/07/01/How-to-Setup-My-Develop-Environment/" class="article-date">
+  <time datetime="2017-07-01T07:21:18.000Z" itemprop="datePublished">2017-07-01</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="How-to-Setup-My-Develop-Environment"><a href="#How-to-Setup-My-Develop-Environment" class="headerlink" title="How to Setup My Develop Environment"></a>How to Setup My Develop Environment</h1><p>The following settings are based on Ubuntu 14.04 LTS.</p>
+<h2 id="How-to-Setup-GitHub-Client"><a href="#How-to-Setup-GitHub-Client" class="headerlink" title="How to Setup GitHub Client"></a>How to Setup GitHub Client</h2><p>Follow this <a href="http://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/" target="_blank" rel="noopener">official document</a> to setup GitHub auth key.</p>
+<h2 id="How-to-Setup-My-rc-Files"><a href="#How-to-Setup-My-rc-Files" class="headerlink" title="How to Setup My rc Files"></a>How to Setup My rc Files</h2><p>Follow my <a href="http://github.com/weasellin/dotfile" target="_blank" rel="noopener">dotfile</a>‘s document to setup my <code>.bashrc</code>, <code>.inputrc</code>, and <code>.vimrc</code>.</p>
+<p>Where the term, “rc”, originated from could found in <a href="http://stackoverflow.com/questions/11030552/what-does-rc-mean-in-dot-files" target="_blank" rel="noopener">here</a>.</p>
+<h2 id="How-to-Setup-Python-pyenv"><a href="#How-to-Setup-Python-pyenv" class="headerlink" title="How to Setup Python pyenv"></a>How to Setup Python pyenv</h2><p>Follow this <a href="http://github.com/pyenv/pyenv/wiki/Common-build-problems#requirements" target="_blank" rel="noopener">document</a> to install required libraries:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ sudo apt-get install -y \</span><br><span class="line">    make \</span><br><span class="line">    build-essential \</span><br><span class="line">    libssl-dev \</span><br><span class="line">    zlib1g-dev \</span><br><span class="line">    libbz2-dev \</span><br><span class="line">    libreadline-dev \</span><br><span class="line">    libsqlite3-dev \</span><br><span class="line">    wget \</span><br><span class="line">    curl \</span><br><span class="line">    llvm \</span><br><span class="line">    libncurses5-dev \</span><br><span class="line">    libncursesw5-dev \</span><br><span class="line">    xz-utils \</span><br><span class="line">    tk-dev</span><br></pre></td></tr></table></figure>
+
+<p>Then by this <a href="http://github.com/pyenv/pyenv-installer#github-way-recommended" target="_blank" rel="noopener">document</a> to install pyenv:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment"># Load pyenv automatically by adding</span></span><br><span class="line"><span class="comment"># the following to ~/.bash_profile:</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">export</span> PATH=<span class="string">"/home/weasellin/.pyenv/bin:<span class="variable">$PATH</span>"</span></span><br><span class="line"><span class="built_in">eval</span> <span class="string">"<span class="variable">$(pyenv init -)</span>"</span></span><br><span class="line"><span class="built_in">eval</span> <span class="string">"<span class="variable">$(pyenv virtualenv-init -)</span>"</span></span><br></pre></td></tr></table></figure>
+
+<p>Install some python versions to pyenv:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ pyenv install --list</span><br><span class="line">   ...</span><br><span class="line">$ pyenv install 2.7.8</span><br><span class="line">$ pyenv install 3.6.0</span><br><span class="line">$ pyenv install pypy3-2.4.0</span><br><span class="line">$ pyenv versions</span><br><span class="line">* system (<span class="built_in">set</span> by /home/weasellin/.pyenv/version)</span><br><span class="line">  2.7.8</span><br><span class="line">  3.6.0</span><br><span class="line">  pypy3-2.4.0</span><br></pre></td></tr></table></figure>
+
+<p>Create virtual env from installed versions:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ pyenv virtualenv 2.7.8 myenv-2.7.8</span><br><span class="line">$ pyenv virtualenv 3.6.0 myenv-3.6.0</span><br><span class="line">$ pyenv virtualenv pypy3-2.4.0 myenv-pypy3-2.4.0</span><br></pre></td></tr></table></figure>
+
+<p>Activate &amp; deactivate virtual env:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ pyenv activate myenv-3.6.0</span><br><span class="line">$ pyenv deactivate</span><br></pre></td></tr></table></figure>
+
+<h2 id="How-to-Setup-Docker"><a href="#How-to-Setup-Docker" class="headerlink" title="How to Setup Docker"></a>How to Setup Docker</h2><p>Follow this <a href="http://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#install-using-the-repository" target="_blank" rel="noopener">official document</a> to install Docker CE.<br>Then be sure to follow the <a href="http://docs.docker.com/engine/installation/linux/linux-postinstall/#manage-docker-as-a-non-root-user" target="_blank" rel="noopener">post-install steps</a> to allow non-super-user to use docker.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -</span><br><span class="line">$ sudo add-apt-repository \</span><br><span class="line">      <span class="string">"deb [arch=amd64] https://download.docker.com/linux/ubuntu \</span></span><br><span class="line"><span class="string">      $<span class="variable">$(lsb_release -cs)</span> \</span></span><br><span class="line"><span class="string">      stable"</span></span><br><span class="line">$ sudo apt-get update</span><br><span class="line">$ sudo apt-get install docker-ce</span><br><span class="line">$ sudo gpasswd -a <span class="variable">$&#123;USER&#125;</span> docker</span><br><span class="line">$ newgrp docker</span><br><span class="line">$ docker run hello-world</span><br><span class="line">========================</span><br><span class="line">Hello from Docker!</span><br><span class="line">This message shows that your installation appears to be working correctly.</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+  
+    <nav id="page-nav">
+      <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+    </nav>
+  
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

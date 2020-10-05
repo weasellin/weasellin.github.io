@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Database-Internals-Ch-4-Implementing-B-Trees | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Page Header PostgreSQL: page size, layout version MySQL InnoDB: number of heap records, level, implementation-specific values SQLite: number of cells, a rightmost pointer  Magic Numbers multibyte bloc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Database-Internals-Ch-4-Implementing-B-Trees">
+<meta property="og:url" content="https://weasellin.github.io/2020/05/18/Database-Internals-Ch-4-Implementing-B-Trees/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="Page Header PostgreSQL: page size, layout version MySQL InnoDB: number of heap records, level, implementation-specific values SQLite: number of cells, a rightmost pointer  Magic Numbers multibyte bloc">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-05-18T21:37:55.000Z">
+<meta property="article:modified_time" content="2020-05-23T07:15:56.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="database_internals">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Database-Internals-Ch-4-Implementing-B-Trees" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Database-Internals-Ch-4-Implementing-B-Trees
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/18/Database-Internals-Ch-4-Implementing-B-Trees/" class="article-date">
+  <time datetime="2020-05-18T21:37:55.000Z" itemprop="datePublished">2020-05-18</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Page-Header"><a href="#Page-Header" class="headerlink" title="Page Header"></a>Page Header</h2><ul>
+<li>PostgreSQL: page size, layout version</li>
+<li>MySQL InnoDB: number of heap records, level, implementation-specific values</li>
+<li>SQLite: number of cells, a rightmost pointer</li>
+</ul>
+<h3 id="Magic-Numbers"><a href="#Magic-Numbers" class="headerlink" title="Magic Numbers"></a>Magic Numbers</h3><ul>
+<li>multibyte block, ex. <code>(50 41 47 45)</code></li>
+<li>validation &amp; sanity check</li>
+<li>identify version</li>
+</ul>
+<h3 id="Sibling-Links"><a href="#Sibling-Links" class="headerlink" title="Sibling Links"></a>Sibling Links</h3><ul>
+<li>forward / backward links</li>
+<li>help to locate neighboring nodes without ascending back to parent / root</li>
+<li>add complexity to split and merge<ul>
+<li>may required additional locking for the updating sibling node</li>
+<li>could be useful in <em>Blink-Trees</em> (discussed later)</li>
+</ul>
+</li>
+</ul>
+<h3 id="Rightmost-Pointers"><a href="#Rightmost-Pointers" class="headerlink" title="Rightmost Pointers"></a>Rightmost Pointers</h3><ul>
+<li>each cell has 1 separator key and 1 child pointer</li>
+<li>the rightmost pointer is stored in header</li>
+<li>used by SQLite</li>
+</ul>
+<h3 id="Node-High-Keys"><a href="#Node-High-Keys" class="headerlink" title="Node High Keys"></a>Node High Keys</h3><ul>
+<li><em>high key</em>, represents the highest possible key of the subtree</li>
+<li>used by PostgreSQL, called B^link-Trees</li>
+<li>pros:<ul>
+<li>pairwise store separator keys and child pointers</li>
+<li>less edge case handling</li>
+<li>more explicit search space</li>
+</ul>
+</li>
+</ul>
+<h3 id="Overflow-Pages"><a href="#Overflow-Pages" class="headerlink" title="Overflow Pages"></a>Overflow Pages</h3><ul>
+<li><em>primary page</em>, followed by multiple linked <em>overflow pages</em><ul>
+<li>page ID of the <em>next</em> page could be stored in the page header</li>
+</ul>
+</li>
+<li>most of implementation<ul>
+<li>using fixed size of payload (<code>max_payload_size</code>) in the primary page</li>
+<li>spill out to overflow page for the rest of payload</li>
+<li><code>max_payload_size</code> calculated by page size / fanout</li>
+</ul>
+</li>
+<li>require extra bookkeeping for defragmentation</li>
+<li>keys reside in the primary page for frequent comparison</li>
+<li>data records may need to traverse to locate in several overflow pages for the parts</li>
+</ul>
+<h2 id="Operation"><a href="#Operation" class="headerlink" title="Operation"></a>Operation</h2><h3 id="Propagating-Splits-and-Merges"><a href="#Propagating-Splits-and-Merges" class="headerlink" title="Propagating Splits and Merges"></a>Propagating Splits and Merges</h3><ul>
+<li><em>breadcrumbs</em><ul>
+<li>be used to maintain the track of traversal path</li>
+<li>PostgreSQL implements with BTStask</li>
+<li>equivalent as parent pointers, since the child nodes are always referred from the root and parent(s)</li>
+<li>build and maintained in memory</li>
+</ul>
+</li>
+<li><em>deadlocks</em> may happen when using <em>sibling pointers</em><ul>
+<li>WiredTiger uses parent pointers for leaf traversal</li>
+</ul>
+</li>
+</ul>
+<h3 id="Rebalancing"><a href="#Rebalancing" class="headerlink" title="Rebalancing"></a>Rebalancing</h3><ul>
+<li>Operation Cost<ul>
+<li>to postpone split &amp; merge operations</li>
+<li>to amortize the cost of split &amp; merge by <em>rebalancing</em></li>
+</ul>
+</li>
+<li>Occupancy<ul>
+<li>to improve the occupancy<ul>
+<li>B*-Trees keep distributing between the neighboring nodes until both are full</li>
+<li>then split the two nodes into three nodes</li>
+</ul>
+</li>
+<li>lower the tree height<ul>
+<li>fewer pages traversal</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>SQLite implements as the <em>balance-siblings</em> algorithm</li>
+</ul>
+<h3 id="Right-Only-Appends"><a href="#Right-Only-Appends" class="headerlink" title="Right-Only Appends"></a>Right-Only Appends</h3><ul>
+<li>An optimization for auto-incremented monotonically increasing primary index</li>
+<li><em>fastpath</em> in PostgreSQL<ul>
+<li>cache the rightmost leaf, to skip the whole read path from the root</li>
+</ul>
+</li>
+<li><em>quickbalance</em> in SQLite<ul>
+<li>when rightmost page being full, “creating” a new empty page instead of “splitting” to form a half full page</li>
+</ul>
+</li>
+<li><em>bulk loading</em><ul>
+<li>bulk loading presorted data or rebuild the tree</li>
+<li>compose bottom up, avoid splits &amp; merges<ul>
+<li>fill the leaf level pages</li>
+<li>propagate the first keys of each leaf node up to its parent node</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Immutable B-Trees or auto-incremented primary index<ul>
+<li>can fill up nodes with out leaving any space for future middle insertion</li>
+</ul>
+</li>
+</ul>
+<h3 id="Compression"><a href="#Compression" class="headerlink" title="Compression"></a>Compression</h3><ul>
+<li>Compression Level<ul>
+<li>entire index file<ul>
+<li>impractical</li>
+</ul>
+</li>
+<li>page-wise<ul>
+<li>may not align with the disk blocks</li>
+</ul>
+</li>
+<li>row-wise</li>
+<li>filed-wise</li>
+</ul>
+</li>
+<li>Compression Evaluation, ex. Squash Compression Benchmark<ul>
+<li>memory overhead</li>
+<li>compression performance</li>
+<li>decompression performance</li>
+<li>compression ratio</li>
+</ul>
+</li>
+</ul>
+<h3 id="Vacuum-amp-Maintenance"><a href="#Vacuum-amp-Maintenance" class="headerlink" title="Vacuum &amp; Maintenance"></a>Vacuum &amp; Maintenance</h3><ul>
+<li>Rewrite the page with the lived cell data</li>
+<li>Similar terminologies:<ul>
+<li><em>defragmentation</em></li>
+<li><em>garbage collection</em></li>
+<li><em>compaction</em></li>
+<li><em>vacuum</em></li>
+<li><em>maintenance</em></li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/05/28/Database-Internals-Ch-5-Transaction-Processing-and-Recovery/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Database-Internals-Ch-5-Transaction-Processing-and-Recovery
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/05/11/Database-Internals-Ch-3-File-Formats/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Database-Internals-Ch-3-File-Formats</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

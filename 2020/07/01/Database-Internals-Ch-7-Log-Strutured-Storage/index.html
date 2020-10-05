@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Database-Internals-Ch-7-Log-Strutured-Storage | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="B-Tree LSM Tree    in-place update append-only   optimized for read performance optimized for write performance    RUM Conjecture trade-off between Read, Update, &amp; Memory    LSM Trees immutable">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Database-Internals-Ch-7-Log-Strutured-Storage">
+<meta property="og:url" content="https://weasellin.github.io/2020/07/01/Database-Internals-Ch-7-Log-Strutured-Storage/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="B-Tree LSM Tree    in-place update append-only   optimized for read performance optimized for write performance    RUM Conjecture trade-off between Read, Update, &amp; Memory    LSM Trees immutable">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-07-01T23:27:38.000Z">
+<meta property="article:modified_time" content="2020-07-05T03:23:44.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="database_internals">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Database-Internals-Ch-7-Log-Strutured-Storage" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Database-Internals-Ch-7-Log-Strutured-Storage
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/07/01/Database-Internals-Ch-7-Log-Strutured-Storage/" class="article-date">
+  <time datetime="2020-07-01T23:27:38.000Z" itemprop="datePublished">2020-07-01</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <table>
+<thead>
+<tr>
+<th>B-Tree</th>
+<th>LSM Tree</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>in-place update</td>
+<td>append-only</td>
+</tr>
+<tr>
+<td>optimized for read performance</td>
+<td>optimized for write performance</td>
+</tr>
+</tbody></table>
+<ul>
+<li>RUM Conjecture<ul>
+<li>trade-off between Read, Update, &amp; Memory</li>
+</ul>
+</li>
+</ul>
+<h2 id="LSM-Trees"><a href="#LSM-Trees" class="headerlink" title="LSM Trees"></a>LSM Trees</h2><ul>
+<li>immutable on-disk storage structure</li>
+<li>introduced by Patrick O’Neil &amp; Edward Cheng ‘96</li>
+<li>sequential write, prevent fragmentation, have higher density</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Amplification</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Read Amplification</td>
+<td>From needing to read the duplication from multiple tables</td>
+</tr>
+<tr>
+<td>Write Amplification</td>
+<td>From the multiple runs of the compactions</td>
+</tr>
+<tr>
+<td>Space Amplification</td>
+<td>From the duplication in multiple tables</td>
+</tr>
+</tbody></table>
+<h3 id="LSM-Tree-Structure"><a href="#LSM-Tree-Structure" class="headerlink" title="LSM Tree Structure"></a>LSM Tree Structure</h3><ul>
+<li><em>memtable</em><ul>
+<li>mutable in-memory</li>
+<li>serves read &amp; write</li>
+<li>triggered periodically or size threshold, flush to disk</li>
+<li>recoverable with WAL</li>
+</ul>
+</li>
+<li><em>Two-component LSM Tree</em><ul>
+<li>disk-resident tree &amp; memory-resident tree</li>
+<li>drawback: frequent merge by <em>memtable</em> flush</li>
+</ul>
+</li>
+<li><em>Multicomponent LSM Trees</em><ul>
+<li>multiple disk-resident tables (components)</li>
+<li>periodic <em>compaction</em> for several tables</li>
+</ul>
+</li>
+<li>life cycles<ul>
+<li>current memtable: receives writes &amp; serves reads</li>
+<li>flushing memtable: still available for read, but not writable</li>
+<li>on-disk flushing target: not readable, since still incomplete</li>
+<li>flushed tables: available for read as soon as the flushed memtable is discarded</li>
+<li>compacting tables: currently merging disk-resident tables</li>
+<li>compacted tables: created from flushed or other compacted tables</li>
+</ul>
+</li>
+<li><em>Deletion</em><ul>
+<li>just remove records from memtable will cause <em>resurrect</em></li>
+<li>done by <em>delete entry</em> / <em>tombstone</em> / <em>dormant certificate</em></li>
+<li>range delete: <em>predicate deletes</em> / <em>range tombstones</em>, ex. Cassandra</li>
+</ul>
+</li>
+<li><em>Lookups</em><ul>
+<li>from each components, merge &amp; reconcile the contents</li>
+</ul>
+</li>
+<li><em>Merge-Iteration</em><ul>
+<li>given a <em>cursor</em> or <em>iterator</em> to navigate through file contents</li>
+<li>use <em>multiway merge-sort</em> / <em>priority queue</em> / <em>min-heap</em></li>
+</ul>
+</li>
+<li><em>Reconciliation</em><ul>
+<li><em>reconciliation</em> &amp; <em>conflict resolution</em> of the data records associated with the same key</li>
+<li>with records holding metadata, ex. timestamps</li>
+</ul>
+</li>
+</ul>
+<h3 id="Compaction"><a href="#Compaction" class="headerlink" title="Compaction"></a>Compaction</h3><ul>
+<li><em>Maintenance</em><ul>
+<li>has memory usage upper bond since it only holds iterator heads</li>
+<li>multiple compactions can be executed (nonintersecting)</li>
+<li>not only for merge but also allow repartition</li>
+<li>preserve tombstones during compaction, only remove when no associated records assure, ex. RockDB’s bottommost level, Cassandra’s GC</li>
+</ul>
+</li>
+<li><em>Leveled Compaction</em><ul>
+<li>one of the compaction strategies used by RockDB</li>
+<li><em>Level 0</em>: flushed from memtable, tables range may overlapping, when reaching the size threshold, <strong>merge</strong> and <strong>partition</strong> into level 1</li>
+<li><em>Level 1</em>: partitioned into different key ranges, when reaching the size threshold, <strong>merge</strong> and <strong>partition</strong> into level 2</li>
+<li><em>Level k</em>: exponential enlarge the size threshold, bottommost is the oldest data</li>
+</ul>
+</li>
+<li><em>Size-tiered Compaction</em><ul>
+<li>decide level by tables size</li>
+<li>merge small tables to become larger one to be promoted to the higher levels</li>
+</ul>
+</li>
+<li><em>Time-Window Compaction</em><ul>
+<li>if records’ ttl (time-to-live) have been set, ex. Cassandra, the expired tables can be dropped directly</li>
+</ul>
+</li>
+</ul>
+<h3 id="Implementation-Details"><a href="#Implementation-Details" class="headerlink" title="Implementation Details"></a>Implementation Details</h3><h5 id="Sorted-String-Tables"><a href="#Sorted-String-Tables" class="headerlink" title="Sorted String Tables"></a>Sorted String Tables</h5><ul>
+<li>SSTables</li>
+<li>consist of index files and data files</li>
+<li>index file for lookup, ex. B-Trees or hash tables</li>
+<li>data records, concatenation of key-value, are ordered by key, so allows the sequential reading</li>
+<li>immutable dist-resident contents</li>
+<li><em>SSTables-Attached Secondary Indexes</em> (SASI), implemented in Cassandra, the secondary index files are created along with the SSTable primary key index</li>
+</ul>
+<h5 id="Bloom-Filter"><a href="#Bloom-Filter" class="headerlink" title="Bloom Filter"></a>Bloom Filter</h5><ul>
+<li>conceived by Burton Howard Bloom in 1970</li>
+<li>uses a large bits array and multiple hash functions apply on keys</li>
+<li>bitwise <code>or</code> to compose as a filter to indicate whether the test key <em>might</em> in the set</li>
+</ul>
+<h5 id="Skiplist"><a href="#Skiplist" class="headerlink" title="Skiplist"></a>Skiplist</h5><ul>
+<li>probabilistic complexity guarantees are close to search tree</li>
+<li>randomly assign the height</li>
+<li>link by / to each equal or lower height level’s next node</li>
+<li><code>fully_linked</code> flag &amp; compare-and-swap for concurrency</li>
+<li>ex. Cassandra’s secondary index memtable, WiredTiger’s some in-memory operations</li>
+</ul>
+<h5 id="Compression-amp-Disk-Access"><a href="#Compression-amp-Disk-Access" class="headerlink" title="Compression &amp; Disk Access"></a>Compression &amp; Disk Access</h5><ul>
+<li>compressed page size will not align with page boundary</li>
+<li>so need an indirection layer, <em>offset table</em>, which stores offsets and size of compressed pages</li>
+</ul>
+<h3 id="Unordered-LSM-Storage"><a href="#Unordered-LSM-Storage" class="headerlink" title="Unordered LSM Storage"></a>Unordered LSM Storage</h3><ul>
+<li><em>Bitcask</em><ul>
+<li>one of the storage engine used in Riak</li>
+<li>no memtable, store in log file directly, to avoid extra write</li>
+<li><em>keydir</em> as the in-memory hash table point from key to the latest record in log file</li>
+<li>GC during compaction</li>
+<li>not allow range scan</li>
+</ul>
+</li>
+<li><em>WiscKey</em><ul>
+<li>unsorted data records in append-only <em>vLogs</em></li>
+<li>sorted key in LSM tree</li>
+<li>to allow range scan</li>
+<li>when scanning range, use internal SSD parallelism to prefetch blocks, to reduce random I/O</li>
+</ul>
+</li>
+</ul>
+<h3 id="Concurrency-in-LSM-Trees"><a href="#Concurrency-in-LSM-Trees" class="headerlink" title="Concurrency in LSM Trees"></a>Concurrency in LSM Trees</h3><ul>
+<li>Cassandra uses operation order barriers</li>
+<li><em>Memtable switch</em>: after this, all writes go only to the new memtable, while the old one is still available for read</li>
+<li><em>Flush finalization</em>: replace the old memtable with a flushed disk-resident table in the table view</li>
+<li><em>Write-ahead log truncation</em>: discard a log segment holding records associated with a flushed memtable</li>
+</ul>
+<h2 id="Log-Stacking"><a href="#Log-Stacking" class="headerlink" title="Log Stacking"></a>Log Stacking</h2><ul>
+<li>SSDs also use log-structured storage to deal with small random writes</li>
+<li>stacking multiple log-structured systems can run into several problems<ul>
+<li>write amplification</li>
+<li>fragmentation</li>
+<li>poor performance</li>
+</ul>
+</li>
+<li><em>Flash Translation Layer</em><ul>
+<li>flash translation layer (FTL) is used by SSD</li>
+<li>translate logical page addresses to their physical locations</li>
+<li>keep track of pages status (live, discarded, empty)</li>
+<li>garbage collection<ul>
+<li>relocate live pages</li>
+<li>erase by block (group of pages, 64 to 512 pages)</li>
+</ul>
+</li>
+<li><em>wear leveling</em> distributes the load evenly across the medium, to extend device lifetime</li>
+</ul>
+</li>
+<li><em>Filesystem Logging</em><ul>
+<li>cause<ul>
+<li>redundant logging</li>
+<li>different GC pattern</li>
+<li>misaligned segment writes</li>
+<li>interleave data records and log records due to multiple write streams</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="LLAMA-amp-Mindful-Stacking"><a href="#LLAMA-amp-Mindful-Stacking" class="headerlink" title="LLAMA &amp; Mindful Stacking"></a>LLAMA &amp; Mindful Stacking</h3><ul>
+<li><em>latch-free, log-structured, access-method aware</em> (LLAMA)</li>
+<li>allow Bw-Trees to arrange the physical delta nodes in the same chain in contiguous physical location</li>
+<li>more efficient GC, less fragmentation</li>
+<li>reduce read latency</li>
+<li><em>Open-Channel SSDs</em><ul>
+<li>expose internal control of wear-leveling, garbage collection, data placement, &amp; scheduling</li>
+<li>skip flash translation layer, can achieve single layer GC, minimize write amplification</li>
+<li>Software Defined Flash (SDF): read in page, write in block</li>
+<li>LOCS (LSM Tree-based KV Store on Open-Channel SSD), 2013</li>
+<li>LightNVM, implemented in the Linux kernel, 2017</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/10/05/Database-Internals-Ch-9-Failure-Detection/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Database-Internals-Ch-9-Failure-Detection
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/06/14/Database-Internals-Ch-6-BTrees-Variants/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Database-Internals-Ch-6-BTrees-Variants</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Database-Internals-Ch-9-Failure-Detection | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="prerequisite of consensus, atomic broadcast algorithms, and distributed systems link failure and process failure essential properties completeness all members notice the failure process eventually re">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Database-Internals-Ch-9-Failure-Detection">
+<meta property="og:url" content="https://weasellin.github.io/2020/10/05/Database-Internals-Ch-9-Failure-Detection/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="prerequisite of consensus, atomic broadcast algorithms, and distributed systems link failure and process failure essential properties completeness all members notice the failure process eventually re">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-10-05T09:45:51.000Z">
+<meta property="article:modified_time" content="2020-10-05T10:26:12.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="database_internals">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Database-Internals-Ch-9-Failure-Detection" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Database-Internals-Ch-9-Failure-Detection
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/10/05/Database-Internals-Ch-9-Failure-Detection/" class="article-date">
+  <time datetime="2020-10-05T09:45:51.000Z" itemprop="datePublished">2020-10-05</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>prerequisite of consensus, atomic broadcast algorithms, and distributed systems</li>
+<li>link failure and process failure</li>
+<li>essential properties<ul>
+<li><em>completeness</em><ul>
+<li>all members notice the failure process</li>
+<li>eventually reach the final result</li>
+</ul>
+</li>
+<li><em>efficiency</em><ul>
+<li>how fast the failure process can be identified</li>
+</ul>
+</li>
+<li><em>accuracy</em><ul>
+<li>precisely detect process failure</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Heartbeats-amp-Pings"><a href="#Heartbeats-amp-Pings" class="headerlink" title="Heartbeats &amp; Pings"></a>Heartbeats &amp; Pings</h2><ul>
+<li>Fixed Time Interval<ul>
+<li>simple, need to carefully select frequency and timeout</li>
+</ul>
+</li>
+<li>Timeout-Free Failure Detector<ul>
+<li>under asynchronous assumption</li>
+</ul>
+</li>
+<li>Outsourced Heartbeats<ul>
+<li>heartbeats sending from neighbor nodes as failover</li>
+</ul>
+</li>
+<li>Phi-Accural Failure Detector<ul>
+<li>sliding window of ETA to estimate the failure probability</li>
+</ul>
+</li>
+<li>Gossip and Failure Detection<ul>
+<li>propagate and update heartbeat counters vector to random neighbor</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2020/07/01/Database-Internals-Ch-7-Log-Strutured-Storage/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Database-Internals-Ch-7-Log-Strutured-Storage</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Hadoop Application Architectures Ch.3 Processing Data in Hadoop | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="MapReduce Spark Hive, Pig, Crunch, Cascading  Shared Nothing Architectures  scalability fault-tolerant  MapReduceOverview introduced by Jeffrey Dean and Sanjay Ghemawat from Google with paper map pha">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop Application Architectures Ch.3 Processing Data in Hadoop">
+<meta property="og:url" content="https://weasellin.github.io/2019/12/04/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="MapReduce Spark Hive, Pig, Crunch, Cascading  Shared Nothing Architectures  scalability fault-tolerant  MapReduceOverview introduced by Jeffrey Dean and Sanjay Ghemawat from Google with paper map pha">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/hive_architecture.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/impala_architecture.png">
+<meta property="article:published_time" content="2019-12-04T12:01:29.000Z">
+<meta property="article:modified_time" content="2020-01-21T00:47:52.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="hadoop">
+<meta property="article:tag" content="hadoop_application_architectures">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/hive_architecture.png">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Hadoop Application Architectures Ch.3 Processing Data in Hadoop
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/04/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/" class="article-date">
+  <time datetime="2019-12-04T12:01:29.000Z" itemprop="datePublished">2019-12-04</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>MapReduce</li>
+<li>Spark</li>
+<li>Hive, Pig, Crunch, Cascading</li>
+</ul>
+<p><em>Shared Nothing Architectures</em></p>
+<ul>
+<li>scalability</li>
+<li>fault-tolerant</li>
+</ul>
+<h2 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h2><h3 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h3><ul>
+<li>introduced by <em>Jeffrey Dean</em> and <em>Sanjay Ghemawat</em> from <em>Google</em> with <a href="">paper</a></li>
+<li>map phase / sort &amp; shuffle phase / reduce phase</li>
+<li>input / output of each phase are <em>key-value</em> pairs</li>
+<li>output of mapper and reducer is written to disk<ul>
+<li><em>syncronization barrier</em> (inefficient for iterative processing)</li>
+</ul>
+</li>
+<li>mapper processes a single pair at a time</li>
+<li>mapper pass key-value pairs as output to reducers</li>
+<li>mapper can’t pass information to other mappers</li>
+</ul>
+<h3 id="Mapper"><a href="#Mapper" class="headerlink" title="Mapper"></a>Mapper</h3><ul>
+<li><code>InputFormat</code> class<ul>
+<li><code>getSplits()</code><ul>
+<li>determines the number of map processes</li>
+<li>determines the cluster nodes on which they will execute</li>
+<li>commonly used <code>TextInputFormat</code> generates an input split per block</li>
+</ul>
+</li>
+<li><code>getReader()</code><ul>
+<li>provides a reader to map tasks</li>
+<li>could be overridden</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>RecordReader</code> class<ul>
+<li>reads the data blocks, returns key-value records</li>
+<li>implementations: text delimited, SequenceFile, Avro, Parquet, etc.</li>
+</ul>
+</li>
+<li><code>Mapper.setup()</code><ul>
+<li><code>Configuration</code> object</li>
+</ul>
+</li>
+<li><code>Mapper.map()</code><ul>
+<li>inputs: <code>key</code>, <code>value</code>, and a <code>context</code></li>
+<li>output data would be buffered and sorted, <code>io.sort.mb</code></li>
+</ul>
+</li>
+<li><code>Partitioner</code><ul>
+<li>default, key hashed</li>
+<li>custom partitioner<ul>
+<li>ex. secondary sort<ul>
+<li>key as <code>ticker-time</code> for sorted, partitioner on <code>ticker symbol</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>Mapper.cleanup()</code><ul>
+<li>flies closing, logging message, etc.</li>
+</ul>
+</li>
+<li><code>Combiner.combine()</code><ul>
+<li>aggregate locally</li>
+<li>output has to be identical format with <code>map()</code></li>
+<li>could assumes the input is sorted</li>
+</ul>
+</li>
+</ul>
+<h3 id="Reducer"><a href="#Reducer" class="headerlink" title="Reducer"></a>Reducer</h3><ul>
+<li><code>Shuffle</code><ul>
+<li>copy the output of the mappers from the map nodes to the reduce nodes</li>
+</ul>
+</li>
+<li><code>Reducer.setup()</code><ul>
+<li>initialize variables and file handles</li>
+</ul>
+</li>
+<li><code>Reducer.reduce()</code><ul>
+<li>sorted key</li>
+<li>input with <code>values</code></li>
+<li>a key and all its values will never be split across more than one reducer<ul>
+<li>skewness, review partitioning</li>
+</ul>
+</li>
+<li>output to <code>outputFileFormat</code></li>
+</ul>
+</li>
+<li><code>Reducer.cleanup()</code><ul>
+<li>flies closing, logging message, etc.</li>
+</ul>
+</li>
+<li><code>OutputFormat</code><ul>
+<li>a single reducer will always write a single file<ul>
+<li>ex. <code>part-r-00000</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Join"><a href="#Join" class="headerlink" title="Join"></a>Join</h3><p>Reference: <a href="https://www.edureka.co/blog/mapreduce-example-reduce-side-join/" target="_blank" rel="noopener">https://www.edureka.co/blog/mapreduce-example-reduce-side-join/</a></p>
+<h5 id="Map-side-Join"><a href="#Map-side-Join" class="headerlink" title="Map-side Join"></a>Map-side Join</h5><blockquote>
+<p>The join operation is performed in the map phase itself. Therefore, in the map side join, the mapper performs the join and it is mandatory that the input to each map is partitioned and sorted according to the keys.</p>
+</blockquote>
+<h5 id="Reduce-side-Join"><a href="#Reduce-side-Join" class="headerlink" title="Reduce-side Join"></a>Reduce-side Join</h5><blockquote>
+<ul>
+<li>Mapper reads the input data which are to be combined based on common column or join key.</li>
+</ul>
+</blockquote>
+<ul>
+<li>The mapper processes the input and adds a tag to the input to distinguish the input belonging from different sources or data sets or databases.</li>
+<li>The mapper outputs the intermediate key-value pair where the key is nothing but the join key.</li>
+<li>After the sorting and shuffling phase, a key and the list of values is generated for the reducer.</li>
+<li>Now, the reducer joins the values present in the list with the key to give the final aggregated output.</li>
+</ul>
+<h3 id="When-to-Use-MapReduce"><a href="#When-to-Use-MapReduce" class="headerlink" title="When to Use MapReduce"></a>When to Use MapReduce</h3><ul>
+<li>is a very low-level framework</li>
+<li>for experienced Java developers who are comfortable with the MapReduce programming paradigm</li>
+<li>where detailed control of the execution has significant advantages</li>
+</ul>
+<h2 id="Spark"><a href="#Spark" class="headerlink" title="Spark"></a>Spark</h2><h3 id="Overview-1"><a href="#Overview-1" class="headerlink" title="Overview"></a>Overview</h3><ul>
+<li>In 2009 <em>Matei Zaharia</em> and his team at <em>UC Berkeley’s AMPLab</em> researched possible improvements to the MapReduce framework.</li>
+<li>Improves on<ul>
+<li>iterative machine learning</li>
+<li>interactive data analysis</li>
+<li>reusing a data set cached in memory for multiple processing tasks</li>
+<li>DAG model (directed acyclic graphs)<ul>
+<li>ex. Oozie for MapReduce</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>reference books<ul>
+<li><a href="http://bit.ly/learning-spark" target="_blank" rel="noopener">Learning Spark</a></li>
+<li><a href="http://bit.ly/advanced-spark" target="_blank" rel="noopener">Advanced Analytics with Spark</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="Spark-Components"><a href="#Spark-Components" class="headerlink" title="Spark Components"></a>Spark Components</h3><ul>
+<li><em>Driver</em><ul>
+<li><em>main</em> function to define the RDD (<em>resilient distributed datasets</em>) and their transformations / actions</li>
+</ul>
+</li>
+<li><em>Dag Scheduler</em><ul>
+<li>optimize the code and arrive an efficient DAG</li>
+</ul>
+</li>
+<li><em>Task Scheduler</em><ul>
+<li>cluster manager: YARN, Mesos, etc. has info<ul>
+<li>workers</li>
+<li>assigned threads</li>
+<li>location of data blocks</li>
+<li>assigning tasks to workers</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>Worker</em><ul>
+<li>receives work and data</li>
+<li>executes task without knowledge of the entire DAG</li>
+</ul>
+</li>
+</ul>
+<h3 id="Basic-Spark-Concepts"><a href="#Basic-Spark-Concepts" class="headerlink" title="Basic Spark Concepts"></a>Basic Spark Concepts</h3><h5 id="RDD-RESILIENT-DISTRIBUTED-DATASETS"><a href="#RDD-RESILIENT-DISTRIBUTED-DATASETS" class="headerlink" title="RDD (RESILIENT DISTRIBUTED DATASETS)"></a>RDD (RESILIENT DISTRIBUTED DATASETS)</h5><ul>
+<li>RDDs are collections of serializable elements, and such a collection may be partitioned, in which case it is stored on multiple nodes</li>
+<li>Spark determines the number of partitions by the input format</li>
+<li>RDDs store their <strong>lineage</strong> — the set of transformations that was used to create the current state, starting from the first input format that was used to create the RDD</li>
+<li>If the data is lost, Spark will <strong>replay</strong> the lineage to rebuild the lost RDDs so the job can continue</li>
+<li>Spark would replay the “Good Replay” boxes and the “Lost Block” boxes to get the data needed to execute the final step</li>
+</ul>
+<h5 id="SHARED-VARIABLES"><a href="#SHARED-VARIABLES" class="headerlink" title="SHARED VARIABLES"></a>SHARED VARIABLES</h5><ul>
+<li><em>broadcast</em> variables</li>
+<li><em>accumulator</em> variables</li>
+</ul>
+<h5 id="SPARKCONTEXT"><a href="#SPARKCONTEXT" class="headerlink" title="SPARKCONTEXT"></a>SPARKCONTEXT</h5><ul>
+<li>represents the connection to a Spark cluster</li>
+<li>used to create RDDs, broadcast data, and initialize accumulators</li>
+</ul>
+<h5 id="TRANSFORMATIONS"><a href="#TRANSFORMATIONS" class="headerlink" title="TRANSFORMATIONS"></a>TRANSFORMATIONS</h5><ul>
+<li>transformations take one RDD and return another RDD</li>
+<li>RDDs are <strong>immutable</strong></li>
+<li>transformations in Spark are always <strong>lazy</strong></li>
+<li>calling a transformation function only creates a new RDD with this specific <strong>lineage</strong></li>
+<li>transformations is only executed when an <strong>action</strong> is called<ul>
+<li>allows optimize the execution graph</li>
+</ul>
+</li>
+</ul>
+<p>Some core transformations:</p>
+<ul>
+<li><code>map()</code></li>
+<li><code>filter()</code></li>
+<li><code>keyBy()</code></li>
+<li><code>join()</code></li>
+<li><code>groupByKey()</code></li>
+<li><code>sort()</code></li>
+</ul>
+<h5 id="ACTION"><a href="#ACTION" class="headerlink" title="ACTION"></a>ACTION</h5><ul>
+<li>take an RDD, perform a computation, and return the result to the driver application</li>
+<li>result of the computation can be <em>a collection</em>, <em>values printed to the screen</em>, <em>values saved to file</em>, or similar</li>
+<li>an action will never return an RDD</li>
+</ul>
+<h3 id="Benefits-of-Using-Spark"><a href="#Benefits-of-Using-Spark" class="headerlink" title="Benefits of Using Spark"></a>Benefits of Using Spark</h3><h5 id="SIMPLICITY"><a href="#SIMPLICITY" class="headerlink" title="SIMPLICITY"></a>SIMPLICITY</h5><ul>
+<li>simpler than those of MapReduce</li>
+</ul>
+<h5 id="VERSATILITY"><a href="#VERSATILITY" class="headerlink" title="VERSATILITY"></a>VERSATILITY</h5><ul>
+<li>extensible, general-purpose parallel processing framework</li>
+<li>support a stream-processing framework called Spark Streaming</li>
+<li>a graph processing engine called GraphX</li>
+</ul>
+<h5 id="REDUCED-DISK-I-O"><a href="#REDUCED-DISK-I-O" class="headerlink" title="REDUCED DISK I/O"></a>REDUCED DISK I/O</h5><ul>
+<li>Spark’s RDDs can be stored in memory and processed in multiple steps or iterations without additional I/O</li>
+</ul>
+<h5 id="STORAGE"><a href="#STORAGE" class="headerlink" title="STORAGE"></a>STORAGE</h5><ul>
+<li>the developer controls the persistence</li>
+</ul>
+<h5 id="MULTILANGUAGE"><a href="#MULTILANGUAGE" class="headerlink" title="MULTILANGUAGE"></a>MULTILANGUAGE</h5><ul>
+<li>Spark APIs are implemented for Java, Scala, and Python</li>
+</ul>
+<h5 id="RESOURCE-MANAGER-INDEPENDENCE"><a href="#RESOURCE-MANAGER-INDEPENDENCE" class="headerlink" title="RESOURCE MANAGER INDEPENDENCE"></a>RESOURCE MANAGER INDEPENDENCE</h5><ul>
+<li>Spark supports YARN, Mesos, &amp; Kubernetes</li>
+</ul>
+<h5 id="INTERACTIVE-SHELL"><a href="#INTERACTIVE-SHELL" class="headerlink" title="INTERACTIVE SHELL"></a>INTERACTIVE SHELL</h5><ul>
+<li>REPL (read-eval-print loop)</li>
+</ul>
+<h5 id="APACHE-TEZ-AN-ADDITIONAL-DAG-BASED-PROCESSING-FRAMEWORK"><a href="#APACHE-TEZ-AN-ADDITIONAL-DAG-BASED-PROCESSING-FRAMEWORK" class="headerlink" title="APACHE TEZ: AN ADDITIONAL DAG-BASED PROCESSING FRAMEWORK"></a>APACHE TEZ: AN ADDITIONAL DAG-BASED PROCESSING FRAMEWORK</h5><ul>
+<li>Tez is a framework that allows for expressing complex DAGs for processing data</li>
+<li>the architecture of Tez is intended to provide performance improvements and better resource management than MapReduce</li>
+</ul>
+<h2 id="Abstraction"><a href="#Abstraction" class="headerlink" title="Abstraction"></a>Abstraction</h2><ul>
+<li>ETL Model: Pig, Crunch, and Cascading</li>
+<li>Query Model: Hive</li>
+</ul>
+<h3 id="Apache-Pig"><a href="#Apache-Pig" class="headerlink" title="Apache Pig"></a>Apache Pig</h3><ul>
+<li>developed at <em>Yahoo</em>, and released to Apache in 2007</li>
+<li>Pig-specific workflow language, <em>Pig Latin</em></li>
+<li>compiled into a logical plan and then into a physical plan</li>
+<li>Data container<ul>
+<li><em>relations</em>, <em>bag</em>, <em>tuples</em></li>
+</ul>
+</li>
+<li>Transformation functions<ul>
+<li>no execution is done until the STORE command is called - nothing is done until the saveToTextFile is called</li>
+</ul>
+</li>
+<li><code>DESCRIBE</code> and <code>EXPLAIN</code></li>
+<li>support UDFs</li>
+<li>CLI to access HDFS</li>
+</ul>
+<h3 id="Apache-Crunch"><a href="#Apache-Crunch" class="headerlink" title="Apache Crunch"></a>Apache Crunch</h3><ul>
+<li>based on Google’s <em>FlumeJava</em></li>
+<li>in Java</li>
+<li>full access to all MapReduce functionality</li>
+<li>separation of business logic from integration logic</li>
+<li><code>Pipeline</code> object</li>
+<li>actual execution of a Crunch pipeline occurs with a call to the <code>done()</code> method</li>
+<li><code>MRPipeline</code>, <code>SparkPipeline</code>, <code>PCollection</code>, <code>PTable</code></li>
+</ul>
+<h3 id="Cascading"><a href="#Cascading" class="headerlink" title="Cascading"></a>Cascading</h3><ul>
+<li>in Java</li>
+<li>like Crunch, full access to all MapReduce functionality</li>
+<li>like Crunch, separation of business logic from integration logic</li>
+</ul>
+<h2 id="Hive"><a href="#Hive" class="headerlink" title="Hive"></a>Hive</h2><h3 id="Overview-2"><a href="#Overview-2" class="headerlink" title="Overview"></a>Overview</h3><ul>
+<li>SQL on Hadoop</li>
+<li>cornerstone of newer SQL implementations<ul>
+<li>Impala, Presto, Spark SQL, Apache Drill</li>
+</ul>
+</li>
+<li>biggest drawback, <strong>performance</strong>, due to MapReduce execution engine<ul>
+<li>addressed by<ul>
+<li><code>Hive-on-Tez</code>, from 0.13.0</li>
+<li><code>Hive-on-Spark</code>, <a href="https://issues.apache.org/jira/browse/HIVE-7292" target="_blank" rel="noopener">HIVE-7292</a></li>
+<li><em>Vectorized query execution</em>, from 0.13.0, supports on ORC and Parquet</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Hive Metastore, becomes the standard for metadata management and sharing among different systems</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/hive_architecture.png" alt="Hive Architecture"></p>
+<ul>
+<li>In <code>CREATE TABLE</code><ul>
+<li><em>external table</em>, underlying data remains intact while table deletion</li>
+<li>storage format declarartion</li>
+</ul>
+</li>
+<li><code>ANALYZE STATISTICS</code><ul>
+<li><code>ANALYZE TABLE foo COMPUTE STATISTICS;</code></li>
+<li><code>hive.stats.autogater</code>, default <code>true</code>, but only triggered by <code>INSERT</code></li>
+<li>import or moving still need explicit <code>ANALYZE</code> command</li>
+</ul>
+</li>
+<li>optimized <code>join</code><ul>
+<li>available in newer version only</li>
+<li><code>hive.auto.convert.join</code><ul>
+<li><em>map join</em></li>
+<li><em>bucketed join</em></li>
+<li><em>sorted bucketed merge join</em></li>
+<li><em>regular join</em></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>SQL is great for query, but not for<ul>
+<li>machine learning, text processing, graph algorithms</li>
+</ul>
+</li>
+<li>should always reviewing under the hood, ex. by <code>EXPLAIN</code></li>
+</ul>
+<h3 id="When-to-Use-Hive"><a href="#When-to-Use-Hive" class="headerlink" title="When to Use Hive"></a>When to Use Hive</h3><ul>
+<li>Hive Metastore</li>
+<li>SQL</li>
+<li>Pluggable<ul>
+<li>custom data format, serialization / deserialization</li>
+<li>execution engine, MapReduce, Tez, Spark</li>
+</ul>
+</li>
+<li>Batch processing</li>
+<li>Fault-tolerant</li>
+<li>Feature-rich<ul>
+<li>nested types</li>
+</ul>
+</li>
+</ul>
+<h2 id="Impala"><a href="#Impala" class="headerlink" title="Impala"></a>Impala</h2><ul>
+<li>2012, Google had published <a href="https://ai.google/research/pubs/pub38125" target="_blank" rel="noopener">F1</a> and <a href="https://ai.google/research/pubs/pub36632" target="_blank" rel="noopener">Dremel</a></li>
+<li>Impala was inspired by Dremel</li>
+<li>massively parallel processing (MPP) data warehouses<ul>
+<li>such as Netezza, Greenplum, and Teradata</li>
+</ul>
+</li>
+<li>delivers query latency and concurrency<ul>
+<li>significantly lower than that of Hive running on MapReduce</li>
+</ul>
+</li>
+<li>uses Hive SQL dialect and Hive Metastore</li>
+<li>supports both HDFS and HBase as data sources, like Hive</li>
+<li>supports the popular data formats<ul>
+<li>delimited text, SequenceFiles, Avro, and Parquet</li>
+</ul>
+</li>
+</ul>
+<h3 id="Overview-3"><a href="#Overview-3" class="headerlink" title="Overview"></a>Overview</h3><ul>
+<li>shared nothing architecture</li>
+<li>Impala daemons, <em>impalad</em><ul>
+<li>running on each nodes, identical and interchangeable</li>
+<li>responsible for<ul>
+<li>query planner</li>
+<li>query coordinator</li>
+<li>query execution engine</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>focus on the core functionality, <strong>executing queries as fast as possible</strong><ul>
+<li>off-loaded data store to HDFS and HBase</li>
+<li>off-loaded database and table management to Hive Metastore</li>
+</ul>
+</li>
+<li>distributed join strategies<ul>
+<li><em>broadcast hash joins</em></li>
+<li><em>partitioned hash joins</em></li>
+</ul>
+</li>
+<li>query profiles<ul>
+<li>table scan rates</li>
+<li>actual data sizes</li>
+<li>amount of memory used</li>
+<li>execution times</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/impala_architecture.png" alt="Impala Architecture"></p>
+<h3 id="Speed-Oriented-Design"><a href="#Speed-Oriented-Design" class="headerlink" title="Speed-Oriented Design"></a>Speed-Oriented Design</h3><ul>
+<li>in-memory processing<ul>
+<li>could spill to disk from 2.0 and later</li>
+<li>minimum of 128GB to 256GB of RAM</li>
+<li>not fault-tolerant, node lose will cause query failed</li>
+</ul>
+</li>
+<li>long running daemons<ul>
+<li>no startup cost</li>
+<li>high concurrency</li>
+<li>colocate for data locality</li>
+<li>could be managed by YARN or Linux CGroups</li>
+</ul>
+</li>
+<li>efficient execution engine<ul>
+<li>implemented in C++<ul>
+<li>better advantage of vectorization, CPU instructions for text parsing, CRC32 computation, etc.</li>
+<li>no JVM overhead</li>
+<li>no Java GC latency</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>use of LLVM<ul>
+<li>Low Level Virtual Machine</li>
+<li>compile the query to optimized machine code</li>
+<li>machine code improves the efficiency of the code execution in the CPU by getting rid of the polymorphism</li>
+<li>machine code generated uses optimizations available in modern CPUs (such as Sandy Bridge) to improve its I/O efficiency</li>
+<li>the entire query and its functions are compiled into a single context of execution, Impala doesn’t have the same overhead of context switching because all function calls are inlined and there are no branches in the instruction pipeline, which makes execution even faster</li>
+</ul>
+</li>
+</ul>
+<h3 id="When-to-Use-Impala"><a href="#When-to-Use-Impala" class="headerlink" title="When to Use Impala"></a>When to Use Impala</h3><ul>
+<li>much faster than Hive</li>
+<li>compare to Hive<ul>
+<li>not fault-tolerant</li>
+<li>not supports nested data types</li>
+<li>not supports custom data format</li>
+</ul>
+</li>
+</ul>
+<h2 id="Other-Tools"><a href="#Other-Tools" class="headerlink" title="Other Tools"></a>Other Tools</h2><ul>
+<li>RHadoop<ul>
+<li>for R</li>
+</ul>
+</li>
+<li>Apache Mahout<ul>
+<li>machine learning tasks</li>
+</ul>
+</li>
+<li>Oryx<ul>
+<li>machine learning application</li>
+<li>Lambda architecture</li>
+</ul>
+</li>
+<li>Python<ul>
+<li><a href="https://www.slideshare.net/InfoQ/a-guide-to-python-frameworks-for-hadoop" target="_blank" rel="noopener">A Guide to Python Frameworks for Hadoop</a></li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/12/10/Hadoop-Application-Architectures-Ch-4-Common-Hadoop-Processing-Patterns/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Hadoop Application Architectures Ch.4 Common Hadoop Processing Patterns
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/11/24/Hadoop-Application-Architectures-Ch-2-Data-Movement/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Hadoop Application Architectures Ch.2 Data Movement</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

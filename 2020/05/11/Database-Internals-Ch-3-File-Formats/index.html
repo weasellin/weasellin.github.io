@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Database-Internals-Ch-3-File-Formats | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="MotivationFor on-disk layout structures, we have to deal with:  fixed-size primitives structures &amp; variable size structures garbage collection &amp; fragmentation serialization &amp; deserializati">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Database-Internals-Ch-3-File-Formats">
+<meta property="og:url" content="https://weasellin.github.io/2020/05/11/Database-Internals-Ch-3-File-Formats/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="MotivationFor on-disk layout structures, we have to deal with:  fixed-size primitives structures &amp; variable size structures garbage collection &amp; fragmentation serialization &amp; deserializati">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-05-11T22:27:02.000Z">
+<meta property="article:modified_time" content="2020-05-17T09:17:56.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="database_internals">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Database-Internals-Ch-3-File-Formats" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Database-Internals-Ch-3-File-Formats
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/11/Database-Internals-Ch-3-File-Formats/" class="article-date">
+  <time datetime="2020-05-11T22:27:02.000Z" itemprop="datePublished">2020-05-11</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Motivation"><a href="#Motivation" class="headerlink" title="Motivation"></a>Motivation</h2><p>For on-disk layout structures, we have to deal with:</p>
+<ul>
+<li>fixed-size primitives structures &amp; variable size structures</li>
+<li>garbage collection &amp; fragmentation</li>
+<li>serialization &amp; deserialization</li>
+<li>tracking and management of the segments usage</li>
+</ul>
+<h2 id="Binary-Encoding"><a href="#Binary-Encoding" class="headerlink" title="Binary Encoding"></a>Binary Encoding</h2><ul>
+<li>numeric (fixed-size)<ul>
+<li><em>Big-endian</em>: most-significant byte (MSB)</li>
+<li><em>Little-endian</em>: least-significant byte (LSB)</li>
+<li>IEEE 754: 32-bit <code>float</code> for single-precision value<ul>
+<li>bit 31: sign</li>
+<li>bit 30-23: exponent</li>
+<li>bit 22-1: fraction</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>string</code> (variable-size)<ul>
+<li><code>(size|data)</code>: <em>UCSD String</em> or <em>Pascal String</em><ul>
+<li>could get length in constant time without iterating through</li>
+<li>could slice copy from memory</li>
+</ul>
+</li>
+<li><code>(data/null)</code>: <em>null-terminated string</em></li>
+</ul>
+</li>
+<li>bit-packed data<ul>
+<li>booleans</li>
+<li>enum</li>
+<li>flags, bitmasks</li>
+</ul>
+</li>
+</ul>
+<h2 id="Structures-amp-Layouts"><a href="#Structures-amp-Layouts" class="headerlink" title="Structures &amp; Layouts"></a>Structures &amp; Layouts</h2><h3 id="File-Organization"><a href="#File-Organization" class="headerlink" title="File Organization"></a>File Organization</h3><p><code>| header | page | page | page | ... | tailer |</code></p>
+<h3 id="Page-Organization-for-Fixed-size-Records"><a href="#Page-Organization-for-Fixed-size-Records" class="headerlink" title="Page Organization for Fixed-size Records"></a>Page Organization for Fixed-size Records</h3><p>Page for a B-Tree node:</p>
+<p><code>| P0 | k1 | v1 | P1 | k2 | v2 | ... | kn | vn | Pn | unused |</code></p>
+<p>Downside:</p>
+<ul>
+<li>key insertion requires relocating elements</li>
+<li>not allow managing or accessing variable-size records efficiently</li>
+</ul>
+<h3 id="Slotted-Pages"><a href="#Slotted-Pages" class="headerlink" title="Slotted Pages"></a>Slotted Pages</h3><p><code>| header | offset0 | offset1 | offset2 | ... | unused | ... | cell2 | cell1 | cell0 |</code></p>
+<p>Allow:</p>
+<ul>
+<li>storing variable-size of records with a minimal overhead</li>
+<li>reclaiming space occupied by the removed records</li>
+<li>dynamic layout to hide the exact location internally</li>
+</ul>
+<h3 id="Cells"><a href="#Cells" class="headerlink" title="Cells"></a>Cells</h3><ul>
+<li><em>separator key</em> cells</li>
+</ul>
+<p><code>| [int] key_size | [int] child_page_id | [bytes] key |</code></p>
+<ul>
+<li><em>key-value</em> cells</li>
+</ul>
+<p><code>| [int] key_size | [int] value_size | [bytes] key | [bytes] data_record |</code></p>
+<h3 id="Management-of-Cells-in-Slotted-Pages"><a href="#Management-of-Cells-in-Slotted-Pages" class="headerlink" title="Management of Cells in Slotted Pages"></a>Management of Cells in Slotted Pages</h3><ul>
+<li>Keep <em>offsets</em> sorted by keys<ul>
+<li>no need to relocate <em>cells</em></li>
+</ul>
+</li>
+<li>Maintain an <em>Availability List</em> for inserting a new cell<ul>
+<li>holds the list of offsets of freed segments and their sizes</li>
+<li><em>first fit strategy</em><ul>
+<li>larger overhead, effectively wasted</li>
+</ul>
+</li>
+<li><em>best fir strategy</em><ul>
+<li>find a segment leaves smallest remainder</li>
+</ul>
+</li>
+<li>if cannot find in availability list<ul>
+<li>and if there are enough <em>fragmented bytes</em> available<ul>
+<li>=&gt; defragmentation</li>
+</ul>
+</li>
+<li>if there are not enough available<ul>
+<li>=&gt; create an overflow page</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Versioning"><a href="#Versioning" class="headerlink" title="Versioning"></a>Versioning</h2><p>Could be done in several ways:</p>
+<ul>
+<li>identified by filename prefix (ex. Cassandra)</li>
+<li>separated file (ex. <em>PG_VERSION</em> in PostgreSQL)</li>
+<li>stored in index file header</li>
+<li>file format using magic number</li>
+</ul>
+<h2 id="Checksumming"><a href="#Checksumming" class="headerlink" title="Checksumming"></a>Checksumming</h2><p>Usually put the <em>page cheksum</em> in the page header.</p>
+<p>Distinct between:</p>
+<ul>
+<li><em>checksum</em><ul>
+<li>weakest form of guarantee and aren’t able to detect corruptiob in multiple bits</li>
+</ul>
+</li>
+<li><em>cyclic redundancy check</em> (CRC)<ul>
+<li>make sure there were no unintended and accidental changes in data</li>
+<li>not designed to resist attacks and intentional changes in data</li>
+</ul>
+</li>
+<li><em>cryptographic hash function</em><ul>
+<li>for security</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/05/18/Database-Internals-Ch-4-Implementing-B-Trees/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Database-Internals-Ch-4-Implementing-B-Trees
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/05/04/Database-Internals-Ch-2-B-Tree-Basics/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Database-Internals-Ch-2-B-Tree-Basics</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

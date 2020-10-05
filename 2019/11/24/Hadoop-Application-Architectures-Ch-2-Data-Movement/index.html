@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Hadoop Application Architectures Ch.2 Data Movement | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Ingestion Extraction  Data Ingestion ConsiderationsCommon data sources:  data management system such as relational databases logs, event data files from existing storage system  Considerations:  Time">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop Application Architectures Ch.2 Data Movement">
+<meta property="og:url" content="https://weasellin.github.io/2019/11/24/Hadoop-Application-Architectures-Ch-2-Data-Movement/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="Ingestion Extraction  Data Ingestion ConsiderationsCommon data sources:  data management system such as relational databases logs, event data files from existing storage system  Considerations:  Time">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/load_sequentially.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/load_parallel.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/flume_ingest_fan_in.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/flume_ingest_split.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/flume_ingest_partition.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/camus.png">
+<meta property="article:published_time" content="2019-11-24T23:55:50.000Z">
+<meta property="article:modified_time" content="2020-01-21T00:47:52.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="hadoop">
+<meta property="article:tag" content="hadoop_application_architectures">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/load_sequentially.png">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Hadoop-Application-Architectures-Ch-2-Data-Movement" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Hadoop Application Architectures Ch.2 Data Movement
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/11/24/Hadoop-Application-Architectures-Ch-2-Data-Movement/" class="article-date">
+  <time datetime="2019-11-24T23:55:50.000Z" itemprop="datePublished">2019-11-24</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>Ingestion</li>
+<li>Extraction</li>
+</ul>
+<h2 id="Data-Ingestion-Considerations"><a href="#Data-Ingestion-Considerations" class="headerlink" title="Data Ingestion Considerations"></a>Data Ingestion Considerations</h2><p>Common data sources:</p>
+<ul>
+<li>data management system such as relational databases</li>
+<li>logs, event data</li>
+<li>files from existing storage system</li>
+</ul>
+<p>Considerations:</p>
+<ul>
+<li>Timeliness of data ingestion and accessibility</li>
+<li>Incremental updates</li>
+<li>Data access and processing</li>
+<li>Source system and data structure</li>
+<li>Partitioning and splitting of data</li>
+<li>Storage format</li>
+<li>Data transformation</li>
+</ul>
+<h3 id="Timeliness-of-Data-Ingestion"><a href="#Timeliness-of-Data-Ingestion" class="headerlink" title="Timeliness of Data Ingestion"></a>Timeliness of Data Ingestion</h3><p>Timeliness classification:</p>
+<ul>
+<li>Macro batch (15 mins -)</li>
+<li>Microbatch (2 mins -)</li>
+<li>Near-Real-Time Decision Support (2 secs -)</li>
+<li>Near-Real-Time Event Processing (100 msecs -)</li>
+<li>Real Time</li>
+</ul>
+<p>System complexity, cost, disk or memory.</p>
+<h3 id="Incremental-Updates"><a href="#Incremental-Updates" class="headerlink" title="Incremental Updates"></a>Incremental Updates</h3><ul>
+<li><code>append</code><ul>
+<li>notice the <em>small files problem</em>, may require periodic process to merge small files</li>
+<li>write to</li>
+</ul>
+</li>
+<li><code>update</code><ul>
+<li>HDFS<ul>
+<li><em>delta file</em> and <em>compaction job</em></li>
+<li>only work for multi-minute timeliness intervals</li>
+</ul>
+</li>
+<li>HBase<ul>
+<li>milliseconds timeliness</li>
+<li>8 - 10 times slower scan (compare to HDFS)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Access-Patterns"><a href="#Access-Patterns" class="headerlink" title="Access Patterns"></a>Access Patterns</h3><ul>
+<li>scan: HDFS (supports memory cache from Hadoop 2.3.0)</li>
+<li>random access: HBase</li>
+<li>search: Solr</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Use cases</th>
+<th>Storage device</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MapReduce</td>
+<td>Large batch processes</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Hive</td>
+<td>Batch processing with SQL-like language</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Pig</td>
+<td>Batch processing with a data flow language</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Spark</td>
+<td>Fast interactive processing</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Giraph</td>
+<td>Batch graph processing</td>
+<td>HDFS preferred</td>
+</tr>
+<tr>
+<td>Impala</td>
+<td>MPP style SQL</td>
+<td>HDFS is preferred for most cases</td>
+</tr>
+<tr>
+<td>HBase API</td>
+<td>Atomic puts, gets, and deletes on record-level data</td>
+<td>HBase</td>
+</tr>
+</tbody></table>
+<h3 id="Original-Source-System-and-Data-Structure"><a href="#Original-Source-System-and-Data-Structure" class="headerlink" title="Original Source System and Data Structure"></a>Original Source System and Data Structure</h3><h5 id="READ-SPEED-OF-THE-DEVICES-ON-SOURCE-SYSTEMS"><a href="#READ-SPEED-OF-THE-DEVICES-ON-SOURCE-SYSTEMS" class="headerlink" title="READ SPEED OF THE DEVICES ON SOURCE SYSTEMS"></a>READ SPEED OF THE DEVICES ON SOURCE SYSTEMS</h5><blockquote>
+<p>Disk I/O: often a major bottleneck in any processing pipeline.<br>Generally, with Hadoop we’ll see read speeds of anywhere from 20 MBps to 100 MBps, and there are limitations on the motherboard or controller for reading from all the disks on the system.<br>To maximize read speeds, make sure to take advantage of as many disks as possible on the source system.<br>On a typical drive three threads is normally required to maximize throughput, although this number will vary.</p>
+</blockquote>
+<ul>
+<li>to use as many as multiple disks</li>
+<li>multi-threads</li>
+</ul>
+<h5 id="ORIGINAL-FILE-TYPE"><a href="#ORIGINAL-FILE-TYPE" class="headerlink" title="ORIGINAL FILE TYPE"></a>ORIGINAL FILE TYPE</h5><h5 id="COMPRESSION"><a href="#COMPRESSION" class="headerlink" title="COMPRESSION"></a>COMPRESSION</h5><h5 id="RELATIONAL-DATABASE-MANAGEMENT-SYSTEMS"><a href="#RELATIONAL-DATABASE-MANAGEMENT-SYSTEMS" class="headerlink" title="RELATIONAL DATABASE MANAGEMENT SYSTEMS"></a>RELATIONAL DATABASE MANAGEMENT SYSTEMS</h5><p>Apache Sqoop: a very rich tool with lots of options, but at the same time it is simple and easy to learn</p>
+<ul>
+<li>batch process: slow timeliness<ul>
+<li>Sqoop</li>
+</ul>
+</li>
+<li>data pipeline split: one to RDBMS, one to HDFS<ul>
+<li>Flume or Kafka</li>
+</ul>
+</li>
+<li>network limited: edge node<ul>
+<li>RDBMS file dump</li>
+</ul>
+</li>
+</ul>
+<h5 id="STREAMING-DATA"><a href="#STREAMING-DATA" class="headerlink" title="STREAMING DATA"></a>STREAMING DATA</h5><h5 id="LOGFILES"><a href="#LOGFILES" class="headerlink" title="LOGFILES"></a>LOGFILES</h5><ul>
+<li>anti-pattern: read the logfiles from disk as they are written<ul>
+<li>because this is almost impossible to implement without losing data</li>
+</ul>
+</li>
+<li>recommend: Flume or Kafka</li>
+</ul>
+<h3 id="Transformations"><a href="#Transformations" class="headerlink" title="Transformations"></a>Transformations</h3><p>Options:</p>
+<ul>
+<li>Transformation</li>
+<li>Partitioning</li>
+<li>Splitting</li>
+</ul>
+<p>For timeliness,</p>
+<ul>
+<li>batch transformation<ul>
+<li>Hive, Pig, MapReduce, Spark</li>
+<li>checkpoint for failure</li>
+<li>all-or-nothing</li>
+</ul>
+</li>
+<li>streaming ingestion<ul>
+<li>Flume<ul>
+<li>interceptors<ul>
+<li>notice the performance issue, external call, GC, etc.</li>
+</ul>
+</li>
+<li>selectors<ul>
+<li>decide which of the roads of event data will go down</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Network-Bottlenecks"><a href="#Network-Bottlenecks" class="headerlink" title="Network Bottlenecks"></a>Network Bottlenecks</h3><ul>
+<li>increase bandwidth</li>
+<li>compress data</li>
+</ul>
+<h3 id="Network-Security"><a href="#Network-Security" class="headerlink" title="Network Security"></a>Network Security</h3><ul>
+<li>encrypt with OpenSSL</li>
+</ul>
+<h3 id="Push-or-Pull"><a href="#Push-or-Pull" class="headerlink" title="Push or Pull"></a>Push or Pull</h3><p>requirements:</p>
+<ul>
+<li>Keeping track of what has been sent</li>
+<li>Handling retries or failover options in case of failure</li>
+<li>Being respectful of the source system that data is being ingested from</li>
+<li>Access and security</li>
+</ul>
+<h5 id="SQOOP"><a href="#SQOOP" class="headerlink" title="SQOOP"></a>SQOOP</h5><p>a pull solution, requires</p>
+<ul>
+<li>connection information for the source database</li>
+<li>one or more tables to extract</li>
+<li>ensure at a defined extraction rate</li>
+<li>scheduled to not interfere with the source system’s peak load time</li>
+</ul>
+<h5 id="FLUME"><a href="#FLUME" class="headerlink" title="FLUME"></a>FLUME</h5><ul>
+<li>Log4J appender<ul>
+<li>pushing events through a pipeline</li>
+</ul>
+</li>
+<li>spooling directory source or the JMS source<ul>
+<li>events are being pulled</li>
+</ul>
+</li>
+</ul>
+<h3 id="Failure-Handling"><a href="#Failure-Handling" class="headerlink" title="Failure Handling"></a>Failure Handling</h3><blockquote>
+<p>Failure scenarios need to be documented, including failure delay expectations and how data loss will be handled.</p>
+</blockquote>
+<ul>
+<li>File transfer<ul>
+<li>using directories for different stages<ul>
+<li><em>ToLoad</em></li>
+<li><em>InProgress</em></li>
+<li><em>Failure</em></li>
+<li><em>Successful</em></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Streaming ingestion<ul>
+<li>areas for failure<ul>
+<li>publisher failure</li>
+<li>broker failure</li>
+<li>consumer failure</li>
+</ul>
+</li>
+<li>deduplication<ul>
+<li>is a heavy performance cost</li>
+<li>some other works<ul>
+<li><a href="https://segment.com/blog/exactly-once-delivery/" target="_blank" rel="noopener">https://segment.com/blog/exactly-once-delivery/</a></li>
+<li><a href="http://eng.tapjoy.com/blog-list/real-time-deduping-at-scale" target="_blank" rel="noopener">http://eng.tapjoy.com/blog-list/real-time-deduping-at-scale</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Level-of-Complexity"><a href="#Level-of-Complexity" class="headerlink" title="Level of Complexity"></a>Level of Complexity</h3><p>ease of use, ex. HDFS CLI, FUSE, or NFS</p>
+<h2 id="Data-Ingestion-Options"><a href="#Data-Ingestion-Options" class="headerlink" title="Data Ingestion Options"></a>Data Ingestion Options</h2><p>In here,</p>
+<ul>
+<li>File transfer</li>
+<li>Sqoop</li>
+<li>Flume</li>
+<li>Kafka</li>
+</ul>
+<h3 id="File-Transfers"><a href="#File-Transfers" class="headerlink" title="File Transfers"></a>File Transfers</h3><p>Hadoop client’s <code>hadoop fs -put</code> and <code>hadoop fs -get</code></p>
+<ul>
+<li>simplest</li>
+<li>all-or-nothing batch processing</li>
+<li>single-threaded</li>
+<li>no transformations</li>
+<li>any file types</li>
+</ul>
+<h5 id="HDFS-CLIENT-COMMANDS"><a href="#HDFS-CLIENT-COMMANDS" class="headerlink" title="HDFS CLIENT COMMANDS"></a>HDFS CLIENT COMMANDS</h5><ul>
+<li>configurable replicas, common default 3</li>
+<li>checksum file accompanies each block</li>
+<li><em>double-hop</em> from a edge node due to some network policy</li>
+</ul>
+<h5 id="MOUNTABLE-HDFS"><a href="#MOUNTABLE-HDFS" class="headerlink" title="MOUNTABLE HDFS"></a>MOUNTABLE HDFS</h5><ul>
+<li>allow to use common filesystem commands</li>
+<li>not full POSIX semantic</li>
+<li>not support random write</li>
+<li>potential misuse: small files problem<ul>
+<li>mitigated by Solr for indexing, HBase, container format as Avro</li>
+</ul>
+</li>
+</ul>
+<p>implementations example</p>
+<ul>
+<li>Fuse-DFS<ul>
+<li>no need to modify the Linux kernel</li>
+<li>multiple hops, poor consistency model</li>
+<li>not yet production ready</li>
+</ul>
+</li>
+<li>NFSv3<ul>
+<li>scaling by Hadoop NFS Gateway nodes</li>
+<li>recommended to use only in small, manual data transfers</li>
+</ul>
+</li>
+</ul>
+<h4 id="Considerations"><a href="#Considerations" class="headerlink" title="Considerations"></a>Considerations</h4><ul>
+<li>single sink or multiple sinks</li>
+<li>reliability or not</li>
+<li>transformation or not</li>
+</ul>
+<h3 id="Sqoop-Batch-Transfer-Between-Hadoop-and-Relational-Databases"><a href="#Sqoop-Batch-Transfer-Between-Hadoop-and-Relational-Databases" class="headerlink" title="Sqoop: Batch Transfer Between Hadoop and Relational Databases"></a>Sqoop: Batch Transfer Between Hadoop and Relational Databases</h3><blockquote>
+<p>When used for importing data into Hadoop, Sqoop generates map-only MapReduce jobs where each mapper connects to the database using a Java database connectivity (JDBC) driver, selects a portion of the table to be imported, and writes the data to HDFS.</p>
+</blockquote>
+<h5 id="CHOOSING-A-SPLIT-BY-COLUMN"><a href="#CHOOSING-A-SPLIT-BY-COLUMN" class="headerlink" title="CHOOSING A SPLIT-BY COLUMN"></a>CHOOSING A SPLIT-BY COLUMN</h5><ul>
+<li><code>split-by</code></li>
+<li><code>num-mappers</code></li>
+</ul>
+<h5 id="USING-DATABASE-SPECIFIC-CONNECTORS-WHENEVER-AVAILABLE"><a href="#USING-DATABASE-SPECIFIC-CONNECTORS-WHENEVER-AVAILABLE" class="headerlink" title="USING DATABASE-SPECIFIC CONNECTORS WHENEVER AVAILABLE"></a>USING DATABASE-SPECIFIC CONNECTORS WHENEVER AVAILABLE</h5><h5 id="USING-THE-GOLDILOCKS-METHOD-OF-SQOOP-PERFORMANCE-TUNING"><a href="#USING-THE-GOLDILOCKS-METHOD-OF-SQOOP-PERFORMANCE-TUNING" class="headerlink" title="USING THE GOLDILOCKS METHOD OF SQOOP PERFORMANCE TUNING"></a>USING THE GOLDILOCKS METHOD OF SQOOP PERFORMANCE TUNING</h5><ul>
+<li>start with a very low number of mappers</li>
+<li>gradually increase it to achieve a balance</li>
+</ul>
+<h5 id="LOADING-MANY-TABLES-IN-PARALLEL-WITH-FAIR-SCHEDULER-THROTTLING"><a href="#LOADING-MANY-TABLES-IN-PARALLEL-WITH-FAIR-SCHEDULER-THROTTLING" class="headerlink" title="LOADING MANY TABLES IN PARALLEL WITH FAIR SCHEDULER THROTTLING"></a>LOADING MANY TABLES IN PARALLEL WITH FAIR SCHEDULER THROTTLING</h5><ul>
+<li><p>Load the tables sequentially<br><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/load_sequentially.png" alt=""></p>
+</li>
+<li><p>Load the tables in parallel (Fair Scheduler)<br><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/load_parallel.png" alt=""></p>
+</li>
+</ul>
+<h5 id="DIAGNOSING-BOTTLENECKS"><a href="#DIAGNOSING-BOTTLENECKS" class="headerlink" title="DIAGNOSING BOTTLENECKS"></a>DIAGNOSING BOTTLENECKS</h5><ul>
+<li>Network bandwidth<ul>
+<li>likely to be either 1 GbE or 10 GbE (120 MBps or 1.2 GBps)</li>
+</ul>
+</li>
+<li>RDBMS<ul>
+<li>review the query generated by the mappers</li>
+<li>in Sqoop incremental mode<ul>
+<li>make sure using index</li>
+</ul>
+</li>
+<li>ingest entire table<ul>
+<li>full table scans are typically preferred</li>
+</ul>
+</li>
+<li>monitor the database</li>
+<li>schedule the execution time</li>
+</ul>
+</li>
+<li>Data skew<ul>
+<li>default splitting range evenly with min to max of split_by column values</li>
+<li>choose <code>--split-by</code></li>
+<li>define <code>--boundary-query</code></li>
+</ul>
+</li>
+<li>Connector<ul>
+<li>RDBMS-specific connector is preferred</li>
+</ul>
+</li>
+<li>Hadoop<ul>
+<li>check disk I/O, CPU utilization, and swapping on the DataNodes where the mappers are running</li>
+</ul>
+</li>
+<li>Inefficient access path<ul>
+<li>incredibly important the split column is either the <strong>partition key</strong> or has an <strong>index</strong></li>
+<li>if no such column, then use only one mapper</li>
+</ul>
+</li>
+</ul>
+<h5 id="KEEPING-HADOOP-UPDATED"><a href="#KEEPING-HADOOP-UPDATED" class="headerlink" title="KEEPING HADOOP UPDATED"></a>KEEPING HADOOP UPDATED</h5><ul>
+<li>small table<ul>
+<li>just overwrite it</li>
+</ul>
+</li>
+<li>large table<ul>
+<li>delta<ul>
+<li>Incremental Sequence ID</li>
+<li>Timestamp</li>
+</ul>
+</li>
+<li>write to a new directory<ul>
+<li>check <code>{output_dir}/_SUCCESS</code></li>
+</ul>
+</li>
+<li>compaction with <code>sqoop-merge</code><ul>
+<li>sorted and partitioned data set could be optimized in merge, map-only job</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Flume-Event-Based-Data-Collection-and-Processing"><a href="#Flume-Event-Based-Data-Collection-and-Processing" class="headerlink" title="Flume: Event-Based Data Collection and Processing"></a>Flume: Event-Based Data Collection and Processing</h3><h5 id="FLUME-ARCHITECTURE"><a href="#FLUME-ARCHITECTURE" class="headerlink" title="FLUME ARCHITECTURE"></a>FLUME ARCHITECTURE</h5><p>[Flume Components]</p>
+<p>Main components inside of the Flume agent JVM:</p>
+<ul>
+<li>Sources<ul>
+<li>consume events from external sources and forward to channels</li>
+<li>including AvroSource, SpoolDirectorySource, HTTPSource, and JMSSource</li>
+</ul>
+</li>
+<li>Interceptors<ul>
+<li>allow events to be intercepted and modified in flight</li>
+<li>anything that can be implemented in a Java class</li>
+<li>formatting, partitioning, filtering, splitting, validating, or applying metadata to events</li>
+</ul>
+</li>
+<li>Selectors<ul>
+<li>routing for events</li>
+<li>fork to multiple channels, or send to a specific channel based on the event</li>
+</ul>
+</li>
+<li>Channels<ul>
+<li>store events until they’re consumed by a sink</li>
+<li>memory channel, file channel, balancing performance with durability</li>
+</ul>
+</li>
+<li>Sinks<ul>
+<li>remove events from a channel and deliver to a destination</li>
+</ul>
+</li>
+</ul>
+<h5 id="FLUME-PATTERNS"><a href="#FLUME-PATTERNS" class="headerlink" title="FLUME PATTERNS"></a>FLUME PATTERNS</h5><h6 id="Fan-in"><a href="#Fan-in" class="headerlink" title="Fan-in"></a>Fan-in</h6><p>Agents on Hadoop edge nodes.</p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/flume_ingest_fan_in.png" alt=""></p>
+<h6 id="Splitting-data-on-ingest"><a href="#Splitting-data-on-ingest" class="headerlink" title="Splitting data on ingest"></a>Splitting data on ingest</h6><p>Backup HDFS cluster for disaster recovery (DR).</p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/flume_ingest_split.png" alt=""></p>
+<h6 id="Partitioning-data-on-ingest"><a href="#Partitioning-data-on-ingest" class="headerlink" title="Partitioning data on ingest"></a>Partitioning data on ingest</h6><p>Ex. partition events by timestamp.</p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/flume_ingest_partition.png" alt=""></p>
+<h6 id="Splitting-events-for-streaming-analytics"><a href="#Splitting-events-for-streaming-analytics" class="headerlink" title="Splitting events for streaming analytics"></a>Splitting events for streaming analytics</h6><p>Send to streaming such as Storm or Spark Streaming. (point a Flume Avro sink to Spark Streaming’s Flume Stream)</p>
+<h5 id="FILE-FORMATS"><a href="#FILE-FORMATS" class="headerlink" title="FILE FORMATS"></a>FILE FORMATS</h5><ul>
+<li>Text files<ul>
+<li>with container format SequenceFiles or Avro</li>
+<li>Avro is preferred because<ul>
+<li>it stores schema as part of the file,</li>
+<li>and also compresses more efficiently.</li>
+<li>providing better failure handling.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Columnar formats<ul>
+<li>RCFile, ORC, or Parquet are also <strong>not</strong> well suited for Flume</li>
+<li>more data lose risk due to batch processing</li>
+</ul>
+</li>
+<li>Customized <em>event serializers</em><ul>
+<li>override the EventSerializer interface to apply your own logic and create a custom output format</li>
+</ul>
+</li>
+</ul>
+<h5 id="RECOMMENDATIONS"><a href="#RECOMMENDATIONS" class="headerlink" title="RECOMMENDATIONS"></a>RECOMMENDATIONS</h5><h6 id="Flume-sources"><a href="#Flume-sources" class="headerlink" title="Flume sources"></a>Flume sources</h6><ul>
+<li>Batch size<ul>
+<li>notice of the network latency for sending acknowledge</li>
+<li>start from 1,000</li>
+</ul>
+</li>
+<li>Threads<ul>
+<li>pushing source: add more clients or client threads</li>
+<li>pulling source: configure more sources in the agent</li>
+</ul>
+</li>
+</ul>
+<h6 id="Flume-sinks"><a href="#Flume-sinks" class="headerlink" title="Flume sinks"></a>Flume sinks</h6><ul>
+<li>Number of sinks<ul>
+<li>channel to sink, is one-to-many</li>
+<li>sink is single thread</li>
+<li>limitation with more sinks should be the network or the CPU</li>
+</ul>
+</li>
+<li>Batch Sizes<ul>
+<li>overhead of an <em>fsync</em> system call</li>
+<li>only big downside to large batches with a sink is an increased risk of duplicate events</li>
+<li>balance between throughput and potential duplicates</li>
+</ul>
+</li>
+</ul>
+<h6 id="Flume-interceptors"><a href="#Flume-interceptors" class="headerlink" title="Flume interceptors"></a>Flume interceptors</h6><ul>
+<li>capability to take an event or group of events and modify them, filter them, or split them</li>
+<li>custom code comes with risk of issues like memory leaks or consuming excessive CPU</li>
+</ul>
+<h6 id="Flume-memory-channels"><a href="#Flume-memory-channels" class="headerlink" title="Flume memory channels"></a>Flume memory channels</h6><ul>
+<li>if performance is your primary consideration, and data loss is not an issue</li>
+<li>better for streaming analytics sink</li>
+</ul>
+<h6 id="Flume-file-channels"><a href="#Flume-file-channels" class="headerlink" title="Flume file channels"></a>Flume file channels</h6><ul>
+<li>it’s more durable than the memory channel</li>
+<li>to use multiple disks</li>
+<li>if using multiple file channels, use distinct directories, and preferably separate disks, for each channel</li>
+<li>use dual checkpoint directories</li>
+<li>better for persistent sink</li>
+</ul>
+<h6 id="JDBC-channels"><a href="#JDBC-channels" class="headerlink" title="JDBC channels"></a>JDBC channels</h6><ul>
+<li>persists events to any JDBC-compliant data store</li>
+<li>most durable channel, but also the least performant</li>
+</ul>
+<h6 id="Sizing-Channels"><a href="#Sizing-Channels" class="headerlink" title="Sizing Channels"></a>Sizing Channels</h6><ul>
+<li>Memory channels<ul>
+<li>can be fed by multiple sources</li>
+<li>can be fetched from by multiple sinks</li>
+<li>so for a pipeline, one channel in a node usually is enough</li>
+</ul>
+</li>
+<li>Channel size<ul>
+<li>large memory channel could have <strong>garbage collection</strong> activity that could slow down the whole agent</li>
+</ul>
+</li>
+</ul>
+<h5 id="FINDING-FLUME-BOTTLENECKS"><a href="#FINDING-FLUME-BOTTLENECKS" class="headerlink" title="FINDING FLUME BOTTLENECKS"></a>FINDING FLUME BOTTLENECKS</h5><ul>
+<li>Latency between nodes<ul>
+<li>batch size or more threads</li>
+</ul>
+</li>
+<li>Throughput between nodes<ul>
+<li>data compression</li>
+</ul>
+</li>
+<li>Number of threads</li>
+<li>Number of sinks</li>
+<li>Channel</li>
+<li>Garbage collection issues</li>
+</ul>
+<h3 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a>Kafka</h3><ul>
+<li><em>producers</em>, <em>brokers</em>, <em>consumers</em></li>
+<li><em>topic</em>, <em>partition</em>, <em>offset</em></li>
+</ul>
+<p>Large number of partitions:</p>
+<ul>
+<li>Each partition can be consumed by at most one consumer from the same group</li>
+<li>Therefore, we recommend at least as many partitions per node as there are servers in the cluster, possibly planning for a few years of growth.</li>
+<li>There are no real downsides to having a few hundred partitions per topic.</li>
+</ul>
+<h5 id="KAFKA-FAULT-TOLERANCE"><a href="#KAFKA-FAULT-TOLERANCE" class="headerlink" title="KAFKA FAULT TOLERANCE"></a>KAFKA FAULT TOLERANCE</h5><ul>
+<li><em>replica</em></li>
+<li><em>leader</em>, <em>followers</em></li>
+</ul>
+<p>Producer acknowledge:</p>
+<ul>
+<li>all synchronized replicas</li>
+<li>leader only</li>
+<li>asynchronized</li>
+</ul>
+<p>Consumer only read <em>committed</em> (all synchronized) messages.</p>
+<p>Supported semantics,</p>
+<ul>
+<li><em>at least once</em><ul>
+<li>consumer advances the offset <strong>after</strong> processing the messages</li>
+</ul>
+</li>
+<li><em>at most once</em><ul>
+<li>consumer advances the offset <strong>before</strong> processing the messages</li>
+</ul>
+</li>
+<li><em>exactly once</em><ul>
+<li>consumer advances the offset, and processes the messages <strong>at the same time</strong> with two-phase commits</li>
+</ul>
+</li>
+</ul>
+<p>Multiple data centers deployment.</p>
+<h5 id="KAFKA-AND-HADOOP"><a href="#KAFKA-AND-HADOOP" class="headerlink" title="KAFKA AND HADOOP"></a>KAFKA AND HADOOP</h5><table>
+<thead>
+<tr>
+<th></th>
+<th>Kafka</th>
+<th>Flume</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Hadoop ingest solution</td>
+<td>less</td>
+<td>more</td>
+</tr>
+<tr>
+<td>Required code writing</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Fault tolerant</td>
+<td>higher</td>
+<td>lower</td>
+</tr>
+<tr>
+<td>Performance</td>
+<td>higher</td>
+<td>lower</td>
+</tr>
+</tbody></table>
+<h6 id="Flume-with-Kafka"><a href="#Flume-with-Kafka" class="headerlink" title="Flume with Kafka"></a>Flume with Kafka</h6><ul>
+<li>Kafka source<ul>
+<li>consumer, reads data from Kafka and sends it to the Flume channel</li>
+<li>adding multiple sources with the same <em>groupId</em> for load balancing and high availability</li>
+<li>batch size tuning</li>
+</ul>
+</li>
+<li>Kafka sink<ul>
+<li>producer, sends data from a Flume channel to Kafka</li>
+<li>batch size tuning</li>
+</ul>
+</li>
+<li>Kafka channel<ul>
+<li>combines a producer and a consumer</li>
+<li>each batch will be sent to a separate Kafka partition, so the writes will be load-balanced</li>
+</ul>
+</li>
+</ul>
+<h6 id="Camus"><a href="#Camus" class="headerlink" title="Camus"></a>Camus</h6><ul>
+<li>ingesting data from Kafka to HDFS</li>
+<li>automatic discovery of Kafka topics from ZooKeeper</li>
+<li>conversion of messages to Avro and Avro schema management</li>
+<li>automatic partitioning</li>
+<li>all-or-nothing batch processing</li>
+<li>need to write decoder to convert Kafka messages to Avro</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-2-Data-Movement/camus.png" alt=""></p>
+<h2 id="Data-Extraction"><a href="#Data-Extraction" class="headerlink" title="Data Extraction"></a>Data Extraction</h2><ul>
+<li>Moving data from Hadoop to an RDBMS or data warehouse<ul>
+<li>In most cases, Sqoop will be the appropriate choice for ingesting the transformed data into the target database.</li>
+</ul>
+</li>
+<li>Moving data between Hadoop clusters<ul>
+<li>DistCp uses MapReduce to perform parallel transfers of large volumes of data.</li>
+<li>DistCp is also suitable when either the source or target is a non-HDFS filesystem—for example, an increasingly common need is to move data into a cloud-based system, such as Amazon’s Simple Storage System (S3).</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/12/04/Hadoop-Application-Architectures-Ch-3-Processing-Data-in-Hadoop/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Hadoop Application Architectures Ch.3 Processing Data in Hadoop
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/11/12/Hadoop-SequenceFile-Sync-Marker/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Hadoop SequenceFile Sync Marker</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Hadoop Application Architectures Ch.6 Orchestration | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="OverviewSystem of,  workflow orchestration workflow automation business process automation scheduling, coordinating, and managing workflows  Each of jobs, referred to as an action, could be  scheduled">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop Application Architectures Ch.6 Orchestration">
+<meta property="og:url" content="https://weasellin.github.io/2019/12/16/Hadoop-Application-Architectures-Ch-6-Orchestration/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="OverviewSystem of,  workflow orchestration workflow automation business process automation scheduling, coordinating, and managing workflows  Each of jobs, referred to as an action, could be  scheduled">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/oozie_architecture.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/azkaban_architecture.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/point_to_point_workflow.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/fan_out_workflow.png">
+<meta property="og:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/capture_decision_workflow.png">
+<meta property="article:published_time" content="2019-12-16T07:23:45.000Z">
+<meta property="article:modified_time" content="2020-01-21T00:47:52.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="hadoop">
+<meta property="article:tag" content="hadoop_application_architectures">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/oozie_architecture.png">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Hadoop-Application-Architectures-Ch-6-Orchestration" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Hadoop Application Architectures Ch.6 Orchestration
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/16/Hadoop-Application-Architectures-Ch-6-Orchestration/" class="article-date">
+  <time datetime="2019-12-16T07:23:45.000Z" itemprop="datePublished">2019-12-16</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h2><p>System of,</p>
+<ul>
+<li><em>workflow orchestration</em></li>
+<li><em>workflow automation</em></li>
+<li><em>business process automation</em></li>
+<li>scheduling, coordinating, and managing workflows</li>
+</ul>
+<p>Each of jobs, referred to as an <em>action</em>, could be</p>
+<ul>
+<li>scheduled<ul>
+<li>at a particular time</li>
+<li>periodic interval</li>
+<li>triggered by events or status</li>
+</ul>
+</li>
+<li>coordinated<ul>
+<li>when a previous action finishes successfully</li>
+</ul>
+</li>
+<li>managing to<ul>
+<li>send notification mails</li>
+<li>record the time taken</li>
+</ul>
+</li>
+</ul>
+<p>Good workflow orchestration engines will</p>
+<ul>
+<li>expressed as a <strong>DAG</strong></li>
+<li>help defining the <strong>interfaces</strong> between workflow components</li>
+<li>support metadata and data lineage tracking</li>
+<li>integration between various software system</li>
+<li>data lifecycle management</li>
+<li>track and report data quality</li>
+<li>workflow components repository</li>
+<li>flexible scheduling</li>
+<li>dependency management</li>
+<li>centralized status monitoring</li>
+<li>workflow failure recovery</li>
+<li>workflow rolling back</li>
+<li>report generation</li>
+<li>parameterized workflow</li>
+<li>arguments passing</li>
+</ul>
+<h2 id="Orchestration-Framworks"><a href="#Orchestration-Framworks" class="headerlink" title="Orchestration Framworks"></a>Orchestration Framworks</h2><table>
+<thead>
+<tr>
+<th>Workflow Engine</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Apache Oozie</td>
+<td>developed by Yahoo!, in order to support its growing Hadoop clusters and the increasing number of jobs and workflows running on those clusters</td>
+</tr>
+<tr>
+<td>Azkaban</td>
+<td>developed by LinkedIn, with the goal of being a visual and easy way to manage workflows</td>
+</tr>
+<tr>
+<td>Luigi</td>
+<td>an open source Python package from Spotify, that allows you to orchestrate long-running batch jobs and has built-in support for Hadoop</td>
+</tr>
+<tr>
+<td>Airflow</td>
+<td>created by Airbnb, an open source Python workflow management system designed for authoring, scheduling, and monitoring workflows</td>
+</tr>
+</tbody></table>
+<p>Considerations,</p>
+<ul>
+<li>ease of installation</li>
+<li>community involvement and uptake</li>
+<li>UI support</li>
+<li>testing</li>
+<li>logs</li>
+<li>workflow management</li>
+<li>error handling</li>
+</ul>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/oozie_architecture.png" alt="Oozie Architecture"></p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/azkaban_architecture.png" alt="Azkaban Architecture"></p>
+<h2 id="Workflow-Patterns"><a href="#Workflow-Patterns" class="headerlink" title="Workflow Patterns"></a>Workflow Patterns</h2><p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/point_to_point_workflow.png" alt="Point-to-Point Workflow"></p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/fan_out_workflow.png" alt="Fan-out Workflow"></p>
+<p><img src="https://github.com/weasellin/docker-hexo/raw/master/source/_posts/Hadoop-Application-Architectures-Ch-6-Orchestration/capture_decision_workflow.png" alt="Capture-and-Decision Workflow"></p>
+<h2 id="Scheduling-Patterns"><a href="#Scheduling-Patterns" class="headerlink" title="Scheduling Patterns"></a>Scheduling Patterns</h2><ul>
+<li>Frequency Scheduling<ul>
+<li>Note: DST cause that a day (with Timezone info) will not always be 24 hours</li>
+</ul>
+</li>
+<li>Time and Data Triggers</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/12/23/Hadoop-Application-Architectures-Ch-7-Near-Real-Time-Processing-with-Hadoop/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Hadoop Application Architectures Ch.7 Near-Real-Time Processing with Hadoop
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/12/16/Hadoop-Application-Architectures-Ch-5-Graph-Processing-on-Hadoop/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Hadoop Application Architectures Ch.5 Graph Processing on Hadoop</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

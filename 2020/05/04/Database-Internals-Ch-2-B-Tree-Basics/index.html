@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Database-Internals-Ch-2-B-Tree-Basics | Ansel&#39;s Note</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Binary Search Trees BST (Binary Search Trees) Tree balancing, pathological tree rebalancing, pivot, rotate  Considerations (impractical) on trees for disk-based storage:  locality: node child pointers">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Database-Internals-Ch-2-B-Tree-Basics">
+<meta property="og:url" content="https://weasellin.github.io/2020/05/04/Database-Internals-Ch-2-B-Tree-Basics/index.html">
+<meta property="og:site_name" content="Ansel&#39;s Note">
+<meta property="og:description" content="Binary Search Trees BST (Binary Search Trees) Tree balancing, pathological tree rebalancing, pivot, rotate  Considerations (impractical) on trees for disk-based storage:  locality: node child pointers">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-05-04T22:00:03.000Z">
+<meta property="article:modified_time" content="2020-05-10T23:08:01.000Z">
+<meta property="article:author" content="Ansel Lin">
+<meta property="article:tag" content="reading_note">
+<meta property="article:tag" content="data_engineering">
+<meta property="article:tag" content="database_internals">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Ansel&#39;s Note" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Database-Internals-Ch-2-B-Tree-Basics" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Database-Internals-Ch-2-B-Tree-Basics
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/04/Database-Internals-Ch-2-B-Tree-Basics/" class="article-date">
+  <time datetime="2020-05-04T22:00:03.000Z" itemprop="datePublished">2020-05-04</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Binary-Search-Trees"><a href="#Binary-Search-Trees" class="headerlink" title="Binary Search Trees"></a>Binary Search Trees</h2><ul>
+<li>BST (Binary Search Trees)</li>
+<li>Tree balancing, <em>pathological</em> tree</li>
+<li>rebalancing, <em>pivot</em>, <em>rotate</em></li>
+</ul>
+<p>Considerations (impractical) on trees for disk-based storage:</p>
+<ul>
+<li><em>locality</em>: node child pointers may span across several disk pages</li>
+<li><em>tree height</em>: hight number of disk seek to located the searched element</li>
+</ul>
+<h2 id="Disk-Based-Structures"><a href="#Disk-Based-Structures" class="headerlink" title="Disk-Based Structures"></a>Disk-Based Structures</h2><ul>
+<li>HDD (Hard Disk Drives)<ul>
+<li>read/write <em>head movements</em> (seek for random access): most expensive</li>
+<li><em>sequential operations</em>: relatively cheap</li>
+<li>smallest transfer unit: <em>sector</em> (512Bytes - 4 KB)</li>
+</ul>
+</li>
+<li>SSD (Solid State Drives)<ul>
+<li>no disk spin or head movements<ul>
+<li>the diff between random versus sequential I/O is not as large as HDD</li>
+</ul>
+</li>
+<li>is built of<ul>
+<li><em>memory cells</em></li>
+<li><em>strings</em> (32 - 64 cells per string)</li>
+<li><em>arrays</em></li>
+<li><em>pages</em> (2 - 16 KB)</li>
+<li><em>blocks</em> (64 - 512 pages per blocks)</li>
+<li><em>planes</em></li>
+<li><em>dies</em></li>
+</ul>
+</li>
+<li>smallest unit for read/write: page (write to empty cells only)</li>
+<li>smallest unit for erase: block</li>
+<li>FTL (Flash Translation Layer), responsible for<ul>
+<li>mapping page ID to physical locations</li>
+<li>tracking empty, written, discarded pages</li>
+<li><em>garbage collection</em>, relocate live pages, erase unused blocks</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="On-Disk-Structures"><a href="#On-Disk-Structures" class="headerlink" title="On-Disk Structures"></a>On-Disk Structures</h3><ul>
+<li><em>Block Device</em> abstration<ul>
+<li>hide the internal disk structures provided by HDD &amp; SSD for OS</li>
+<li>even though garbage collection usually done in background, it may impact write performance in case of random and unaligned workloads</li>
+<li>writing <em>full block</em>, combining subsequent writes to the same block<ul>
+<li>buffering, immutability</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><em>Pointer</em> for disk structures<ul>
+<li>on disk, the data layout is managed manually</li>
+<li>offset are<ul>
+<li>precomputed: if the pointer is written before the referring part</li>
+<li>or cached in memory</li>
+</ul>
+</li>
+<li>preferred<ul>
+<li>to keep number of pointers and spans to minimum</li>
+<li>rather to have a long dependency chain</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Fewer disk access by reduce “out-of-page”pointers<ul>
+<li>Paged Binary Trees<ul>
+<li>group nodes into pages to improve locality</li>
+<li>but still need to update out-of-page pointers during balancing</li>
+</ul>
+</li>
+<li>B-Trees<ul>
+<li>increase node fanout</li>
+<li>reduce tree height</li>
+<li>reduce the node pointers</li>
+<li>reduce the frequency of balancing operations</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Ubiquitous-B-Trees"><a href="#Ubiquitous-B-Trees" class="headerlink" title="Ubiquitous B-Trees"></a>Ubiquitous B-Trees</h2><p>Using B-Tree, could query both <em>point</em> and <em>range</em>.</p>
+<h3 id="B-Tree-Hierarchy"><a href="#B-Tree-Hierarchy" class="headerlink" title="B-Tree Hierarchy"></a>B-Tree Hierarchy</h3><ul>
+<li><em>node</em>: holds up to N keys and N + 1 pointers</li>
+<li><em>key</em> in the node: <em>index entries</em>, <em>separator keys</em>, <em>divider cells</em></li>
+<li><em>root node</em>, <em>internal nodes</em>, <em>leaf nodes</em></li>
+<li><em>page</em> as <em>node</em></li>
+<li><em>occupancy</em><ul>
+<li>balancing operations are triggered when full or nearly empty</li>
+</ul>
+</li>
+<li><em>B+-Trees</em>: only holds value on the leaf nodes</li>
+<li>some variants also have <em>sibling node pointers</em>, to simplify range scan</li>
+</ul>
+<h3 id="B-Tree-Lookup"><a href="#B-Tree-Lookup" class="headerlink" title="B-Tree Lookup"></a>B-Tree Lookup</h3><ul>
+<li>Complexity<ul>
+<li>block transfers: <code>log_k(M)</code></li>
+<li>comparisons: <code>log_2(M)</code> (binary search within each node)</li>
+</ul>
+</li>
+<li>Lookup objective<ul>
+<li>exact match: point queries, updates, deletions</li>
+<li>predecessor: range scan, inserts</li>
+</ul>
+</li>
+</ul>
+<h3 id="B-Tree-Node-Splits-amp-Merges"><a href="#B-Tree-Node-Splits-amp-Merges" class="headerlink" title="B-Tree Node Splits &amp; Merges"></a>B-Tree Node Splits &amp; Merges</h3><table>
+<thead>
+<tr>
+<th>Splits</th>
+<th>Merges</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>insert</td>
+<td>delete</td>
+</tr>
+<tr>
+<td>when <em>overflow</em> the capacity</td>
+<td>when <em>underflow</em> the capacity</td>
+</tr>
+<tr>
+<td>leaf nodes: N k-v pairs</td>
+<td>(occupancy under a threshold)</td>
+</tr>
+<tr>
+<td>internal nodes: N + 1 pointers</td>
+<td>merge, otherwise rebalance</td>
+</tr>
+<tr>
+<td><em>promote</em> the <em>split point</em> (midpoint) to the parent node</td>
+<td><em>demote</em> / <em>delete</em> the separator key for internal / leaf node</td>
+</tr>
+</tbody></table>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/05/11/Database-Internals-Ch-3-File-Formats/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Database-Internals-Ch-3-File-Formats
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/05/02/Database-Internals-Ch-1-Intro/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Database Internals Ch.1 Introduction and Overview</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 Ansel Lin 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/hejianxian" target="_blank" rel="noopener" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>
